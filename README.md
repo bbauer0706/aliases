@@ -80,7 +80,7 @@ Navigate and open projects in VSCode:
 
 ## Customization
 
-Edit the files in the `~/aliases` directory to customize or add your own aliases.
+Edit the files in the `<dir>/aliases` directory to customize or add your own aliases.
 Each file is organized by category and sourced automatically.
 
 ### Adding Your Own Aliases
