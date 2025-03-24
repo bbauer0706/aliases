@@ -25,84 +25,74 @@ error() {
   exit 1
 }
 
-# Check if .bash_aliases exists
-if [ ! -f "$HOME/.bash_aliases" ]; then
-  status "Creating .bash_aliases file"
-  
-  # Create the .bash_aliases file with a nice header
-  cat > "$HOME/.bash_aliases" << 'EOF'
+# Detect the actual location of the aliases repository
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+ALIASES_DIR=$SCRIPT_DIR
+
+status "Detected aliases repository at: $ALIASES_DIR"
+
+# Create the template for .bash_aliases with a variable for the directory path
+BASH_ALIASES_TEMPLATE=$(cat << EOF
 #!/bin/bash
 ##############################################################################
 #                                                                            #
 #                         CUSTOM BASH ALIASES                                #
 #                                                                            #
 #  This file is automatically managed by the aliases repository.             #
-#  Make changes to the individual files in ~/aliases/ instead.               #
+#  Make changes to the individual files in the aliases repository instead.   #
 #                                                                            #
 ##############################################################################
 
+# Define the aliases directory location
+ALIASES_DIR="$ALIASES_DIR"
+
 # Source all alias files from the aliases directory
-if [ -d "$HOME/aliases" ]; then
-  for alias_file in "$HOME/aliases"/*.ali.sh; do
-    if [ -f "$alias_file" ]; then
-      source "$alias_file"
+if [ -d "\$ALIASES_DIR" ]; then
+  for alias_file in "\$ALIASES_DIR"/*.ali.sh; do
+    if [ -f "\$alias_file" ]; then
+      source "\$alias_file"
     fi
   done
+else
+  echo -e "\033[0;31m[ERROR]\033[0m Aliases directory not found: \$ALIASES_DIR"
 fi
 EOF
+)
+
+# Check if .bash_aliases exists
+if [ ! -f "$HOME/.bash_aliases" ]; then
+  status "Creating .bash_aliases file"
+  
+  # Create the .bash_aliases file with the template
+  echo "$BASH_ALIASES_TEMPLATE" > "$HOME/.bash_aliases"
 
   success "Created .bash_aliases file"
 else
-  status ".bash_aliases already exists, checking format"
+  status ".bash_aliases already exists, checking if update is needed"
   
-  # Check if sourcing of alias files is already in .bash_aliases
-  if ! grep -q "Source all alias files from the aliases directory" "$HOME/.bash_aliases"; then
-    warning ".bash_aliases doesn't include the standard sourcing code"
+  # Define the expected variable definition to check for
+  EXPECTED_DIR_VAR="ALIASES_DIR=\"$ALIASES_DIR\""
+  
+  # Check if the correct variable definition is in .bash_aliases
+  if grep -q "$EXPECTED_DIR_VAR" "$HOME/.bash_aliases"; then
+    success ".bash_aliases already contains the correct repository path"
+  else
+    warning ".bash_aliases needs to be updated with the correct repository path"
     
     # Ask user if they want to update the file
-    read -p "Do you want to update your .bash_aliases to source the alias files? (y/n): " -n 1 -r
+    read -p "Do you want to update your .bash_aliases to use the current repository path? (y/n): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
       # Backup the existing file
       cp "$HOME/.bash_aliases" "$HOME/.bash_aliases.bak"
       
-      # Create temporary file with new content
-      TMP_FILE=$(mktemp)
-      cat > "$TMP_FILE" << 'EOF'
-#!/bin/bash
-##############################################################################
-#                                                                            #
-#                         CUSTOM BASH ALIASES                                #
-#                                                                            #
-#  This file is automatically managed by the aliases repository.             #
-#  Make changes to the individual files in ~/aliases/ instead.               #
-#                                                                            #
-##############################################################################
-
-# Source all alias files from the aliases directory
-if [ -d "$HOME/aliases" ]; then
-  for alias_file in "$HOME/aliases"/*.ali.sh; do
-    if [ -f "$alias_file" ]; then
-      source "$alias_file"
-    fi
-  done
-fi
-
-# Original content of .bash_aliases follows:
-EOF
-      
-      # Append the original content
-      cat "$HOME/.bash_aliases" >> "$TMP_FILE"
-      
       # Replace the file
-      mv "$TMP_FILE" "$HOME/.bash_aliases"
+      echo "$BASH_ALIASES_TEMPLATE" > "$HOME/.bash_aliases"
       
-      success "Updated .bash_aliases and created backup at .bash_aliases.bak"
+      success "Updated .bash_aliases with the correct path and created backup at .bash_aliases.bak"
     else
-      warning "User chose not to update .bash_aliases"
+      warning "User chose not to update .bash_aliases - aliases may not work correctly"
     fi
-  else
-    success ".bash_aliases already has the correct format"
   fi
 fi
 
@@ -123,3 +113,4 @@ success "Setup complete! Your bash aliases are now configured."
 echo ""
 echo -e "${YELLOW}Note:${NC} Changes to alias files will take effect in new terminal sessions"
 echo -e "      or after running 'source ~/.bash_aliases'"
+echo -e "      Aliases are sourced from: ${GREEN}$ALIASES_DIR${NC}"
