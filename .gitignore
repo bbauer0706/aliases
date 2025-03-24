@@ -1,0 +1,12 @@
+# Local configurations
+.local.ali.sh
+local.ali.sh
+
+# Editor files
+*~
+*.swp
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
