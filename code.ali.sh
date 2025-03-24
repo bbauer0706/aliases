@@ -204,8 +204,21 @@ c() {
   local suffix="${input: -1}"
   local base="${input%?}"
   
-  # Only consider s/w suffixes
-  if [[ "$suffix" != "s" && "$suffix" != "w" ]]; then
+  # First, check if the exact input matches a project
+  if [[ -n "$(_get_project_path "$input")" ]]; then
+    # If full input is a valid project, use it as is
+    suffix=""
+    base="$input"
+  elif [[ "$suffix" == "s" || "$suffix" == "w" ]]; then
+    # Check if base is a valid project when removing the suffix
+    if [[ -z "$(_get_project_path "$base")" ]]; then
+      # Base is not a valid project, treat the whole input as a project
+      suffix=""
+      base="$input"
+    fi
+    # Otherwise, keep the split as is (base + suffix)
+  else
+    # Neither 's' nor 'w' suffix, treat whole string as base
     suffix=""
     base="$input"
   fi
@@ -240,7 +253,7 @@ c() {
       else
         echo -n "  $display_name "
       fi
-      
+        
       # Check server component
       if [[ $(_has_component "$display_name" "server") == "true" ]]; then
         echo -e -n "| ${COLOR_SERVER}${display_name}s${COLOR_RESET} "
@@ -371,12 +384,12 @@ _c_completion() {
           projects+=("${display}w")
         fi
       fi
-      
+        
       # Also add individual component completions that match directly
       if [[ "${display}s" == "$cur"* && $(_has_component "$display" "server") == "true" ]]; then
         projects+=("${display}s")
       fi
-      
+        
       if [[ "${display}w" == "$cur"* && $(_has_component "$display" "web") == "true" ]]; then
         projects+=("${display}w")
       fi
@@ -398,8 +411,8 @@ _c_completion() {
       if [[ $(_has_component "$display" "server") == "true" ]]; then
         variants+="s"
       fi
-      
-      # Check for web component 
+        
+      # Check for web component
       if [[ $(_has_component "$display" "web") == "true" ]]; then
         variants+="w"
       fi
@@ -413,7 +426,6 @@ _c_completion() {
     done
   fi
   
-  # Set completion reply
   COMPREPLY=($(compgen -W "${projects[*]}" -- "$cur"))
   
   # Handle bracket completions (for manually typed bracket notation)
