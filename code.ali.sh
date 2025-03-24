@@ -110,11 +110,13 @@ _get_component_path() {
   fi
   
   local project_path="${full_paths[$full_name]}"
-  local paths_map="${component_type}_paths"
   
   # Check if this project has a custom path defined
-  if [[ -n "${!paths_map[$full_name]}" ]]; then
-    echo "${!paths_map[$full_name]}"
+  if [[ "$component_type" == "server" && -n "${server_paths[$full_name]}" ]]; then
+    echo "${server_paths[$full_name]}"
+    return
+  elif [[ "$component_type" == "web" && -n "${web_paths[$full_name]}" ]]; then
+    echo "${web_paths[$full_name]}"
     return
   fi
   
@@ -329,25 +331,36 @@ _c_completion() {
       if [[ "$display" == "$cur"* ]]; then
         local full_name="${display_to_full[$display]}"
         local variants=""
+        local has_server=false
+        local has_web=false
         
         # Check for server and web components
         if [[ $(_has_component "$display" "server") == "true" ]]; then
           variants+="s"
+          has_server=true
         fi
         
         if [[ $(_has_component "$display" "web") == "true" ]]; then
           variants+="w"
+          has_web=true
         fi
         
-        # Show project with variants if they exist
-        if [[ -n "$variants" ]]; then
-          projects+=("$display[$variants]")
-        else
+        # Only add base project if it's a partial match (not exact match)
+        if [[ "$display" != "$cur" ]]; then
           projects+=("$display")
+        fi
+        
+        # Add individual component completions if they exist
+        if [[ "$has_server" == "true" ]]; then
+          projects+=("${display}s")
+        fi
+        
+        if [[ "$has_web" == "true" ]]; then
+          projects+=("${display}w")
         fi
       fi
       
-      # Also add individual component completions
+      # Also add individual component completions that match directly
       if [[ "${display}s" == "$cur"* && $(_has_component "$display" "server") == "true" ]]; then
         projects+=("${display}s")
       fi
@@ -357,7 +370,7 @@ _c_completion() {
       fi
     done
   else
-    # No input - show all display names (preferring short names)
+    # No input - show all display names with bracket notation for variants
     declare -a all_displays
     
     for full_name in "${!full_paths[@]}"; do
@@ -379,7 +392,7 @@ _c_completion() {
         variants+="w"
       fi
       
-      # If we have variants, show the compact format only
+      # If we have variants, show the compact format with brackets
       if [[ -n "$variants" ]]; then
         projects+=("$display[$variants]")
       else
@@ -391,7 +404,7 @@ _c_completion() {
   # Set completion reply
   COMPREPLY=($(compgen -W "${projects[*]}" -- "$cur"))
   
-  # Handle bracket completions
+  # Handle bracket completions (for manually typed bracket notation)
   if [[ ${#COMPREPLY[@]} -eq 1 && ${COMPREPLY[0]} =~ \[([sw]+)$ ]]; then
     # Add the closing bracket
     COMPREPLY[0]="${COMPREPLY[0]}]"
