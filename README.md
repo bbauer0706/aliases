@@ -16,10 +16,13 @@ A collection of useful bash aliases and functions to improve command-line produc
 
 ```bash
 # Clone the repository
-git clone <repository-url> ~/aliases
+git clone <repository-url> <dir>
+
+# Make the setup script executable if needed
+chmod +x <dir>/setup.sh
 
 # Run the setup script
-~/aliases/setup.sh
+<dir>/setup.sh
 ```
 
 ### Update Existing Installation
@@ -31,9 +34,20 @@ If you already have the repository cloned:
 cd ~/aliases
 git pull
 
+# Make sure the setup script is executable
+chmod +x setup.sh
+
 # Run the setup script to apply any changes
 ./setup.sh
 ```
+
+## What the Setup Script Does
+
+The setup script performs these essential tasks:
+
+1. Creates or updates your `~/.bash_aliases` file to source all alias files
+2. Ensures your `~/.bashrc` properly sources the `~/.bash_aliases` file
+3. Preserves your existing aliases if you already have a `.bash_aliases` file
 
 ## Available Commands
 
@@ -68,6 +82,33 @@ Navigate and open projects in VSCode:
 
 Edit the files in the `~/aliases` directory to customize or add your own aliases.
 Each file is organized by category and sourced automatically.
+
+### Adding Your Own Aliases
+
+Create new `.ali.sh` files in the aliases directory to organize your aliases by category:
+
+```bash
+# Create a new aliases file
+touch ~/aliases/my_custom.ali.sh
+
+# Make it executable
+chmod +x ~/aliases/my_custom.ali.sh
+
+# Edit the file
+code ~/aliases/my_custom.ali.sh
+```
+
+To apply changes immediately:
+
+```bash
+source ~/.bash_aliases
+```
+
+## Troubleshooting
+
+- **Aliases not working**: Make sure all `.ali.sh` files are executable with `chmod +x ~/aliases/*.ali.sh`
+- **Changes not applying**: Remember to run `source ~/.bash_aliases` after making changes
+- **Script permission issues**: If you get "permission denied" errors, run `chmod +x ~/aliases/setup.sh`
 
 ## License
 
