@@ -20,17 +20,12 @@ alias mcp='mvn clean package'
 
 # Maven function with shortcuts
 m() {
-  # No parameters, show help
-  if [[ $# -eq 0 ]]; then
-    echo "Maven shortcuts:"
-    echo "  m ci      - mvn clean install"
-    echo "  m cp      - mvn clean package"
-    echo "  m cid     - mvn clean install -DskipTests"
-    echo "  m cpd     - mvn clean package -DskipTests"
-    echo "  m t       - mvn test"
-    echo "  m tc      - mvn test -Dtest=ClassName"
-    echo "  m tm      - mvn test -Dtest=ClassName#methodName"
-    echo "  m run     - mvn spring-boot:run"
+  # Help parameters
+  if [[ $# -eq 0 || "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "mvn command shortcuts:"
+    for cmd in "${!mvn_commands[@]}"; do
+      echo "  $cmd => mvn ${mvn_commands[$cmd]}"
+    done
     return
   fi
 
@@ -46,7 +41,25 @@ m() {
     tc)  mvn test -Dtest="$1" ;;
     tm)  mvn test -Dtest="$1" ;;
     run) mvn spring-boot:run ;;
-    *)   mvn "$cmd" "$@" ;;
+    *)   
+        # Check if it's a standard Maven phase/goal
+        if [[ "$cmd" =~ ^(clean|compile|test|package|verify|install|deploy|site)$ ]]; then
+          mvn "$cmd" "$@"
+        else
+          # Unknown command, show error
+          echo "Error: Unknown Maven shortcut or phase: '$cmd'"
+          echo ""
+          echo "Available shortcuts:"
+          for cmd in "${!mvn_commands[@]}"; do
+            echo "  $cmd => mvn ${mvn_commands[$cmd]}"
+          done
+          
+          echo ""
+          echo "Standard Maven phases:"
+          echo "  clean, compile, test, package, verify, install, deploy, site"
+          echo ""
+        fi
+        ;;
   esac
 }
 

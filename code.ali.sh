@@ -160,6 +160,18 @@ _has_component() {
 # ============================================================================
 
 c() {
+  # Help parameters
+  if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "VS Code project navigation:"
+    echo "  c                - Open home directory"
+    echo "  c <project>      - Open project"
+    echo "  c <project>s     - Open server component of project"
+    echo "  c <project>w     - Open web component of project"
+    echo "  c <project>[sw]  - Open both server and web components"
+    echo "  c <proj1> <proj2> ... - Open multiple projects"
+    return
+  fi
+
   # No parameters, open home directory
   if [[ $# -eq 0 ]]; then
     code "$HOME"

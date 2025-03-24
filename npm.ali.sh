@@ -18,8 +18,8 @@ declare -A npm_commands=(
 
 # Main function for npm operations
 n() {
-  # Display help if no arguments are provided
-  if [[ $# -eq 0 ]]; then
+  # Help parameters
+  if [[ $# -eq 0 || "$1" == "-h" || "$1" == "--help" ]]; then
     echo "npm command shortcuts:"
     for cmd in "${!npm_commands[@]}"; do
       echo "  $cmd => npm ${npm_commands[$cmd]}"
@@ -45,8 +45,27 @@ n() {
       npm ${npm_commands[$cmd]} "$@"
     fi
   else
-    # For any other commands, just pass to npm run
-    npm run "$cmd" "$@"
+    # Check if the script exists in package.json
+    if [ -f "package.json" ] && grep -q "\"$cmd\":" package.json; then
+      # The script exists in package.json, run it
+      npm run "$cmd" "$@"
+    else
+      # Unknown shortcut or script, show error
+      echo "Error: Unknown npm shortcut or script: '$cmd'"
+      echo ""
+      echo "Available shortcuts:"
+      for cmd in "${!npm_commands[@]}"; do
+        echo "  $cmd => npm ${npm_commands[$cmd]}"
+      done
+      
+      if [ -f "package.json" ]; then
+        echo ""
+        echo "Available scripts in package.json:"
+        grep -o '"[a-zA-Z0-9:_-]*":' package.json | tr -d '":' | sed 's/^/  /'
+      fi
+      
+      echo ""
+    fi
   fi
 }
 

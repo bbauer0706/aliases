@@ -20,21 +20,12 @@ declare -A git_commands=(
 )
 
 g() {
-  # No parameters, show help
-  if [[ $# -eq 0 ]]; then
-    echo "Git shortcuts:"
-    echo "  g s       - git status"
-    echo "  g a       - git add ."
-    echo "  g c \"msg\" - git commit -m \"msg\""
-    echo "  g ac \"msg\"- git add . && git commit -m \"msg\""
-    echo "  g p       - git pull"
-    echo "  g ps      - git push"
-    echo "  g psf     - git push -f"
-    echo "  g co br   - git checkout branch"
-    echo "  g nb br   - git checkout -b branch"
-    echo "  g nf br   - git checkout -b features/branch"
-    echo "  g l       - git log --oneline"
-    echo "  g b       - git branch"
+  # Help parameters
+  if [[ $# -eq 0 || "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "git command shortcuts:"
+    for cmd in "${!git_commands[@]}"; do
+      echo "  $cmd => git ${git_commands[$cmd]}"
+    done
     return
   fi
 
@@ -54,7 +45,24 @@ g() {
     nf) git checkout -b "features/$1" ;;
     l)  git log --oneline ;;
     b)  git branch ;;
-    *)  git "$cmd" "$@" ;;
+    *)  
+        # Check if it's a valid git command
+        if git help "$cmd" &>/dev/null; then
+          git "$cmd" "$@"
+        else
+          # Unknown command, show error
+          echo "Error: Unknown git shortcut or command: '$cmd'"
+          echo ""
+          echo "Available shortcuts:"
+          for cmd in "${!git_commands[@]}"; do
+            echo "  $cmd => git ${git_commands[$cmd]}"
+          done
+          
+          echo ""
+          echo "Try 'git help' for a list of available git commands."
+          return 1
+        fi
+        ;;
   esac
 }
 
