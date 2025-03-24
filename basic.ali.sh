@@ -16,5 +16,4 @@ kp() {
 
 # Edit configuration files
 alias ali='code ~/.bash_aliases'
-alias ali-edit='code ~/aliases'
 alias env='code ~/.bash_react'
