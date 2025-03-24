@@ -31,7 +31,7 @@ If you already have the repository cloned:
 
 ```bash
 # Pull latest changes
-cd ~/aliases
+cd <dir>/aliases
 git pull
 
 # Make sure the setup script is executable
@@ -89,14 +89,35 @@ Create new `.ali.sh` files in the aliases directory to organize your aliases by 
 
 ```bash
 # Create a new aliases file
-touch ~/aliases/my_custom.ali.sh
+touch <dir>/aliases/my_custom.ali.sh
 
 # Make it executable
-chmod +x ~/aliases/my_custom.ali.sh
+chmod +x <dir>/aliases/my_custom.ali.sh
 
 # Edit the file
-code ~/aliases/my_custom.ali.sh
+code <dir>/aliases/my_custom.ali.sh
 ```
+
+### Using Local Aliases
+
+For machine-specific aliases that shouldn't be committed to version control, use the `.local.ali.sh` or `local.ali.sh` file pattern:
+
+```bash
+# Create a local aliases file
+touch <dir>/aliases/my_custom.local.ali.sh
+
+# Make it executable
+chmod +x <dir>/aliases/my_custom.local.ali.sh
+
+# Edit the file
+code <dir>/aliases/my_custom.local.ali.sh
+```
+
+Files matching these patterns are automatically sourced but ignored by git, making them perfect for:
+- Machine-specific paths
+- Work-specific aliases
+- Credentials or sensitive information
+- Personal preferences
 
 To apply changes immediately:
 
@@ -106,10 +127,6 @@ source ~/.bash_aliases
 
 ## Troubleshooting
 
-- **Aliases not working**: Make sure all `.ali.sh` files are executable with `chmod +x ~/aliases/*.ali.sh`
+- **Aliases not working**: Make sure all `.ali.sh` files are executable with `chmod +x <dir>/aliases/*.ali.sh`
 - **Changes not applying**: Remember to run `source ~/.bash_aliases` after making changes
-- **Script permission issues**: If you get "permission denied" errors, run `chmod +x ~/aliases/setup.sh`
-
-## License
-
-MIT
+- **Script permission issues**: If you get "permission denied" errors, run `chmod +x <dir>/aliases/setup.sh`
