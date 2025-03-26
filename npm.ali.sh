@@ -33,17 +33,7 @@ n() {
   
   # Check if it's a known shorthand command
   if [[ -n "${npm_commands[$cmd]}" ]]; then
-    # For 'dev' command, add repository command if available
-    if [[ "$cmd" == "dev" ]]; then
-      # Try to get repository command name and run it first
-      { 
-        REPO_CMD=$(basename $(git rev-parse --show-toplevel 2>/dev/null)) && eval $REPO_CMD || echo ""
-      } 
-      npm ${npm_commands[$cmd]} "$@"
-    else
-      # Run the mapped npm command
-      npm ${npm_commands[$cmd]} "$@"
-    fi
+    npm ${npm_commands[$cmd]} "$@"
   else
     # Check if the script exists in package.json
     if [ -f "package.json" ] && grep -q "\"$cmd\":" package.json; then

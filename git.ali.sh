@@ -17,6 +17,10 @@ declare -A git_commands=(
   [nf]="checkout -b features/"
   [l]="log --oneline"
   [b]="branch"
+  [cl]="clone"
+  [m]="merge"
+  [d]="diff"
+  [r]="rebase"
 )
 
 g() {
