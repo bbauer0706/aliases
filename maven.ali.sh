@@ -32,35 +32,33 @@ m() {
   local cmd="$1"
   shift # Remove the first argument
 
-  case "$cmd" in
-    ci)  mvn clean install ;;
-    cp)  mvn clean package ;;
-    cid) mvn clean install -DskipTests ;;
-    cpd) mvn clean package -DskipTests ;;
-    t)   mvn test ;;
-    tc)  mvn test -Dtest="$1" ;;
-    tm)  mvn test -Dtest="$1" ;;
-    run) mvn spring-boot:run ;;
-    *)   
-        # Check if it's a standard Maven phase/goal
-        if [[ "$cmd" =~ ^(clean|compile|test|package|verify|install|deploy|site)$ ]]; then
-          mvn "$cmd" "$@"
-        else
-          # Unknown command, show error
-          echo "Error: Unknown Maven shortcut or phase: '$cmd'"
-          echo ""
-          echo "Available shortcuts:"
-          for cmd in "${!mvn_commands[@]}"; do
-            echo "  $cmd => mvn ${mvn_commands[$cmd]}"
-          done
-          
-          echo ""
-          echo "Standard Maven phases:"
-          echo "  clean, compile, test, package, verify, install, deploy, site"
-          echo ""
-        fi
-        ;;
-  esac
+  # Check if it's a known shorthand command
+  if [[ -n "${mvn_commands[$cmd]}" ]]; then
+    # Special case for test class commands that need the parameter appended
+    if [[ "$cmd" == "tc" || "$cmd" == "tm" ]]; then
+      mvn ${mvn_commands[$cmd]}"$1"
+    else
+      mvn ${mvn_commands[$cmd]} "$@"
+    fi
+  else
+    # Check if it's a standard Maven phase/goal
+    if [[ "$cmd" =~ ^(clean|compile|test|package|verify|install|deploy|site)$ ]]; then
+      mvn "$cmd" "$@"
+    else
+      # Unknown command, show error
+      echo "Error: Unknown Maven shortcut or phase: '$cmd'"
+      echo ""
+      echo "Available shortcuts:"
+      for cmd in "${!mvn_commands[@]}"; do
+        echo "  $cmd => mvn ${mvn_commands[$cmd]}"
+      done
+      
+      echo ""
+      echo "Standard Maven phases:"
+      echo "  clean, compile, test, package, verify, install, deploy, site"
+      echo ""
+    fi
+  fi
 }
 
 # Tab completion for the 'm' function

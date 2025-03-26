@@ -36,38 +36,40 @@ g() {
   local cmd="$1"
   shift # Remove the first argument
 
-  case "$cmd" in
-    s)  git status ;;
-    a)  git add . ;;
-    c)  git commit -m "$*" ;;
-    ac) git add . && git commit -m "$*" ;;
-    p)  git pull ;;
-    ps) git push ;;
-    psf) git push -f ;;
-    co) git checkout "$1" ;;
-    nb) git checkout -b "$1" ;;
-    nf) git checkout -b "features/$1" ;;
-    l)  git log --oneline ;;
-    b)  git branch ;;
-    *)  
-        # Check if it's a valid git command
-        if git help "$cmd" &>/dev/null; then
-          git "$cmd" "$@"
-        else
-          # Unknown command, show error
-          echo "Error: Unknown git shortcut or command: '$cmd'"
-          echo ""
-          echo "Available shortcuts:"
-          for cmd in "${!git_commands[@]}"; do
-            echo "  $cmd => git ${git_commands[$cmd]}"
-          done
-          
-          echo ""
-          echo "Try 'git help' for a list of available git commands."
-          return 1
-        fi
-        ;;
-  esac
+  # Check if it's a known shorthand command
+  if [[ -n "${git_commands[$cmd]}" ]]; then
+    # Special handling for commands that need parameters
+    if [[ "$cmd" == "c" || "$cmd" == "ac" ]]; then
+      # For commit messages, pass all remaining args as a single string
+      eval "git ${git_commands[$cmd]} \"$*\""
+    elif [[ "$cmd" == "co" || "$cmd" == "nb" ]]; then
+      # For checkout commands, pass the first parameter
+      git ${git_commands[$cmd]} "$1"
+    elif [[ "$cmd" == "nf" ]]; then
+      # For feature branch creation
+      git ${git_commands[$cmd]} "$1"
+    else
+      # For regular commands
+      eval "git ${git_commands[$cmd]} $*"
+    fi
+  else
+    # Check if it's a valid git command
+    if git help "$cmd" &>/dev/null; then
+      git "$cmd" "$@"
+    else
+      # Unknown command, show error
+      echo "Error: Unknown git shortcut or command: '$cmd'"
+      echo ""
+      echo "Available shortcuts:"
+      for cmd in "${!git_commands[@]}"; do
+        echo "  $cmd => git ${git_commands[$cmd]}"
+      done
+      
+      echo ""
+      echo "Try 'git help' for a list of available git commands."
+      return 1
+    fi
+  fi
 }
 
 # Tab completion for the 'g' function
