@@ -25,6 +25,20 @@ error() {
   exit 1
 }
 
+# Function to calculate starting port based on username
+calculate_user_port() {
+  local username="$USER"
+  # Use username hash to generate a base port
+  local hash_val=$(echo "$username" | cksum | cut -d ' ' -f 1)
+  # Generate a port rounded to thousands between 3000 and 9000
+  local port=$(( 3000 + ($hash_val % 7) * 1000 ))
+  echo "$port"
+}
+
+# Calculate user-specific starting port
+USER_PORT=$(calculate_user_port)
+status "Calculated user-specific starting port: $USER_PORT"
+
 # Detect the actual location of the aliases repository
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 ALIASES_DIR=$SCRIPT_DIR
@@ -55,6 +69,11 @@ if [ -d "\$ALIASES_DIR" ]; then
   done
 else
   echo -e "\033[0;31m[ERROR]\033[0m Aliases directory not found: \$ALIASES_DIR"
+fi
+
+if [[ "\${PROJECT_ENV_LOADED}" != "true" ]]; then
+  export PROJECT_ENV_LOADED=true
+  project_env -p $USER_PORT
 fi
 EOF
 )

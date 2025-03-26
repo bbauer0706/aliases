@@ -1,6 +1,8 @@
 #!/bin/bash
+##############################################################################
+#                         AUTO PROJECT SELECTION                             #
+##############################################################################
 
-# Function to display help
 show_help() {
     echo "Usage: project_env [OPTIONS]"
     echo "Sets up environment variables for project development."
@@ -42,15 +44,6 @@ is_port_available() {
     fi
 }
 
-# Function to find next available port
-find_available_port() {
-    local port=3000
-    while ! is_port_available $port; do
-        ((port++))
-    done
-    return $port
-}
-
 # Function to get project name from current directory
 get_project_name() {
     local current_dir=$(pwd)
@@ -65,8 +58,10 @@ get_project_name() {
         echo "$project_name" 
         return 0
     else
-        echo ""
-        return 1
+        # Not in workspace dir, use current directory name
+        local current_dir_name=$(basename "$current_dir")
+        echo "$current_dir_name"
+        return 0
     fi
 }
 
@@ -169,9 +164,9 @@ project_env() {
     
     export WEBPORT=$port
     if [ "$no_port_offset" = true ]; then
-        export GQLPORT=$port  # No offset between WEB and GQL ports
+        export GQLPORT=$port 
     else
-        export GQLPORT=$(($port+1))  # Standard offset
+        export GQLPORT=$(($port+1)) 
     fi
     export SBPORT=$(($port+2))
     export NDEBUGPORT=$(($port+3))
@@ -181,9 +176,3 @@ project_env() {
     export GQLINTROSPECTION=$introspection
     export GQLTRANSFERMODE=$transfer_mode
 }
-
-# guarded call on source
-if [[ "${PROJECT_ENV_LOADED}" != "true" ]]; then
-    export PROJECT_ENV_LOADED=true
-    project_env
-fi
