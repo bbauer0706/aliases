@@ -23,11 +23,10 @@ _define_mappings_c() {
   
   # Define full name to shortcut mapping
   declare -gA full_to_short=(
-    [mockbar]="mbar"
     [urm20]="urm"
     [otv20]="otv"
     [ragnarokui]="rak"
-    [dispach20]="dip"
+    [dispatch20]="dip"
   )
   
   # Custom component paths for specific projects (using full names)
@@ -37,7 +36,6 @@ _define_mappings_c() {
   
   declare -gA web_paths=(
     [urm20]="urm2"
-    [otv20]="webApp"
   )
   
   # Color codes for display
