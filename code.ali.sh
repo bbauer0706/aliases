@@ -46,6 +46,33 @@ _define_mappings_c() {
   # Default paths for server and web components
   declare -ga default_server_paths=("java/serverJava" "serverJava")
   declare -ga default_web_paths=("webapp" "webApp" "web")
+  
+  # Load local mappings if they exist
+  local script_dir="$(dirname "${BASH_SOURCE[0]}")"
+  local local_mappings_file="$script_dir/mappings.local.sh"
+  
+  if [[ -f "$local_mappings_file" ]]; then    
+    # Initialize empty local mapping arrays/associative arrays
+    declare -gA local_full_to_short=()
+    declare -gA local_server_paths=()
+    declare -gA local_web_paths=()
+    
+    # Source the local mappings file
+    source "$local_mappings_file"
+    
+    # Merge local mappings with default mappings
+    for key in "${!local_full_to_short[@]}"; do
+      full_to_short[$key]="${local_full_to_short[$key]}"
+    done
+    
+    for key in "${!local_server_paths[@]}"; do
+      server_paths[$key]="${local_server_paths[$key]}"
+    done
+    
+    for key in "${!local_web_paths[@]}"; do
+      web_paths[$key]="${local_web_paths[$key]}"
+    done
+  fi
 }
 
 # Initialize mappings

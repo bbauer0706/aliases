@@ -1,6 +1,7 @@
 # Local configurations
 .local.ali.sh
 local.ali.sh
+*local*
 
 # Editor files
 *~
