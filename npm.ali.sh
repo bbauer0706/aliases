@@ -5,6 +5,9 @@
 
 # Basic NPM commands
 alias dev='n dev'
+alias build='n b'
+alias vit='n vit'
+alias jes='n wat'
 # Define mappings of shorthand commands to actual npm commands
 declare -A npm_commands=(
   [gen]="run gen"
@@ -14,6 +17,8 @@ declare -A npm_commands=(
   [start]="start"
   [i]="install"
   [t]="test"
+  [vit]="run vitest"
+  [wat]="run test:watch"
 )
 
 # Main function for npm operations

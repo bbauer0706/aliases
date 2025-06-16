@@ -176,3 +176,60 @@ project_env() {
     export GQLINTROSPECTION=$introspection
     export GQLTRANSFERMODE=$transfer_mode
 }
+
+# Function to automatically update project environment when changing directories
+auto_update_project_env() {
+    local current_dir=$(pwd)
+    local workspace_dir="$HOME/workspaces"
+    
+    # Only auto-update if we're in a workspace directory
+    if [[ "$current_dir" == "$workspace_dir"/* ]]; then
+        local new_project_name=$(get_project_name)
+        
+        # Only update if the project name has changed
+        if [ "$new_project_name" != "$PROJECT_NAME" ]; then
+            echo "Auto-updating environment for project: $new_project_name"
+            project_env -p ${WEBPORT:-8000}
+        fi
+    fi
+}
+
+# Enhanced cd function that updates project environment
+pcd() {
+    if [ $# -eq 0 ]; then
+        # No arguments, go to home
+        cd
+    else
+        # Change to specified directory
+        cd "$@"
+    fi
+    
+    # Auto-update project environment if successful
+    if [ $? -eq 0 ]; then
+        auto_update_project_env
+    fi
+}
+
+# Alias for the enhanced cd
+alias cd='pcd'
+
+# Function to manually refresh project environment in current directory
+refresh_project_env() {
+    echo "Refreshing project environment for current directory..."
+    local current_dir=$(pwd)
+    echo "Current directory: $current_dir"
+    
+    # Clear PROJECT_NAME to force refresh
+    unset PROJECT_NAME
+    
+    # Run project_env with current port or default
+    project_env -p ${WEBPORT:-8000}
+    
+    echo "Environment refreshed!"
+    show_env_vars
+}
+
+# Convenient aliases for project environment management
+alias fix_env='refresh_project_env'
+alias fix_project='refresh_project_env'  
+alias project_fix='refresh_project_env'

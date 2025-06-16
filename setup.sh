@@ -46,6 +46,8 @@ ALIASES_DIR=$SCRIPT_DIR
 status "Detected aliases repository at: $ALIASES_DIR"
 
 # Create the template for .bash_aliases with a variable for the directory path
+# This template includes a fix to prevent PROJECT_NAME being set to username
+# when the shell starts outside of a workspace directory
 BASH_ALIASES_TEMPLATE=$(cat << EOF
 #!/bin/bash
 ##############################################################################
@@ -71,9 +73,29 @@ else
   echo -e "\033[0;31m[ERROR]\033[0m Aliases directory not found: \$ALIASES_DIR"
 fi
 
+# Initialize project environment only when appropriate
 if [[ "\${PROJECT_ENV_LOADED}" != "true" ]]; then
   export PROJECT_ENV_LOADED=true
-  project_env -p $USER_PORT
+  
+  # Only auto-run project_env if we're in a workspace directory
+  if [[ "\$(pwd)" == "\$HOME/workspaces"/* ]]; then
+    project_env -p $USER_PORT
+  else
+    # Set default values when not in a workspace to avoid PROJECT_NAME=username issue
+    export PROFILE=dev
+    export GQLHOST=\$(hostname)
+    export WEBPORT=$USER_PORT
+    export GQLPORT=\$((\$WEBPORT + 1))
+    export SBPORT=\$((\$WEBPORT + 2))
+    export NDEBUGPORT=\$((\$WEBPORT + 3))
+    export GQLNUMBEROFMAXRETRIES=3
+    export GQLSERVERPATH="/graphql"
+    export GQLHTTPS=false
+    export GQLINTROSPECTION=true
+    export GQLTRANSFERMODE=plain
+    # Don't set PROJECT_NAME when not in workspace to avoid username confusion
+    echo -e "\033[0;33m[INFO]\033[0m Project environment initialized with defaults. Use 'fix_env' in a workspace project to set PROJECT_NAME."
+  fi
 fi
 EOF
 )
@@ -133,3 +155,10 @@ echo ""
 echo -e "${YELLOW}Note:${NC} Changes to alias files will take effect in new terminal sessions"
 echo -e "      or after running 'source ~/.bash_aliases'"
 echo -e "      Aliases are sourced from: ${GREEN}$ALIASES_DIR${NC}"
+echo ""
+echo -e "${BLUE}Project Environment Features:${NC}"
+echo -e "  • Auto-detects project names when in workspace directories"
+echo -e "  • Prevents PROJECT_NAME=username issue when outside workspace"
+echo -e "  • Use ${GREEN}fix_env${NC} or ${GREEN}refresh_project_env${NC} to update environment in any project"
+echo -e "  • Enhanced ${GREEN}cd${NC} command auto-updates environment when moving between projects"
+echo -e "  • Default starting port: ${GREEN}$USER_PORT${NC} (calculated from your username)"
