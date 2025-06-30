@@ -6,8 +6,10 @@
 ##############################################################################
 
 # Directory listing
-alias la='ls -A'
-alias ll='ls -l'
+alias la='ls -alh'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ~='cd ~'
 
 # Kill process on port
 kp() {

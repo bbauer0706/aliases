@@ -233,3 +233,28 @@ refresh_project_env() {
 alias fix_env='refresh_project_env'
 alias fix_project='refresh_project_env'  
 alias project_fix='refresh_project_env'
+
+# Auto-setup for new terminals (especially VS Code debug terminals)
+auto_setup_new_terminal() {
+    # Check if we're in a workspace directory and missing project environment
+    if [[ "$(pwd)" == "$HOME/workspaces"/* ]]; then
+        # Check if PROJECT_NAME is not set or different from current directory
+        local current_project=$(get_project_name)
+        
+        if [[ -z "$PROJECT_NAME" || "$PROJECT_NAME" != "$current_project" ]]; then           
+            # Reset the environment loaded flag to force reload
+            unset PROJECT_ENV_LOADED
+            
+            # Set up project environment
+            if type project_env >/dev/null 2>&1; then
+                project_env -p ${WEBPORT:-8000}
+                echo -e "\033[0;32m[SUCCESS]\033[0m Project environment loaded for: $PROJECT_NAME, PORT: $WEBPORT"
+            else
+                echo -e "\033[0;31m[ERROR]\033[0m project_env function not available"
+            fi
+        fi
+    fi
+}
+
+# Run auto-setup for new terminals
+auto_setup_new_terminal

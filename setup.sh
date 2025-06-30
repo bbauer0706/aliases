@@ -73,30 +73,55 @@ else
   echo -e "\033[0;31m[ERROR]\033[0m Aliases directory not found: \$ALIASES_DIR"
 fi
 
-# Initialize project environment only when appropriate
-if [[ "\${PROJECT_ENV_LOADED}" != "true" ]]; then
-  export PROJECT_ENV_LOADED=true
-  
-  # Only auto-run project_env if we're in a workspace directory
-  if [[ "\$(pwd)" == "\$HOME/workspaces"/* ]]; then
-    project_env -p $USER_PORT
-  else
-    # Set default values when not in a workspace to avoid PROJECT_NAME=username issue
-    export PROFILE=dev
-    export GQLHOST=\$(hostname)
-    export WEBPORT=$USER_PORT
-    export GQLPORT=\$((\$WEBPORT + 1))
-    export SBPORT=\$((\$WEBPORT + 2))
-    export NDEBUGPORT=\$((\$WEBPORT + 3))
-    export GQLNUMBEROFMAXRETRIES=3
-    export GQLSERVERPATH="/graphql"
-    export GQLHTTPS=false
-    export GQLINTROSPECTION=true
-    export GQLTRANSFERMODE=plain
-    # Don't set PROJECT_NAME when not in workspace to avoid username confusion
-    echo -e "\033[0;33m[INFO]\033[0m Project environment initialized with defaults. Use 'fix_env' in a workspace project to set PROJECT_NAME."
+# Initialize project environment after all aliases are loaded
+initialize_project_env() {
+  if [[ "\${PROJECT_ENV_LOADED}" != "true" ]]; then
+    export PROJECT_ENV_LOADED=true
+    # Only auto-run project_env if we're in a workspace directory
+    if [[ "\$(pwd)" == "\$HOME/workspaces"/* ]]; then
+      # Check if project_env function is available
+      if type project_env >/dev/null 2>&1; then
+        project_env -p $USER_PORT
+      else
+        echo -e "\033[0;33m[WARNING]\033[0m project_env function not yet available, using defaults"
+        # Set default values as fallback
+        export PROFILE=dev
+        export GQLHOST=\$(hostname)
+        export WEBPORT=$USER_PORT
+        export GQLPORT=\$((\$WEBPORT + 1))
+        export SBPORT=\$((\$WEBPORT + 2))
+        export NDEBUGPORT=\$((\$WEBPORT + 3))
+        export GQLNUMBEROFMAXRETRIES=3
+        export GQLSERVERPATH="/graphql"
+        export GQLHTTPS=false
+        export GQLINTROSPECTION=true
+        export GQLTRANSFERMODE=plain
+        export PROJECT_NAME=\$(basename "\$(pwd)")
+      fi
+    else
+      # Set default values when not in a workspace
+      export PROFILE=dev
+      export GQLHOST=\$(hostname)
+      export WEBPORT=$USER_PORT
+      export GQLPORT=\$((\$WEBPORT + 1))
+      export SBPORT=\$((\$WEBPORT + 2))
+      export NDEBUGPORT=\$((\$WEBPORT + 3))
+      export GQLNUMBEROFMAXRETRIES=3
+      export GQLSERVERPATH="/graphql"
+      export GQLHTTPS=false
+      export GQLINTROSPECTION=true
+      export GQLTRANSFERMODE=plain
+      # Don't set PROJECT_NAME when not in workspace
+    fi
   fi
-fi
+}
+
+# Initialize environment with a small delay to ensure all functions are loaded
+# Use a background process to avoid blocking terminal startup
+{
+  sleep 0.1
+  initialize_project_env
+} &
 EOF
 )
 
@@ -150,15 +175,23 @@ else
   success ".bash_aliases is already sourced from .bashrc"
 fi
 
-success "Setup complete! Your bash aliases are now configured."
+success "Setup complete! Your bash aliases are now configured with enhanced VS Code debug terminal support."
 echo ""
 echo -e "${YELLOW}Note:${NC} Changes to alias files will take effect in new terminal sessions"
 echo -e "      or after running 'source ~/.bash_aliases'"
 echo -e "      Aliases are sourced from: ${GREEN}$ALIASES_DIR${NC}"
 echo ""
+echo -e "${BLUE}New Files Created:${NC}"
+echo -e "  • ${GREEN}vscode-debug.ali.sh${NC} - VS Code debug terminal support"
+echo -e "  • ${GREEN}test-env.sh${NC} - Environment validation script"
+echo ""
 echo -e "${BLUE}Project Environment Features:${NC}"
 echo -e "  • Auto-detects project names when in workspace directories"
+echo -e "  • Enhanced VS Code debug terminal support with automatic environment setup"
+echo -e "  • Robust function loading with fallback defaults"
 echo -e "  • Prevents PROJECT_NAME=username issue when outside workspace"
 echo -e "  • Use ${GREEN}fix_env${NC} or ${GREEN}refresh_project_env${NC} to update environment in any project"
 echo -e "  • Enhanced ${GREEN}cd${NC} command auto-updates environment when moving between projects"
+echo -e "  • Use ${GREEN}setup_debug${NC} or ${GREEN}debug_env${NC} to manually setup VS Code debug environment"
+echo -e "  • Use ${GREEN}test_env${NC} to validate your project environment setup"
 echo -e "  • Default starting port: ${GREEN}$USER_PORT${NC} (calculated from your username)"
