@@ -8,7 +8,7 @@ alias dev='n dev'
 alias build='n b'
 alias vit='n vit'
 alias jes='n wat'
-alias story='r start:storybook'
+alias story='n run start:storybook'
 # Define mappings of shorthand commands to actual npm commands
 declare -A npm_commands=(
   [gen]="run gen"
