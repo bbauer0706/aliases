@@ -10,11 +10,10 @@ alias la='ls -alh'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ~='cd ~'
+alias clera='clear'
+alias clare='clear'
 
 # Kill process on port
 kp() {
   fuser -k $1/tcp
 }
-
-# Edit configuration files
-alias ali='code ~/.bash_aliases'
