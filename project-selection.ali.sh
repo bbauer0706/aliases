@@ -65,6 +65,62 @@ get_project_name() {
     fi
 }
 
+# Function to check if current directory is a server component
+is_server_directory() {
+    local current_dir=$(pwd)
+    local workspace_dir="$HOME/workspaces"
+    
+    # Check if current directory is under the workspace directory
+    if [[ "$current_dir" == "$workspace_dir"/* ]]; then
+        # Extract the part of the path after workspaces/
+        local remaining_path="${current_dir#$workspace_dir/}"
+        # Extract the project name (first directory)
+        local project_name="${remaining_path%%/*}"
+        # Extract the relative path within the project
+        local within_project="${remaining_path#*/}"
+        
+        # Check if we're not at the project root level
+        if [[ "$within_project" != "$project_name" ]]; then
+            # Load local mappings if they exist to get custom server paths
+            local script_dir="$(dirname "${BASH_SOURCE[0]}")"
+            local local_mappings_file="$script_dir/mappings.local.sh"
+            
+            # Initialize custom server paths
+            declare -A custom_server_paths=()
+            if [[ -f "$local_mappings_file" ]]; then
+                # Source the local mappings to get local_server_paths
+                declare -A local_server_paths=()
+                source "$local_mappings_file"
+                
+                # Copy local server paths to custom_server_paths
+                for key in "${!local_server_paths[@]}"; do
+                    custom_server_paths[$key]="${local_server_paths[$key]}"
+                done
+            fi
+            
+            # Default server paths to check
+            local default_server_paths=("java/serverJava" "serverJava")
+            
+            # First check if there's a custom server path for this project
+            if [[ -n "${custom_server_paths[$project_name]}" ]]; then
+                local custom_path="${custom_server_paths[$project_name]}"
+                if [[ "$current_dir" == "$workspace_dir/$project_name/$custom_path"* ]]; then
+                    return 0  # true - is server directory
+                fi
+            fi
+            
+            # Then check default server paths
+            for server_path in "${default_server_paths[@]}"; do
+                if [[ "$current_dir" == "$workspace_dir/$project_name/$server_path"* ]]; then
+                    return 0  # true - is server directory
+                fi
+            done
+        fi
+    fi
+    
+    return 1  # false - not a server directory
+}
+
 # Function to get port offset for a project
 get_project_offset() {
     local project_name="$1"
@@ -152,24 +208,50 @@ project_env() {
     
     export PROFILE=$profile
     
+    # Determine which port to check based on directory type
+    local is_server_dir=false
+    if is_server_directory; then
+        is_server_dir=true
+    fi
+    
     # Find available port starting from specified port with project offset
-    local port=$((starting_port + project_specific_offset))
-    while ! is_port_available $port; do
-        ((port++))
+    local base_port=$((starting_port + project_specific_offset))
+    local port_to_check=$base_port
+    
+    # If we're in a server directory and not using no_port_offset, 
+    # we should check the GQL port instead of the web port
+    if [ "$is_server_dir" = true ] && [ "$no_port_offset" = false ]; then
+        port_to_check=$((base_port + 1))
+    fi
+    
+    # Find the first available port starting from the appropriate port
+    while ! is_port_available $port_to_check; do
+        ((port_to_check++))
     done
-
+    
+    # Set the ports based on which type of directory we're in
+    if [ "$is_server_dir" = true ] && [ "$no_port_offset" = false ]; then
+        # In server directory: GQLPORT gets the available port, WEBPORT is one less
+        export GQLPORT=$port_to_check
+        export WEBPORT=$((port_to_check - 1))
+    else
+        # In web/root directory: WEBPORT gets the available port
+        export WEBPORT=$port_to_check
+        if [ "$no_port_offset" = true ]; then
+            export GQLPORT=$port_to_check 
+        else
+            export GQLPORT=$((port_to_check + 1)) 
+        fi
+    fi
+    
     # Check hostname for setting GQLHOST
     CURRENT_HOSTNAME=$(hostname)
     export GQLHOST=$CURRENT_HOSTNAME
     
-    export WEBPORT=$port
-    if [ "$no_port_offset" = true ]; then
-        export GQLPORT=$port 
-    else
-        export GQLPORT=$(($port+1)) 
-    fi
-    export SBPORT=$(($port+2))
-    export NDEBUGPORT=$(($port+3))
+    # Set remaining ports based on the base calculation
+    local base_for_other_ports=$base_port
+    export SBPORT=$(($base_for_other_ports+2))
+    export NDEBUGPORT=$(($base_for_other_ports+3))
     export GQLNUMBEROFMAXRETRIES=3
     export GQLSERVERPATH="/graphql"
     export GQLHTTPS=$use_https
@@ -247,8 +329,8 @@ auto_setup_new_terminal() {
             
             # Set up project environment
             if type project_env >/dev/null 2>&1; then
-                project_env -p ${WEBPORT:-8000}
-                echo -e "\033[0;32m[SUCCESS]\033[0m Project environment loaded for: $PROJECT_NAME, PORT: $WEBPORT"
+                project_env -p ${WEBPORT:-8000} -t plain
+                echo -e "\033[0;32m[SUCCESS]\033[0m Project environment loaded for: $PROJECT_NAME, PORT: $WEBPORT, MODE: $GQLTRANSFERMODE"
             else
                 echo -e "\033[0;31m[ERROR]\033[0m project_env function not available"
             fi
