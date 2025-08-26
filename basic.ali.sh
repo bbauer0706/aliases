@@ -17,3 +17,6 @@ alias clare='clear'
 kp() {
   fuser -k $1/tcp
 }
+
+# typescript
+alias tsc='npx tsc --noEmit'

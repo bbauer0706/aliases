@@ -4,6 +4,7 @@
 ##############################################################################
 
 alias dev='npm run dev'
+alias gen='npm run gen'
 alias build='npm run build'
 alias blocal='npm run build:local'
 alias bstatic='npm run build:static'
@@ -11,3 +12,4 @@ alias vit='npm run vitest'
 alias jes='npm run test:watch'
 alias story='npm run start:storybook'
 alias npmi='npm i'
+alias lint='npm run lint'

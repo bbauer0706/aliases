@@ -21,22 +21,10 @@ _define_mappings_c() {
     fi
   done
   
-  # Define full name to shortcut mapping
-  declare -gA full_to_short=(
-    [urm20]="urm"
-    [otv20]="otv"
-    [ragnarokui]="rak"
-    [dispatch20]="dip"
-  )
-  
-  # Custom component paths for specific projects (using full names)
-  declare -gA server_paths=(
-    [urm20]="serverJava"
-  )
-  
-  declare -gA web_paths=(
-    [urm20]="urm2"
-  )
+  # Initialize empty mapping arrays (all mappings now loaded from local file)
+  declare -gA full_to_short=()
+  declare -gA server_paths=()
+  declare -gA web_paths=()
   
   # Color codes for display
   declare -g COLOR_RESET="\033[0m"
