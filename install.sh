@@ -105,23 +105,19 @@ BASH_ALIASES_TEMPLATE=$(cat << EOF
 # Define the aliases directory location
 ALIASES_DIR="$ALIASES_DIR"
 
-# Add aliases-cli to PATH if not already there
-if [[ ":$PATH:" != *":\$ALIASES_DIR:"* ]]; then
-    export PATH="\$ALIASES_DIR:\$PATH"
-fi
-
 ##############################################################################
 #                        C++ ALIASES-CLI INTEGRATION                        #
 ##############################################################################
 
 # Fast C++ workspace management aliases
-alias c='aliases-cli code'
-alias uw='aliases-cli update'
+alias aliases-cli='\$ALIASES_DIR/aliases-cli'
+alias c='\$ALIASES_DIR/aliases-cli code'
+alias uw='\$ALIASES_DIR/aliases-cli update'
 
 # Project environment setup (enhanced)
 project_env() {
     # Run the C++ version and capture output
-    local output=\$(aliases-cli env "\$@" 2>/dev/null)
+    local output=\$(\$ALIASES_DIR/aliases-cli env "\$@" 2>/dev/null)
     
     if [[ \$? -eq 0 && -n "\$output" ]]; then
         # Extract and eval the export statements
@@ -255,7 +251,7 @@ else
 fi
 
 # Check if .bash_aliases is sourced from .bashrc
-if ! grep -q "source ~/.bash_aliases" "$HOME/.bashrc"; then
+if ! grep -q "source ~/.bash_aliases" "$HOME/.bashrc" && ! grep -q ". ~/.bash_aliases" "$HOME/.bashrc"; then
   status "Adding source command to .bashrc"
   echo "" >> "$HOME/.bashrc"
   echo "# Source bash aliases" >> "$HOME/.bashrc"
@@ -265,6 +261,27 @@ if ! grep -q "source ~/.bash_aliases" "$HOME/.bashrc"; then
   success "Added source command to .bashrc"
 else
   success ".bash_aliases is already sourced from .bashrc"
+fi
+
+# Check for and remove duplicate C++ integration from .bashrc
+if grep -q "# C++ ALIASES-CLI INTEGRATION" "$HOME/.bashrc"; then
+  status "Found duplicate C++ integration in .bashrc, removing..."
+  
+  # Create a temporary file without the C++ integration section
+  awk '
+    /^##############################################################################$/ && getline line && line ~ /^#.*C\+\+ ALIASES-CLI INTEGRATION.*#$/ {
+      # Found start of C++ section, skip until we find the closing line
+      while (getline > 0) {
+        if ($0 ~ /^##############################################################################$/) {
+          break
+        }
+      }
+      next
+    }
+    { print }
+  ' "$HOME/.bashrc" > "$HOME/.bashrc.tmp" && mv "$HOME/.bashrc.tmp" "$HOME/.bashrc"
+  
+  success "Removed duplicate C++ integration from .bashrc"
 fi
 
 success "Setup complete! Your bash aliases are now configured with C++ aliases-cli integration."
