@@ -1,0 +1,182 @@
+#include "aliases/commands/project_env.h"
+#include "aliases/process_utils.h"
+#include "aliases/file_utils.h"
+#include "aliases/common.h"
+#include <iostream>
+
+namespace aliases::commands {
+
+ProjectEnv::ProjectEnv(std::shared_ptr<ProjectMapper> mapper)
+    : project_mapper_(std::move(mapper)) {}
+
+int ProjectEnv::execute(const StringVector& args) {
+    if (!args.empty() && (args[0] == "-h" || args[0] == "--help")) {
+        show_help();
+        return 0;
+    }
+    
+    auto config = parse_arguments(args);
+    auto env = setup_project_environment(config);
+    export_environment_variables(env);
+    print_success_message(env);
+    
+    return 0;
+}
+
+EnvironmentConfig ProjectEnv::parse_arguments(const StringVector& args) {
+    EnvironmentConfig config;
+    
+    for (size_t i = 0; i < args.size(); ++i) {
+        if ((args[i] == "-e") && i + 1 < args.size()) {
+            config.profile = args[++i];
+        } else if ((args[i] == "-s") && i + 1 < args.size()) {
+            config.use_https = (args[++i] == "true");
+        } else if ((args[i] == "-p") && i + 1 < args.size()) {
+            config.starting_port = std::stoi(args[++i]);
+        } else if ((args[i] == "-i") && i + 1 < args.size()) {
+            config.introspection = (args[++i] == "true");
+        } else if ((args[i] == "-t") && i + 1 < args.size()) {
+            config.transfer_mode = args[++i];
+        } else if (args[i] == "-n") {
+            config.no_port_offset = true;
+        }
+    }
+    
+    return config;
+}
+
+void ProjectEnv::show_help() const {
+    std::cout << "Usage: project_env [OPTIONS]" << std::endl;
+    std::cout << "Sets up environment variables for project development." << std::endl;
+    std::cout << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << "  -e ENV      Set environment profile (dev, prod, etc). Default: dev" << std::endl;
+    std::cout << "  -s FLAG     Enable/disable HTTPS (true/false). Default: false" << std::endl;
+    std::cout << "  -p PORT     Starting port number to check availability. Default: 3000" << std::endl;
+    std::cout << "  -i FLAG     Enable/disable GraphQL introspection (true/false). Default: true" << std::endl;
+    std::cout << "  -t MODE     Set transfer mode (plain, compressed, etc). Default: plain" << std::endl;
+    std::cout << "  -n          No port offset - use same port for WEB and GQL services" << std::endl;
+    std::cout << "  -h, --help  Display this help message and exit" << std::endl;
+}
+
+void ProjectEnv::show_environment_variables() const {
+    std::cout << "Current Project Environment Variables:" << std::endl;
+    std::cout << "------------------------------------" << std::endl;
+    
+    const char* env_vars[] = {
+        "PROJECT_NAME", "PROFILE", "GQLHOST", "WEBPORT", "GQLPORT", 
+        "SBPORT", "NDEBUGPORT", "GQLNUMBEROFMAXRETRIES", "GQLSERVERPATH",
+        "GQLHTTPS", "GQLINTROSPECTION", "GQLTRANSFERMODE"
+    };
+    
+    for (const char* var : env_vars) {
+        const char* value = std::getenv(var);
+        std::cout << var << ": " << (value ? value : "Not set") << std::endl;
+    }
+    
+    std::cout << "------------------------------------" << std::endl;
+}
+
+ProjectEnvironment ProjectEnv::setup_project_environment(const EnvironmentConfig& config) {
+    ProjectEnvironment env;
+    
+    // Get project name from current directory
+    env.project_name = get_project_name_from_directory();
+    env.profile = config.profile;
+    env.gql_https = config.use_https;
+    env.gql_introspection = config.introspection;
+    env.gql_transfer_mode = config.transfer_mode;
+    
+    // Get hostname
+    env.gql_host = get_current_hostname();
+    
+    // Calculate ports
+    int project_offset = get_project_port_offset(env.project_name);
+    int base_port = config.starting_port + project_offset;
+    
+    bool is_server_dir = is_server_directory();
+    env.web_port = find_available_port(base_port, is_server_dir, config.no_port_offset);
+    
+    if (config.no_port_offset) {
+        env.gql_port = env.web_port;
+    } else {
+        env.gql_port = is_server_dir ? env.web_port : env.web_port + 1;
+        if (is_server_dir) {
+            env.web_port = env.gql_port - 1;
+        }
+    }
+    
+    env.sb_port = base_port + 2;
+    env.ndebug_port = base_port + 3;
+    
+    return env;
+}
+
+void ProjectEnv::export_environment_variables(const ProjectEnvironment& env) {
+    // In a real implementation, this would set environment variables
+    // For now, just print what would be set
+    std::cout << "Setting environment variables:" << std::endl;
+    std::cout << "export PROJECT_NAME=" << env.project_name << std::endl;
+    std::cout << "export PROFILE=" << env.profile << std::endl;
+    std::cout << "export GQLHOST=" << env.gql_host << std::endl;
+    std::cout << "export WEBPORT=" << env.web_port << std::endl;
+    std::cout << "export GQLPORT=" << env.gql_port << std::endl;
+    std::cout << "export SBPORT=" << env.sb_port << std::endl;
+    std::cout << "export NDEBUGPORT=" << env.ndebug_port << std::endl;
+}
+
+std::string ProjectEnv::get_project_name_from_directory() const {
+    auto current_dir = get_current_directory();
+    auto workspace_dir = get_workspace_directory();
+    
+    if (starts_with(current_dir, workspace_dir + "/")) {
+        auto relative_path = current_dir.substr(workspace_dir.length() + 1);
+        auto first_slash = relative_path.find('/');
+        return (first_slash != std::string::npos) ? relative_path.substr(0, first_slash) : relative_path;
+    }
+    
+    return FileUtils::get_basename(current_dir);
+}
+
+bool ProjectEnv::is_server_directory() const {
+    // Stub implementation
+    return false;
+}
+
+int ProjectEnv::get_project_port_offset(const std::string& project_name) const {
+    // Simple hash-based offset calculation
+    std::hash<std::string> hasher;
+    auto hash_val = hasher(project_name);
+    return 100 + (hash_val % 90) * 10;
+}
+
+int ProjectEnv::find_available_port(int starting_port, bool is_server_dir, bool no_offset) const {
+    int port_to_check = starting_port;
+    if (is_server_dir && !no_offset) {
+        port_to_check += 1;
+    }
+    
+    while (!is_port_available(port_to_check)) {
+        port_to_check++;
+    }
+    
+    return port_to_check;
+}
+
+bool ProjectEnv::is_port_available(int port) const {
+    return ProcessUtils::is_port_available(port);
+}
+
+std::string ProjectEnv::get_current_hostname() const {
+    auto result = ProcessUtils::execute("hostname");
+    return result.success() ? trim(result.stdout_output) : "localhost";
+}
+
+void ProjectEnv::print_success_message(const ProjectEnvironment& env) const {
+    std::cout << Colors::SUCCESS << "[SUCCESS]" << Colors::RESET 
+              << " Project environment loaded for: " << env.project_name 
+              << ", PORT: " << env.web_port 
+              << ", MODE: " << env.gql_transfer_mode << std::endl;
+}
+
+} // namespace aliases::commands

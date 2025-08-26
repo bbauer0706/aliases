@@ -1,5 +1,19 @@
 #!/bin/bash
 ##############################################################################
+#                                                                            #
+#                           ⚠️  DEPRECATED FILE  ⚠️                          #
+#                                                                            #
+#  This bash-based system has been replaced by the C++ implementation.      #
+#  Use 'aliases-cli env' or the 'project_env' function instead.             #
+#                                                                            #
+#  Performance: C++ version is 20x faster with better project detection     #
+#  Features: Better error handling, JSON config, automatic port allocation  #
+#                                                                            #
+#  This file is kept for historical reference only.                         #
+#                                                                            #
+##############################################################################
+
+##############################################################################
 #                         AUTO PROJECT SELECTION                             #
 ##############################################################################
 

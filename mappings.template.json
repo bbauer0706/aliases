@@ -1,0 +1,24 @@
+{
+  "_comment": "Copy this file to mappings.json and configure your projects",
+  "_note": "mappings.json is in .gitignore - your local config won't be committed",
+  
+  "project_mappings": {
+    "example-project-name": {
+      "shortcuts": ["ep", "example"],
+      "server_paths": ["backend", "server", "api"],
+      "web_paths": ["frontend", "webapp", "web", "client"]
+    },
+    "another-project": {
+      "shortcuts": ["ap"],
+      "server_paths": ["java/serverJava"],
+      "web_paths": ["webapp"]
+    }
+  },
+  
+  "_help": {
+    "shortcuts": "Short aliases for project names (c ep -> c example-project-name)",
+    "server_paths": "Relative paths to check for server components (for 'c project server')",
+    "web_paths": "Relative paths to check for web components (for 'c project web')",
+    "auto_discovery": "Projects in ~/workspaces/ are auto-discovered even without config"
+  }
+}

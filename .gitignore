@@ -3,6 +3,7 @@
 local.ali.sh
 mappings.local.sh
 *local.sh
+mappings.json
 
 # Editor files
 *~
@@ -12,3 +13,95 @@ mappings.local.sh
 
 # Temporary files
 *.tmp
+
+##############################################################################
+# C++ Build Artifacts
+##############################################################################
+
+# Build directories
+build/
+build-*/
+cmake-build-*/
+
+# Compiled binaries (allow build/aliases-cli for distribution)
+# aliases-cli  # Commented out to allow committing the built binary
+*.exe
+*.out
+*.app
+
+# Object files
+*.o
+*.obj
+*.lo
+*.slo
+*.ko
+
+# Libraries
+*.a
+*.la
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+_deps/
+
+# Make
+Makefile.in
+.deps/
+.dirstamp
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Profiling
+*.prof
+gmon.out
+
+# Static analysis
+cppcheck-report.xml
+*.cppcheck
+
+# Clang
+.clang_complete
+.clangd/
+
+# GCC
+*.gch
+*.pch
+
+# Intel C++ Compiler
+*.iobj
+*.ipdb
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+lcov.info
+coverage/
+
+# Valgrind
+*.memcheck
+*.callgrind
+*.cachegrind
+
+# Conan
+conandata.txt
+conanfile.py.user
+conan.lock
+
+# vcpkg
+vcpkg_installed/

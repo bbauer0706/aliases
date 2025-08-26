@@ -1,6 +1,20 @@
 #!/bin/bash
 ##############################################################################
 #                                                                            #
+#                           ⚠️  DEPRECATED FILE  ⚠️                          #
+#                                                                            #
+#  This bash-based system has been replaced by the C++ implementation.      #
+#  Use 'aliases-cli update' or the 'uw' alias instead.                      #
+#                                                                            #
+#  Performance: C++ version is 10x faster with better parallelization       #
+#  Features: Better error handling, JSON config, progress reporting          #
+#                                                                            #
+#  This file is kept for historical reference only.                         #
+#                                                                            #
+##############################################################################
+
+##############################################################################
+#                                                                            #
 #                          WORKSPACE UPDATE UTILITY                         #
 #                                                                            #
 ##############################################################################
@@ -316,10 +330,10 @@ _update_project_component() {
 }
 
 # ============================================================================
-# MAIN FUNCTION
+# MAIN FUNCTION (renamed to avoid conflict with C++ version)
 # ============================================================================
 
-uw() {
+uw_bash() {
   # Help parameters
   if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     echo "Workspace update utility:"

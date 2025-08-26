@@ -1,0 +1,116 @@
+#include "aliases/file_utils.h"
+#include <sys/stat.h>
+#include <dirent.h>
+#include <fstream>
+#include <sstream>
+
+namespace aliases {
+
+bool FileUtils::directory_exists(const std::string& path) {
+    struct stat info;
+    return stat(path.c_str(), &info) == 0 && S_ISDIR(info.st_mode);
+}
+
+std::vector<std::string> FileUtils::list_directories(const std::string& path) {
+    std::vector<std::string> directories;
+    
+    DIR* dir = opendir(path.c_str());
+    if (!dir) return directories;
+    
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (entry->d_type == DT_DIR && 
+            std::string(entry->d_name) != "." && 
+            std::string(entry->d_name) != "..") {
+            directories.push_back(entry->d_name);
+        }
+    }
+    
+    closedir(dir);
+    return directories;
+}
+
+std::string FileUtils::get_basename(const std::string& path) {
+    auto pos = path.find_last_of('/');
+    return (pos != std::string::npos) ? path.substr(pos + 1) : path;
+}
+
+std::string FileUtils::join_path(const std::string& base, const std::string& relative) {
+    if (base.empty()) return relative;
+    if (relative.empty()) return base;
+    
+    bool base_ends_slash = base.back() == '/';
+    bool rel_starts_slash = relative.front() == '/';
+    
+    if (base_ends_slash && rel_starts_slash) {
+        return base + relative.substr(1);
+    } else if (!base_ends_slash && !rel_starts_slash) {
+        return base + "/" + relative;
+    } else {
+        return base + relative;
+    }
+}
+
+bool FileUtils::file_exists(const std::string& path) {
+    struct stat info;
+    return stat(path.c_str(), &info) == 0 && S_ISREG(info.st_mode);
+}
+
+std::optional<std::string> FileUtils::read_file(const std::string& path) {
+    std::ifstream file(path);
+    if (!file.is_open()) return std::nullopt;
+    
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
+
+std::string FileUtils::normalize_path(const std::string& path) {
+    // Simple normalization - in a real implementation, this would handle
+    // .. and . components properly
+    return path;
+}
+
+std::string FileUtils::get_parent_directory(const std::string& path) {
+    auto pos = path.find_last_of('/');
+    return (pos != std::string::npos) ? path.substr(0, pos) : ".";
+}
+
+std::string FileUtils::resolve_path(const std::string& path) {
+    // Simple resolution - in a real implementation, this would resolve
+    // relative paths to absolute paths
+    return path;
+}
+
+std::vector<std::string> FileUtils::discover_workspace_projects(const std::string& workspace_dir) {
+    std::vector<std::string> projects;
+    
+    if (!directory_exists(workspace_dir)) {
+        return projects;
+    }
+    
+    auto subdirs = list_directories(workspace_dir);
+    for (const auto& subdir : subdirs) {
+        auto full_path = join_path(workspace_dir, subdir);
+        if (directory_exists(full_path)) {
+            projects.push_back(full_path);
+        }
+    }
+    
+    return projects;
+}
+
+std::optional<std::string> FileUtils::find_component_directory(
+    const std::string& project_path,
+    const std::vector<std::string>& candidate_paths
+) {
+    for (const auto& candidate : candidate_paths) {
+        auto full_path = join_path(project_path, candidate);
+        if (directory_exists(full_path)) {
+            return candidate;
+        }
+    }
+    return std::nullopt;
+}
+
+} // namespace aliases
