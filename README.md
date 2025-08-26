@@ -121,6 +121,25 @@ show_env_vars
 2. **With shortcuts**: Add entry to your local `mappings.json`
 3. **Multi-component**: Define `server_paths` and `web_paths` arrays
 
+### Tab Completion
+
+**Smart tab completion** is available for the `c` command and is implemented in bash (not C++) since tab completion requires shell-specific integration that's not possible in standalone C++ binaries.
+
+The completion system provides:
+- **Project name completion** with shortcuts
+- **Component completion** for server/web variants (e.g., `dips`, `dipw`)
+- **Bracket notation** for multiple components (e.g., `dip[sw]`)
+- **Multiple project support** for batch operations
+
+**Implementation:** Tab completion is sourced separately from `bash_completion/aliases-completion.sh` and automatically loaded by the install script. The completion script queries the C++ binary via `aliases-cli completion projects` to get current project data.
+
+```bash
+# Examples of tab completion
+c di<TAB>        # Completes to dispatch, dip, etc.
+c dip<TAB>       # Shows: dip, dips, dipw, dip[sw]
+c dip[s<TAB>     # Completes to dip[sw]
+```
+
 ## Shell Integration
 
 The setup script configures these aliases automatically:

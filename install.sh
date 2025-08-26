@@ -190,6 +190,11 @@ fi
 
 # Mark that C++ aliases are active (no legacy navigation/update sourcing)
 export USE_CPP_ALIASES=true
+
+# Load bash completion for aliases-cli
+if [ -f "\$ALIASES_DIR/bash_completion/aliases-completion.sh" ]; then
+  source "\$ALIASES_DIR/bash_completion/aliases-completion.sh"
+fi
 EOF
 )
 

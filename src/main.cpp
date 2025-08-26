@@ -27,6 +27,7 @@ void show_help() {
     std::cout << "  code, c          VS Code project navigation" << std::endl;
     std::cout << "  update, uw       Update workspace projects" << std::endl;
     std::cout << "  env              Setup project environment variables" << std::endl;
+    std::cout << "  completion       Generate completion data (for bash completion)" << std::endl;
     std::cout << "  version          Show version information" << std::endl;
     std::cout << "  help             Show this help message" << std::endl;
     std::cout << std::endl;
@@ -36,6 +37,55 @@ void show_help() {
     std::cout << "  " << PROGRAM_NAME << " code urm          # Open project 'urm' in VS Code" << std::endl;
     std::cout << "  " << PROGRAM_NAME << " update            # Update all projects" << std::endl;
     std::cout << "  " << PROGRAM_NAME << " env -p 3000       # Setup environment with port 3000" << std::endl;
+}
+
+int handle_completion(std::shared_ptr<aliases::ProjectMapper> project_mapper, const std::vector<std::string>& args) {
+    if (args.empty()) {
+        std::cerr << "Error: completion command requires a subcommand" << std::endl;
+        std::cerr << "Usage: " << PROGRAM_NAME << " completion <subcommand>" << std::endl;
+        std::cerr << "Subcommands: projects, components" << std::endl;
+        return 1;
+    }
+    
+    const std::string& subcommand = args[0];
+    
+    if (subcommand == "projects") {
+        // Output all projects in a simple format: one per line, shortcut|fullname|has_server|has_web
+        auto projects = project_mapper->get_all_projects();
+        for (const auto& project : projects) {
+            std::cout << project.display_name 
+                      << "|" << project.full_name
+                      << "|" << (project.has_server_component ? "s" : "-")
+                      << "|" << (project.has_web_component ? "w" : "-")
+                      << std::endl;
+        }
+        return 0;
+    }
+    else if (subcommand == "components" && args.size() >= 2) {
+        // Output components for a specific project: project|component_type|path
+        const std::string& project_name = args[1];
+        auto project_info = project_mapper->get_project_info(project_name);
+        
+        if (!project_info) {
+            return 1; // Project not found, silent fail for completion
+        }
+        
+        // Output server component if available
+        if (project_info->has_server_component) {
+            std::cout << project_info->display_name << "|s|" << project_info->server_path.value_or("") << std::endl;
+        }
+        
+        // Output web component if available
+        if (project_info->has_web_component) {
+            std::cout << project_info->display_name << "|w|" << project_info->web_path.value_or("") << std::endl;
+        }
+        
+        return 0;
+    }
+    else {
+        std::cerr << "Error: Unknown completion subcommand '" << subcommand << "'" << std::endl;
+        return 1;
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -86,6 +136,9 @@ int main(int argc, char* argv[]) {
         else if (command == "env") {
             aliases::commands::ProjectEnv env_setup(project_mapper);
             return env_setup.execute(subcommand_args);
+        }
+        else if (command == "completion") {
+            return handle_completion(project_mapper, subcommand_args);
         }
         else if (command == "version") {
             show_version();
