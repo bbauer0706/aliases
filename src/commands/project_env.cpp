@@ -15,6 +15,11 @@ int ProjectEnv::execute(const StringVector& args) {
         return 0;
     }
     
+    if (!args.empty() && args[0] == "--show") {
+        show_environment_variables();
+        return 0;
+    }
+    
     auto config = parse_arguments(args);
     auto env = setup_project_environment(config);
     export_environment_variables(env);
@@ -56,6 +61,7 @@ void ProjectEnv::show_help() const {
     std::cout << "  -i FLAG     Enable/disable GraphQL introspection (true/false). Default: true" << std::endl;
     std::cout << "  -t MODE     Set transfer mode (plain, compressed, etc). Default: plain" << std::endl;
     std::cout << "  -n          No port offset - use same port for WEB and GQL services" << std::endl;
+    std::cout << "  --show      Display current environment variables and exit" << std::endl;
     std::cout << "  -h, --help  Display this help message and exit" << std::endl;
 }
 
@@ -113,16 +119,19 @@ ProjectEnvironment ProjectEnv::setup_project_environment(const EnvironmentConfig
 }
 
 void ProjectEnv::export_environment_variables(const ProjectEnvironment& env) {
-    // In a real implementation, this would set environment variables
-    // For now, just print what would be set
-    std::cout << "Setting environment variables:" << std::endl;
-    std::cout << "export PROJECT_NAME=" << env.project_name << std::endl;
-    std::cout << "export PROFILE=" << env.profile << std::endl;
-    std::cout << "export GQLHOST=" << env.gql_host << std::endl;
-    std::cout << "export WEBPORT=" << env.web_port << std::endl;
-    std::cout << "export GQLPORT=" << env.gql_port << std::endl;
-    std::cout << "export SBPORT=" << env.sb_port << std::endl;
-    std::cout << "export NDEBUGPORT=" << env.ndebug_port << std::endl;
+    // Output shell commands that can be eval'ed by the calling shell
+    std::cout << "export PROJECT_NAME='" << env.project_name << "';" << std::endl;
+    std::cout << "export PROFILE='" << env.profile << "';" << std::endl;
+    std::cout << "export GQLHOST='" << env.gql_host << "';" << std::endl;
+    std::cout << "export WEBPORT=" << env.web_port << ";" << std::endl;
+    std::cout << "export GQLPORT=" << env.gql_port << ";" << std::endl;
+    std::cout << "export SBPORT=" << env.sb_port << ";" << std::endl;
+    std::cout << "export NDEBUGPORT=" << env.ndebug_port << ";" << std::endl;
+    std::cout << "export GQLNUMBEROFMAXRETRIES=" << env.gql_max_retries << ";" << std::endl;
+    std::cout << "export GQLSERVERPATH='" << env.gql_server_path << "';" << std::endl;
+    std::cout << "export GQLHTTPS=" << (env.gql_https ? "true" : "false") << ";" << std::endl;
+    std::cout << "export GQLINTROSPECTION=" << (env.gql_introspection ? "true" : "false") << ";" << std::endl;
+    std::cout << "export GQLTRANSFERMODE='" << env.gql_transfer_mode << "';" << std::endl;
 }
 
 std::string ProjectEnv::get_project_name_from_directory() const {
@@ -173,7 +182,7 @@ std::string ProjectEnv::get_current_hostname() const {
 }
 
 void ProjectEnv::print_success_message(const ProjectEnvironment& env) const {
-    std::cout << Colors::SUCCESS << "[SUCCESS]" << Colors::RESET 
+    std::cerr << Colors::SUCCESS << "[SUCCESS]" << Colors::RESET 
               << " Project environment loaded for: " << env.project_name 
               << ", PORT: " << env.web_port 
               << ", MODE: " << env.gql_transfer_mode << std::endl;

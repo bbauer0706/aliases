@@ -1,6 +1,35 @@
 # Aliases-CLI: C++ Project Management System
 
-A high-performance C++ rewrite of the bash aliases system for managing development workspaces with lightning-fast project navigation.
+A high-performance C++ rewrite of the bash aliases system for managing develo**Tab Completion:**
+
+**Smart tab completion** is available for the `c` command and is implemented in bash (not C++) since tab completion requires shell-specific integration that's not possible in standalone C++ binaries.
+
+The completion system provides:
+- **Project name completion** with shortcuts
+- **Component completion** for server/web variants (e.g., `dips`, `dipw`)
+- **Bracket notation** for multiple components (e.g., `dip[sw]`)
+- **Multiple project support** for batch operations
+
+**Implementation:** Tab completion is sourced separately from `bash_completion/aliases-completion.sh` and automatically loaded by the install script. The completion script queries the C++ binary via `aliases-cli completion projects` to get current project data.
+
+```bash
+# Examples of tab completion
+c di<TAB>        # Completes to dispatch, dip, etc.
+c dip<TAB>       # Shows: dip, dips, dipw, dip[sw]
+c dip[s<TAB>     # Completes to dip[sw]
+```
+
+### Bash Integration
+
+**Project environment functions** are implemented as bash wrappers around the C++ tool since environment variables must be set in the calling shell. The integration is in `bash_integration/project-env.sh` and automatically loaded by the install script.
+
+The bash integration provides:
+- **`project_env()`** - Sets up project environment variables
+- **`show_env()`** - Displays current environment variables  
+- **Legacy compatibility** functions for existing workflows
+- **Auto-setup** for new terminals in workspace directories
+
+**Implementation:** The bash wrapper calls the C++ tool, captures its export statements, and `eval`s them in the current shell context to properly set environment variables.ith lightning-fast project navigation.
 
 ## Overview
 
@@ -142,22 +171,28 @@ c dip[s<TAB>     # Completes to dip[sw]
 
 ## Shell Integration
 
-The setup script configures these aliases automatically:
+The setup script configures these aliases and functions automatically:
 
 ```bash
 # Primary commands (fast C++ implementation)
 alias c='aliases-cli code'
 alias uw='aliases-cli update'
 
-# Environment functions (enhanced)
-project_env() { ... }        # Setup project environment
+# Environment functions (bash integration)
+project_env() { ... }        # Setup project environment via C++ tool
+show_env() { ... }           # Display current environment variables
 refresh_project_env() { ... } # Legacy compatibility wrapper
-show_env_vars() { ... }      # Display current variables
 
 # Convenience aliases
 alias fix_env='refresh_project_env'
 alias fix_project='refresh_project_env'
 ```
+
+**Integration Components:**
+
+- **`bash_completion/`** - Tab completion for the `c` command
+- **`bash_integration/`** - Environment variable management functions
+- **`bash_aliases/`** - Additional utility scripts (maven, npm, basic)
 
 ### Additional Bash Utilities
 
@@ -196,13 +231,17 @@ These utilities work alongside the fast C++ commands to provide a complete devel
 │       ├── workspace_updater.cpp # Git updates (replaces bash)
 │       └── project_env.cpp      # Environment setup (replaces bash)
 ├── include/aliases/             # C++ headers
-├── bash_aliases/                # Bash scripts (mixed status)
+├── bash_aliases/                # Bash utility scripts
 │   ├── basic.ali.sh            # ✅ Active - Basic utilities
 │   ├── maven.ali.sh            # ✅ Active - Maven shortcuts  
 │   ├── npm.ali.sh              # ✅ Active - NPM shortcuts
 │   ├── code.ali-deprecated.sh             # ❌ Deprecated - Use C++ version
 │   ├── update-workspaces.ali-deprecated.sh # ❌ Deprecated - Use C++ version
 │   └── project-selection.ali-deprecated.sh # ❌ Deprecated - Use C++ version
+├── bash_completion/             # Shell completion integration
+│   └── aliases-completion.sh   # ✅ Tab completion for 'c' command
+├── bash_integration/            # Shell function integration  
+│   └── project-env.sh          # ✅ Environment variable wrappers
 ├── aliases-cli                  # Distributed binary (304KB)
 ├── build.sh                    # Build system
 ├── install.sh                  # Installation script

@@ -114,67 +114,6 @@ alias aliases-cli='\$ALIASES_DIR/aliases-cli'
 alias c='\$ALIASES_DIR/aliases-cli code'
 alias uw='\$ALIASES_DIR/aliases-cli update'
 
-# Project environment setup (enhanced)
-project_env() {
-    # Run the C++ version and capture output
-    local output=\$(\$ALIASES_DIR/aliases-cli env "\$@" 2>/dev/null)
-    
-    if [[ \$? -eq 0 && -n "\$output" ]]; then
-        # Extract and eval the export statements
-        echo "\$output" | grep '^export ' | while read -r line; do
-            eval "\$line"
-        done
-        
-        # Show the success message
-        echo "\$output" | grep -v '^export '
-    else
-        echo "Project environment setup failed or not in a project directory"
-        return 1
-    fi
-}
-
-# Legacy compatibility functions (call C++ version internally)
-refresh_project_env() {
-    echo "Refreshing project environment for current directory..."
-    if project_env -p \${WEBPORT:-8000}; then
-        show_env_vars
-    fi
-}
-
-show_env_vars() {
-    echo "Current Project Environment Variables:"
-    echo "------------------------------------"
-    
-    local env_vars=(
-        "PROJECT_NAME" "PROFILE" "GQLHOST" "WEBPORT" "GQLPORT" 
-        "SBPORT" "NDEBUGPORT" "GQLNUMBEROFMAXRETRIES" "GQLSERVERPATH"
-        "GQLHTTPS" "GQLINTROSPECTION" "GQLTRANSFERMODE"
-    )
-    
-    for var in "\${env_vars[@]}"; do
-        echo "\$var: \${!var:-Not set}"
-    done
-    
-    echo "------------------------------------"
-}
-
-# Convenient aliases for project environment management
-alias fix_env='refresh_project_env'
-alias fix_project='refresh_project_env'  
-alias project_fix='refresh_project_env'
-
-# Auto-setup for new terminals (only in workspace directories)
-auto_setup_new_terminal() {
-    if [[ "\$(pwd)" == "\$HOME/workspaces"/* ]]; then
-        if [[ -z "\$PROJECT_NAME" ]]; then
-            project_env -p \${WEBPORT:-8000} -t plain 2>/dev/null || true
-        fi
-    fi
-}
-
-# Run auto-setup for new terminals
-auto_setup_new_terminal
-
 ##############################################################################
 
 ##############################################################################
@@ -194,6 +133,16 @@ export USE_CPP_ALIASES=true
 # Load bash completion for aliases-cli
 if [ -f "\$ALIASES_DIR/bash_completion/aliases-completion.sh" ]; then
   source "\$ALIASES_DIR/bash_completion/aliases-completion.sh"
+fi
+
+# Load bash integration for project environment
+if [ -f "\$ALIASES_DIR/bash_integration/project-env.sh" ]; then
+  source "\$ALIASES_DIR/bash_integration/project-env.sh"
+fi
+
+# Run auto-setup for new terminals
+if type auto_setup_new_terminal >/dev/null 2>&1; then
+  auto_setup_new_terminal
 fi
 EOF
 )
