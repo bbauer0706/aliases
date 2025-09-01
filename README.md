@@ -212,6 +212,7 @@ The system also includes useful bash utilities that complement the C++ commands:
 - NPM/Node.js shortcuts
 - Package management
 - Development server helpers
+- Conditional npm→pnpm alias (when pnpm is available)
 
 These utilities work alongside the fast C++ commands to provide a complete development environment.
 
