@@ -18,13 +18,12 @@ bool ConfigLoader::load_local_mappings(
     }
     
     try {
-        std::ifstream file(json_file);
-        if (!file.is_open()) {
+        auto file_content = FileUtils::read_file(json_file);
+        if (!file_content.has_value() || file_content->empty()) {
             return false;
         }
         
-        json config;
-        file >> config;
+        json config = json::parse(*file_content);
         
         // Load project shortcuts
         if (config.contains("project_mappings") && config["project_mappings"].contains("shortcuts")) {

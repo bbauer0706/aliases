@@ -148,8 +148,20 @@ std::string ProjectEnv::get_project_name_from_directory() const {
 }
 
 bool ProjectEnv::is_server_directory() const {
-    // Stub implementation
-    return false;
+    if (!project_mapper_) return false;
+    
+    auto project_name = get_project_name_from_directory();
+    auto project_info = project_mapper_->get_project_info(project_name);
+    
+    if (!project_info || !project_info->has_server_component) {
+        return false;
+    }
+    
+    // Check if current directory is within the server component path
+    auto current_dir = get_current_directory();
+    auto server_path = project_info->server_path;
+    
+    return server_path && starts_with(current_dir, *server_path);
 }
 
 int ProjectEnv::get_project_port_offset(const std::string& project_name) const {
