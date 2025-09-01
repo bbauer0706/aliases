@@ -16,6 +16,5 @@ alias lint='npm run lint'
 
 # Package manager - alias npm to pnpm if pnpm is available
 if command -v pnpm >/dev/null 2>&1; then
-    echo "Info: 'pnpm' found, aliasing 'npm' to 'pnpm'"
     alias npm='pnpm'
 fi
