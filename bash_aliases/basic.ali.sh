@@ -21,6 +21,9 @@ kp() {
 # typescript
 alias tsc='npx tsc --noEmit'
 
+# Git aliases
+alias git-reset-last='git reset --soft HEAD~1'
+
 # Show current project environment variables
 show_env() {
     # Get the directory where this script is located
