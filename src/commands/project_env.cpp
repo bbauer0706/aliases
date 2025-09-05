@@ -101,19 +101,17 @@ ProjectEnvironment ProjectEnv::setup_project_environment(const EnvironmentConfig
     int base_port = config.starting_port + project_offset;
     
     bool is_server_dir = is_server_directory();
-    env.web_port = find_available_port(base_port, is_server_dir, config.no_port_offset);
     
     if (config.no_port_offset) {
+        env.web_port = find_available_port(base_port, false);
         env.gql_port = env.web_port;
     } else {
-        env.gql_port = is_server_dir ? env.web_port : env.web_port + 1;
-        if (is_server_dir) {
-            env.web_port = env.gql_port - 1;
-        }
+        env.web_port = find_available_port(base_port, is_server_dir);
+        env.gql_port = env.web_port + 1;
     }
     
-    env.sb_port = base_port + 2;
-    env.ndebug_port = base_port + 3;
+    env.sb_port = env.web_port + 2;
+    env.ndebug_port = env.web_port + 3;
     
     return env;
 }
@@ -171,13 +169,15 @@ int ProjectEnv::get_project_port_offset(const std::string& project_name) const {
     return 100 + (hash_val % 90) * 10;
 }
 
-int ProjectEnv::find_available_port(int starting_port, bool is_server_dir, bool no_offset) const {
+int ProjectEnv::find_available_port(int starting_port, bool is_server_dir) const {
     int port_to_check = starting_port;
-    if (is_server_dir && !no_offset) {
-        port_to_check += 1;
-    }
     
     while (!is_port_available(port_to_check)) {
+        // For server directories, if starting port is occupied but next port is available,
+        // still return the starting port (server needs specific ports to match frontend)
+        if (is_server_dir && port_to_check == starting_port && is_port_available(port_to_check + 1)) {
+            return starting_port;
+        }
         port_to_check++;
     }
     
