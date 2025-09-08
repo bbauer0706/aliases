@@ -105,3 +105,7 @@ conan.lock
 
 # vcpkg
 vcpkg_installed/
+
+# added by .workspace
+.bashrc
+.bash_aliases

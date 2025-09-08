@@ -159,7 +159,15 @@ bool ProjectEnv::is_server_directory() const {
     auto current_dir = get_current_directory();
     auto server_path = project_info->server_path;
     
-    return server_path && starts_with(current_dir, *server_path);
+    if (server_path) {
+        // Convert relative server path to absolute path
+        auto workspace_dir = get_workspace_directory();
+        std::string absolute_server_path = workspace_dir + "/" + project_name + "/" + *server_path;
+        
+        return starts_with(current_dir, absolute_server_path);
+    }
+    
+    return false;
 }
 
 int ProjectEnv::get_project_port_offset(const std::string& project_name) const {
@@ -174,7 +182,8 @@ int ProjectEnv::find_available_port(int starting_port, bool is_server_dir) const
     
     while (!is_port_available(port_to_check)) {
         // For server directories, if starting port is occupied but next port is available,
-        // still return the starting port (server needs specific ports to match frontend)
+        // we expect that on the occupied port the web runs and on the next port the gql service runs.
+        // so we can return starting_port in that case, as the outher method will assign gql_port = web_port + 1
         if (is_server_dir && port_to_check == starting_port && is_port_available(port_to_check + 1)) {
             return starting_port;
         }

@@ -55,7 +55,7 @@ private:
     int get_project_port_offset(const std::string& project_name) const;
     
     // Port management
-    int find_available_port(int starting_port, bool is_server_dir, bool no_offset) const;
+    int find_available_port(int starting_port, bool is_server_dir) const;
     bool is_port_available(int port) const;
     
     // Auto-update functionality

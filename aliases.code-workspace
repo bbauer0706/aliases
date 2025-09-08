@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"name": "aliases",
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			".bashrc": "shellscript",
+			".bash_aliases": "shellscript"
+		}
+	}
+}
