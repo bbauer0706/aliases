@@ -7,6 +7,7 @@
 #include "aliases/commands/code_navigator.h"
 #include "aliases/commands/workspace_updater.h"
 #include "aliases/commands/project_env.h"
+#include "aliases/commands/todo.h"
 
 namespace {
     constexpr const char* VERSION = "1.0.0";
@@ -27,6 +28,7 @@ void show_help() {
     std::cout << "  code, c          VS Code project navigation" << std::endl;
     std::cout << "  update, uw       Update workspace projects" << std::endl;
     std::cout << "  env              Setup project environment variables" << std::endl;
+    std::cout << "  todo             Todo list manager with CLI and TUI modes" << std::endl;
     std::cout << "  completion       Generate completion data (for bash completion)" << std::endl;
     std::cout << "  version          Show version information" << std::endl;
     std::cout << "  help             Show this help message" << std::endl;
@@ -37,13 +39,15 @@ void show_help() {
     std::cout << "  " << PROGRAM_NAME << " code urm          # Open project 'urm' in VS Code" << std::endl;
     std::cout << "  " << PROGRAM_NAME << " update            # Update all projects" << std::endl;
     std::cout << "  " << PROGRAM_NAME << " env -p 3000       # Setup environment with port 3000" << std::endl;
+    std::cout << "  " << PROGRAM_NAME << " todo              # Launch interactive todo TUI" << std::endl;
+    std::cout << "  " << PROGRAM_NAME << " todo add \"Fix bug\" # Add a new todo via CLI" << std::endl;
 }
 
 int handle_completion(std::shared_ptr<aliases::ProjectMapper> project_mapper, const std::vector<std::string>& args) {
     if (args.empty()) {
         std::cerr << "Error: completion command requires a subcommand" << std::endl;
         std::cerr << "Usage: " << PROGRAM_NAME << " completion <subcommand>" << std::endl;
-        std::cerr << "Subcommands: projects, components" << std::endl;
+        std::cerr << "Subcommands: projects, components, todo" << std::endl;
         return 1;
     }
     
@@ -80,6 +84,27 @@ int handle_completion(std::shared_ptr<aliases::ProjectMapper> project_mapper, co
             std::cout << project_info->display_name << "|w|" << project_info->web_path.value_or("") << std::endl;
         }
         
+        return 0;
+    }
+    else if (subcommand == "todo") {
+        // Output todo command completions
+        std::cout << "add" << std::endl;
+        std::cout << "list" << std::endl;
+        std::cout << "ls" << std::endl;
+        std::cout << "done" << std::endl;
+        std::cout << "complete" << std::endl;
+        std::cout << "remove" << std::endl;
+        std::cout << "rm" << std::endl;
+        std::cout << "delete" << std::endl;
+        std::cout << "priority" << std::endl;
+        std::cout << "prio" << std::endl;
+        std::cout << "category" << std::endl;
+        std::cout << "cat" << std::endl;
+        std::cout << "tui" << std::endl;
+        std::cout << "-i" << std::endl;
+        std::cout << "--interactive" << std::endl;
+        std::cout << "--help" << std::endl;
+        std::cout << "-h" << std::endl;
         return 0;
     }
     else {
@@ -136,6 +161,10 @@ int main(int argc, char* argv[]) {
         else if (command == "env") {
             aliases::commands::ProjectEnv env_setup(project_mapper);
             return env_setup.execute(subcommand_args);
+        }
+        else if (command == "todo") {
+            aliases::commands::Todo todo_cmd(project_mapper);
+            return todo_cmd.execute(subcommand_args);
         }
         else if (command == "completion") {
             return handle_completion(project_mapper, subcommand_args);

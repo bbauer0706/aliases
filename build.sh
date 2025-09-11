@@ -70,6 +70,27 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Check for ncurses availability
+NCURSES_AVAILABLE=false
+NCURSES_LOCAL_PATH="include/third_party/ncurses"
+
+if [ -d "$NCURSES_LOCAL_PATH" ]; then
+    # Use our locally built ncurses
+    NCURSES_AVAILABLE=true
+    CXXFLAGS="$CXXFLAGS -DHAVE_NCURSES -I${NCURSES_LOCAL_PATH}/include/ncursesw"
+    NCURSES_LIBS="-L${NCURSES_LOCAL_PATH}/lib -lncursesw"
+    print_status "Local ncurses found at $NCURSES_LOCAL_PATH - TUI mode will be available"
+elif pkg-config --exists ncurses 2>/dev/null || [ -f /usr/include/ncurses.h ] || [ -f /usr/local/include/ncurses.h ]; then
+    # Use system ncurses
+    NCURSES_AVAILABLE=true
+    CXXFLAGS="$CXXFLAGS -DHAVE_NCURSES"
+    NCURSES_LIBS="-lncurses"
+    print_status "System ncurses found - TUI mode will be available"
+else
+    NCURSES_LIBS=""
+    print_status "ncurses not found - TUI mode will be disabled, CLI mode still available"
+fi
+
 # Set build flags based on build type
 if [[ "$BUILD_TYPE" == "Debug" ]]; then
     CXXFLAGS="$CXXFLAGS -g -O0 -DDEBUG"
@@ -109,6 +130,7 @@ COMMAND_SOURCES=(
     "src/commands/code_navigator.cpp"
     "src/commands/workspace_updater.cpp"
     "src/commands/project_env.cpp"
+    "src/commands/todo.cpp"
 )
 
 MAIN_SOURCE="src/main.cpp"
@@ -144,7 +166,7 @@ $CXX $CXXFLAGS $INCLUDES -c "$MAIN_SOURCE" -o "$MAIN_OBJECT"
 # Link everything together
 print_status "Linking executable..."
 BINARY_PATH="$BUILD_DIR/aliases-cli"
-$CXX $CXXFLAGS -o "$BINARY_PATH" "$MAIN_OBJECT" "${COMMAND_OBJECTS[@]}" "${CORE_OBJECTS[@]}" -pthread
+$CXX $CXXFLAGS -o "$BINARY_PATH" "$MAIN_OBJECT" "${COMMAND_OBJECTS[@]}" "${CORE_OBJECTS[@]}" -pthread $NCURSES_LIBS
 
 if [[ $? -ne 0 ]]; then
     print_error "Linking failed"

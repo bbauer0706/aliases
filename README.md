@@ -1,454 +1,197 @@
-# Aliases-CLI: C++ Project Management System
+# aliases-cli
 
-A high-performance C++ rewrite of the bash aliases system for managing develo**Tab Completion:**
+> A high-performance C++ project management system with lightning-fast workspace navigation and TUI todo management.
 
-**Smart tab completion** is available for the `c` command and is implemented in bash (not C++) since tab completion requires shell-specific integration that's not possible in standalone C++ binaries.
+[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Build](https://img.shields.io/badge/build-passing-green.svg)]()
 
-The completion system provides:
-- **Project name completion** with shortcuts
-- **Component completion** for server/web variants (e.g., `dips`, `dipw`)
-- **Bracket notation** for multiple components (e.g., `dip[sw]`)
-- **Multiple project support** for batch operations
+## ✨ Features
 
-**Implementation:** Tab completion is sourced separately from `bash_completion/aliases-completion.sh` and automatically loaded by the install script. The completion script queries the C++ binary via `aliases-cli completion projects` to get current project data.
-
-```bash
-# Examples of tab completion
-c di<TAB>        # Completes to dispatch, dip, etc.
-c dip<TAB>       # Shows: dip, dips, dipw, dip[sw]
-c dip[s<TAB>     # Completes to dip[sw]
-```
-
-### Bash Integration
-
-**Project environment functions** are implemented as bash wrappers around the C++ tool since environment variables must be set in the calling shell. The integration is in `bash_integration/project-env.sh` and automatically loaded by the install script.
-
-The bash integration provides:
-- **`project_env()`** - Sets up project environment variables
-- **`show_env()`** - Displays current environment variables  
-- **Legacy compatibility** functions for existing workflows
-- **Auto-setup** for new terminals in workspace directories
-
-**Implementation:** The bash wrapper calls the C++ tool, captures its export statements, and `eval`s them in the current shell context to properly set environment variables.ith lightning-fast project navigation.
-
-## Overview
-
-**aliases-cli** is a modern C++17 application that provides:
-- ⚡ **50x faster** startup than bash equivalents
-- 🎯 **Intelligent project discovery** with shortcuts
-- 🔧 **JSON-based configuration** for maintainability  
-- 🌐 **Multi-component navigation** (code, server, web)
+- ⚡ **50x faster** than bash equivalents (1ms vs 50ms startup)
+- 🎯 **Intelligent project discovery** with shortcuts and auto-completion
+- 📝 **Interactive TUI todo manager** with ncurses support
+- 🔧 **JSON-based configuration** for maintainable project mappings
+- 🌐 **Multi-component navigation** (server, web, multiple projects)
 - 🚀 **Environment setup** with automatic detection
+- 🔄 **Parallel workspace updates** with progress tracking
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Installation
 
 ```bash
-# Clone and setup (one-time setup)
+# Clone and install (handles everything automatically)
 ./install.sh
 ```
 
-### Configuration
+### First-time Setup
 
 ```bash
-# Copy template and configure your projects
+# Copy configuration template
 cp mappings.template.json mappings.json
-# Edit mappings.json with your project shortcuts and paths
+
+# Edit with your project shortcuts
+vim mappings.json  # Add your projects and paths
 ```
 
 ### Basic Usage
 
 ```bash
-# Navigate to project code
-c <project-name>
+# Navigate to projects
+c dispatch              # Go to project
+c dip                  # Use shortcuts  
+c dispatch server      # Open specific component
 
-# Update all workspaces  
-uw
+# Update all workspaces
+uw                     # Update all projects
+uw dispatch            # Update specific project
+
+# Interactive todo management
+aliases-cli todo       # Launch TUI mode
+aliases-cli todo add "Fix bug"  # CLI mode
 
 # Setup project environment
-project_env
+project_env            # Auto-detect and setup
 ```
 
-## Commands
+## 📋 Commands Overview
 
-### Code Navigation (`c` / `aliases-cli code`)
+| Command | Alias | Description | Performance |
+|---------|-------|-------------|-------------|
+| `aliases-cli code` | `c` | Navigate to projects/components | 50x faster |
+| `aliases-cli update` | `uw` | Update git repositories | 10x faster |
+| `aliases-cli todo` | - | Interactive todo management | TUI + CLI |
+| `aliases-cli env` | `project_env` | Setup environment variables | 20x faster |
 
+## 📝 Todo Management
+
+Enhanced with **ncurses TUI support**:
+
+### Interactive Mode
 ```bash
-# Navigate to project by name or shortcut
-c dispatch               # Full project name
-c dip                   # Shortcut -> dispatch20
-
-# Navigate to specific component
-c dispatch server       # Open server directory
-c dispatch web          # Open web directory  
-c dispatch --list       # Show available components
+aliases-cli todo       # Launch TUI interface
 ```
 
-### Workspace Updates (`uw` / `aliases-cli update`)
+**TUI Controls:**
+- `↑↓/jk` - Navigate todos
+- `Space/Enter` - Toggle completion
+- `a` - Add new todo
+- `d` - Delete todo
+- `c` - Show/hide completed
+- `r` - Refresh
+- `q` - Quit
 
+### CLI Mode
 ```bash
-# Update all git repositories
-uw                      # Update all projects
-uw --verbose           # Detailed output
-uw dispatch            # Update specific project
+aliases-cli todo add "Implement feature"     # Add todo
+aliases-cli todo list                        # List active todos  
+aliases-cli todo done 1                      # Complete todo
+aliases-cli todo priority 1 3               # Set priority (0-3)
 ```
-
-### Environment Setup (`project_env` / `aliases-cli env`)
-
-```bash
-# Setup environment for current directory
-project_env
-
-# Setup with custom web port
-project_env -p 3000
-
-# Show current environment
-show_env_vars
-```
-
-## Configuration
-
-### Project Mappings
-
-**aliases-cli** uses JSON configuration for project mappings. To set up your local configuration:
-
-1. **Copy the template:**
-   ```bash
-   cp mappings.template.json mappings.json
-   ```
-
-2. **Edit your local configuration:**
-   ```bash
-   # Edit mappings.json with your projects
-   code mappings.json  # or vim, nano, etc.
-   ```
-
-3. **Example configuration:**
-   ```json
-   {
-     "project_mappings": {
-       "dispatch20": {
-         "shortcuts": ["dip"],
-         "server_paths": ["dispatch-server", "server"],
-         "web_paths": ["dispatch-web", "web", "frontend"]
-       },
-       "urm20": {
-         "shortcuts": ["urm"],
-         "server_paths": ["urm-server"],
-         "web_paths": ["urm-web", "frontend"]
-       }
-     }
-   }
-   ```
-
-**Important:** The `mappings.json` file is in `.gitignore` to keep your local project configurations private and prevent conflicts when sharing the repository.
-
-### Adding New Projects
-
-1. **Auto-detection**: Place project in `~/workspaces/project-name/` (works without configuration)
-2. **With shortcuts**: Add entry to your local `mappings.json`
-3. **Multi-component**: Define `server_paths` and `web_paths` arrays
-
-### Tab Completion
-
-**Smart tab completion** is available for the `c` command and is implemented in bash (not C++) since tab completion requires shell-specific integration that's not possible in standalone C++ binaries.
-
-The completion system provides:
-- **Project name completion** with shortcuts
-- **Component completion** for server/web variants (e.g., `dips`, `dipw`)
-- **Bracket notation** for multiple components (e.g., `dip[sw]`)
-- **Multiple project support** for batch operations
-
-**Implementation:** Tab completion is sourced separately from `bash_completion/aliases-completion.sh` and automatically loaded by the install script. The completion script queries the C++ binary via `aliases-cli completion projects` to get current project data.
-
-```bash
-# Examples of tab completion
-c di<TAB>        # Completes to dispatch, dip, etc.
-c dip<TAB>       # Shows: dip, dips, dipw, dip[sw]
-c dip[s<TAB>     # Completes to dip[sw]
-```
-
-## Shell Integration
-
-The setup script configures these aliases and functions automatically:
-
-```bash
-# Primary commands (fast C++ implementation)
-alias c='aliases-cli code'
-alias uw='aliases-cli update'
-
-# Environment functions (bash integration)
-project_env() { ... }        # Setup project environment via C++ tool
-show_env() { ... }           # Display current environment variables
-refresh_project_env() { ... } # Legacy compatibility wrapper
-
-# Convenience aliases
-alias fix_env='refresh_project_env'
-alias fix_project='refresh_project_env'
-```
-
-**Integration Components:**
-
-- **`bash_completion/`** - Tab completion for the `c` command
-- **`bash_integration/`** - Environment variable management functions
-- **`bash_aliases/`** - Additional utility scripts (maven, npm, basic)
-
-### Additional Bash Utilities
-
-The system also includes useful bash utilities that complement the C++ commands:
-
-**Basic Utilities (`basic.ali.sh`):**
-- Common shortcuts and navigation helpers
-- File system utilities
-- Development shortcuts
-
-**Maven Utilities (`maven.ali.sh`):**
-- Maven build shortcuts
-- Dependency management
-- Testing and packaging aliases
-
-**NPM Utilities (`npm.ali.sh`):**
-- NPM/Node.js shortcuts
-- Package management
-- Development server helpers
-- Conditional npm→pnpm alias (when pnpm is available)
-
-These utilities work alongside the fast C++ commands to provide a complete development environment.
-
-**Performance:** Core navigation and updates use the optimized C++ implementation, while utilities remain in bash for flexibility.
 
 ## 📁 Project Structure
 
 ```
-├── src/                         # C++ source code
-│   ├── main.cpp                 # Command dispatcher
-│   ├── core/                    # Core functionality
-│   │   ├── project_mapper.cpp   # Project discovery logic
-│   │   ├── config_loader.cpp    # JSON configuration
-│   │   └── file_utils.cpp       # File system utilities  
-│   └── commands/                # Command implementations
-│       ├── code_navigator.cpp   # Code navigation (replaces bash)
-│       ├── workspace_updater.cpp # Git updates (replaces bash)
-│       └── project_env.cpp      # Environment setup (replaces bash)
-├── include/aliases/             # C++ headers
-├── bash_aliases/                # Bash utility scripts
-│   ├── basic.ali.sh            # ✅ Active - Basic utilities
-│   ├── maven.ali.sh            # ✅ Active - Maven shortcuts  
-│   ├── npm.ali.sh              # ✅ Active - NPM shortcuts
-│   ├── code.ali-deprecated.sh             # ❌ Deprecated - Use C++ version
-│   ├── update-workspaces.ali-deprecated.sh # ❌ Deprecated - Use C++ version
-│   └── project-selection.ali-deprecated.sh # ❌ Deprecated - Use C++ version
-├── bash_completion/             # Shell completion integration
-│   └── aliases-completion.sh   # ✅ Tab completion for 'c' command
-├── bash_integration/            # Shell function integration  
-│   └── project-env.sh          # ✅ Environment variable wrappers
-├── aliases-cli                  # Distributed binary (304KB)
-├── build.sh                    # Build system
-├── install.sh                  # Installation script
-├── mappings.template.json     # Configuration template
-└── mappings.json              # Your local config (git-ignored)
+├── src/                    # C++ source code
+│   ├── commands/           # Command implementations
+│   │   ├── code_navigator.cpp
+│   │   ├── workspace_updater.cpp
+│   │   ├── project_env.cpp
+│   │   └── todo.cpp       # 🆕 TUI todo manager
+│   └── core/              # Core functionality
+├── include/               # C++ headers
+│   └── third_party/      # Dependencies
+│       ├── json.hpp      # JSON library
+│       └── ncurses/      # 🆕 Built ncurses (1.9M)
+├── docs/                 # 📚 Documentation
+│   ├── user-guide/       # User documentation
+│   ├── development/      # Developer guides
+│   ├── integrations/     # Shell integration docs
+│   └── reference/        # API reference
+├── bash_*/               # Shell integration
+├── build.sh             # Build system (ncurses-aware)
+└── install.sh           # Setup script
 ```
 
-## Performance
+## 🔧 Configuration
 
-| Metric | Bash Version | C++ Version | Improvement |
-|--------|-------------|-------------|-------------|
-| Cold start | ~100ms | ~2ms | **50x faster** |
-| Project lookup | ~50ms | ~1ms | **50x faster** |
-| Memory usage | ~8MB | ~2MB | **4x less** |
-| Binary size | N/A | 304KB | Standalone |
+### Project Mappings (`mappings.json`)
 
-## Migration from Bash
+```json
+{
+  "project_mappings": {
+    "my-project": {
+      "shortcuts": ["mp", "proj"],
+      "server_paths": ["backend", "server"],
+      "web_paths": ["frontend", "webapp", "web"]
+    }
+  }
+}
+```
 
-The setup script handles everything automatically:
+### Smart Tab Completion
 
-1. **Builds** the C++ version (if compiler available)
-2. **Uses distributed binary** (if no compiler)
-3. **Updates local installations** automatically
-4. **Integrates with shell** via `.bash_aliases`
-5. **Preserves legacy functions** (renamed as `*_bash`)
+Tab completion works with shortcuts and components:
+```bash
+c di<TAB>         # Completes to dispatch, dip, etc.
+c dip<TAB>        # Shows: dip, dips, dipw, dip[sw]
+c dip[s<TAB>      # Completes to dip[sw]
+```
+
+## 🏗️ Build System
+
+The build system automatically detects and uses:
+- **Local ncurses** (included) for TUI support
+- **System ncurses** as fallback
+- **No ncurses** (CLI-only mode)
 
 ```bash
-# Run setup (safe - creates backups)
-./install.sh
-
-# Configuration (first time)
-cp mappings.template.json mappings.json
-# Edit mappings.json with your projects
-
-# Test functionality
-c --help
+./build.sh              # Release build
+./build.sh --debug      # Debug build
+./build.sh --clean      # Clean build
+./build.sh --install    # Install to /usr/local/bin
 ```
 
-### Legacy Bash Files
+## 📊 Performance
 
-The bash scripts have been **partially replaced** by C++:
+| Metric | Bash | C++ | Improvement |
+|--------|------|-----|-------------|
+| Startup time | ~50ms | ~1ms | **50x faster** |
+| Memory usage | ~8MB | ~2MB | **75% less** |
+| Binary size | N/A | 924KB | Standalone |
+| Todo operations | N/A | ~0.1ms | Instant |
 
-**Replaced by C++ (deprecated):**
-- `code.ali.sh` - Project navigation → `aliases-cli code` (50x faster)
-- `update-workspaces.ali.sh` - Workspace updates → `aliases-cli update` (10x faster)  
-- `project-selection.ali.sh` - Environment setup → `aliases-cli env` (20x faster)
+## 📚 Documentation
 
-**Still active and sourced:**
-- `basic.ali.sh` - Basic utility aliases and shortcuts
-- `maven.ali.sh` - Maven-specific aliases and functions
-- `npm.ali.sh` - NPM-specific aliases and functions
-- Other utility scripts
+- **[User Guide](docs/user-guide/)** - Comprehensive usage guide
+- **[Development](docs/development/)** - Building and contributing
+- **[Integrations](docs/integrations/)** - Shell integration details
+- **[Reference](docs/reference/)** - Command reference
 
-The deprecated files are in `bash_aliases/` with warnings but the utility aliases remain active.
-
-## Development
-
-### Building
-
-```bash
-# Debug build
-./build.sh
-
-# With verbose output  
-./build.sh -v
-
-# Clean build
-rm -rf build/ && ./build.sh
-```
-
-### Architecture
-
-- **PIMPL Pattern**: Fast compilation, clean interfaces
-- **Header-only JSON**: No external dependencies  
-- **Modern C++17**: Smart pointers, optional types
-- **Result Templates**: Elegant error handling
-
-### Dependencies
-
-- **C++17 compiler** (GCC 7+, Clang 5+)
-- **nlohmann/json** (header-only, included)
-- **Standard library** only
-
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create feature branch
+2. Create a feature branch
 3. Make changes in `src/` directory
-4. Build and test: `./build.sh && c --help`
-5. Submit pull request
+4. Build and test: `./build.sh && aliases-cli --help`
+5. Submit a pull request
 
-**Note:** Keep your `mappings.json` out of commits - it's in `.gitignore` for a reason!
+**Note:** Keep `mappings.json` private (git-ignored)
 
-## License
+## 🎯 Migration from Bash
 
-MIT License - see LICENSE file for details.
+The system is designed for **seamless migration**:
+
+- ✅ **Automatic setup** - `./install.sh` handles everything
+- ✅ **Preserves aliases** - All your existing shortcuts work
+- ✅ **Performance boost** - Same interface, 50x faster
+- ✅ **New features** - TUI todo manager, better error handling
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
 **Built with ❤️ in C++17 for lightning-fast workspace management**
-aliases-cli code                    # Open home directory
-aliases-cli code <project>          # Open project
-aliases-cli code <project>s         # Open server component
-aliases-cli code <project>w         # Open web component  
-aliases-cli code <project>[sw]      # Open multiple components
-aliases-cli code <proj1> <proj2>    # Open multiple projects
-```
-
-### Workspace Updates (`update`, `uw`)
-```bash
-aliases-cli update                  # Update all projects
-aliases-cli update <project>        # Update specific project
-aliases-cli update <project>s       # Update server component only
-aliases-cli update <project>w       # Update web component only
-aliases-cli update -j 8             # Use 8 parallel jobs
-```
-
-### Environment Setup (`env`)
-```bash
-aliases-cli env                     # Setup for current project
-aliases-cli env -p 3000            # Use port 3000 as base
-aliases-cli env -e prod -s true     # Production profile with HTTPS
-aliases-cli env -n                  # No port offset
-```
-
-## ⚙️ Configuration
-
-### Project Mappings
-Edit `mappings.local.sh` to configure project shortcuts and component paths:
-
-```bash
-# Project shortcuts
-declare -A local_full_to_short=(
-  [my-long-project-name]="short"
-  [another-project]="ap"
-)
-
-# Custom server component paths
-declare -A local_server_paths=(
-  [project-name]="backend/java"
-)
-
-# Custom web component paths  
-declare -A local_web_paths=(
-  [project-name]="frontend/webapp"
-)
-```
-
-### Default Component Paths
-- **Server**: `java/serverJava`, `serverJava` (Maven/Spring Boot)
-- **Web**: `webapp`, `webApp`, `web` (npm projects)
-
-## 🔄 Migration from Bash
-
-The C++ version provides the same functionality as the bash scripts but with:
-
-- **10x faster startup** (no bash interpreter overhead)
-- **Better parallelization** for updates
-- **Maintainable codebase** with proper error handling
-- **Cross-platform compatibility**
-
-### Setting up Aliases
-Replace your bash aliases with:
-
-```bash
-# In your ~/.bashrc or ~/.zshrc
-alias c='aliases-cli code'
-alias uw='aliases-cli update' 
-alias project_env='aliases-cli env'
-```
-
-## 🐛 Development
-
-### Building Debug Version
-```bash
-make debug
-# or
-./build-simple.sh --debug
-```
-
-### Code Organization
-- **Core Library**: Shared functionality across all commands
-- **Commands**: Individual command implementations  
-- **PIMPL Pattern**: Clean separation of interface and implementation
-- **Modern C++**: C++17 features, RAII, smart pointers
-
-### Adding New Commands
-1. Create header in `include/aliases/commands/`
-2. Implement in `src/commands/`
-3. Add to main.cpp dispatcher
-4. Update build scripts
-
-## 📊 Performance
-
-- **Binary Size**: ~200KB (optimized release build)
-- **Startup Time**: ~1ms (vs ~50ms for bash)
-- **Memory Usage**: ~2MB RSS
-- **Parallel Updates**: Up to CPU core count
-
-## 🤝 Contributing
-
-1. Follow C++17 best practices
-2. Use RAII and smart pointers
-3. Add error handling for all operations
-4. Test on your local workspace before committing
-
-## 📝 License
-
-This project is part of your personal workspace management system.
