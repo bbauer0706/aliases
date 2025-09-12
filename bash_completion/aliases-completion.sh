@@ -8,7 +8,17 @@
 # Tab completion for the 'c' command (aliases-cli code)
 _aliases_code_completion() {
   local cur prev words cword
-  _init_completion || return
+  
+  # Try to use _init_completion if available, otherwise fallback
+  if type -t _init_completion >/dev/null; then
+    _init_completion || return
+  else
+    # Manual initialization for systems without bash-completion package
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    cword=$COMP_CWORD
+  fi
 
   # Get current word being completed
   cur=${COMP_WORDS[COMP_CWORD]}
