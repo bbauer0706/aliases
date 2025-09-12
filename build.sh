@@ -131,6 +131,7 @@ COMMAND_SOURCES=(
     "src/commands/workspace_updater.cpp"
     "src/commands/project_env.cpp"
     "src/commands/todo.cpp"
+    "src/commands/todo_tui.cpp"
 )
 
 MAIN_SOURCE="src/main.cpp"

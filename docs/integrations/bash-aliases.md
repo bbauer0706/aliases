@@ -1,11 +1,118 @@
-# Mixed Status: Bash Aliases Directory
+# Bash Aliases Integration
 
 This directory contains both **active utilities** and **deprecated scripts** from the original bash-based system.
+
+## Todo System Aliases
+
+Comprehensive todo management aliases are provided in `bash_aliases/todo.ali.sh`:
+
+### Smart Main Alias
+
+```bash
+# Main todo alias with intelligent parameter handling
+td() {
+    # td                    - Launch interactive TUI
+    # td "task"             - Add todo with description
+    # td category "task"    - Add todo with category and description  
+    # td command args...    - Pass through to main command
+}
+```
+
+### Core Aliases
+
+```bash
+# Quick access
+alias tdl='aliases-cli todo list'    # List todos
+alias tds='aliases-cli todo search'  # Search todos
+alias todo='td'                      # Legacy compatibility
+```
+
+### Priority-Based Creation
+
+```bash
+# Priority shortcuts
+td-high "task"        # High priority (🔴)
+td-med "task"         # Medium priority (🟡) 
+td-low "task"         # Low priority (🟢)
+```
+
+### Category-Based Creation
+
+```bash
+# Common categories with appropriate priorities
+td-bug "task"         # Bug category (high priority)
+td-feature "task"     # Feature category
+td-docs "task"        # Documentation category
+td-review "task"      # Review category (medium priority)
+td-deploy "task"      # Deployment category (high priority)
+td-test "task"        # Testing category
+```
+
+### Search-Based Actions
+
+```bash
+# Smart search and action
+td-done "search term"     # Find and complete todo
+td-rm "search term"       # Find and remove todo
+td-urgent "search term"   # Find and mark as urgent
+td-find "term" [category] # Search with optional category filter
+td-next                   # Complete next highest priority todo
+```
+
+### Category Shortcuts
+
+```bash
+# Show todos by category
+td-bugs          # All bug todos
+td-features      # All feature todos  
+td-reviews       # All review todos
+```
+
+### Git Integration
+
+```bash
+# Git project and branch integration
+td-branch "task"         # Add todo: "branchname: task" [projectname]
+td-branch-list          # Show todos for current branch
+td-project              # Show all todos for current project
+```
+
+### Usage Examples
+
+```bash
+# Smart main alias usage
+td                              # Launch TUI
+td "Fix login bug"              # Add simple todo
+td bug "Authentication fails"   # Add with category
+
+# Priority-based creation
+td-high "Critical production issue"
+td-med "Update documentation" 
+td-low "Refactor old code"
+
+# Search-based actions
+td-done "authentication"        # Find and complete
+td-urgent "production"          # Find and mark urgent
+td-next                        # Complete next priority item
+
+# Git workflow integration  
+# On branch "feature/user-auth" in project "my-app"
+td-branch "Add login validation"
+# Creates: "feature/user-auth: Add login validation" [my-app]
+
+td-branch-list                 # Show branch todos
+td-project                     # Show all project todos
+
+# Category workflows
+td-bug "Login fails on Safari"
+td-bugs                        # Show all bug todos
+```
 
 ## ✅ Active Files (Still Used)
 
 These bash utilities are **still sourced** and provide valuable shortcuts:
 
+- **todo.ali.sh** - ✅ Comprehensive todo system aliases with smart search and git integration
 - **basic.ali.sh** - ✅ Basic utility aliases and shortcuts
 - **maven.ali.sh** - ✅ Maven-specific aliases and build shortcuts  
 - **npm.ali.sh** - ✅ NPM/Node.js development shortcuts
@@ -29,25 +136,31 @@ These files have been **replaced by the C++ implementation** and renamed with `.
 | Project Navigation | C++ | ✅ Active | 50x faster |
 | Workspace Updates | C++ | ✅ Active | 10x faster |
 | Environment Setup | C++ | ✅ Active | 20x faster |
+| Todo System Core | C++ | ✅ Active | Fast persistence |
+| Todo Aliases | Bash | ✅ Active | Smart shortcuts |
 | Basic Utilities | Bash | ✅ Active | Original |
 | Maven Shortcuts | Bash | ✅ Active | Original |
 | NPM Shortcuts | Bash | ✅ Active | Original |
 
 ## Why Hybrid?
 
-- **Performance-critical** operations (navigation, updates) → C++
-- **Utility shortcuts** (maven, npm, basic) → Bash (flexibility)
-- **Best of both worlds**: Speed where needed, bash convenience for utilities
+- **Performance-critical** operations (navigation, updates, todo core) → C++
+- **Smart shortcuts** (todo aliases, maven, npm, basic) → Bash (flexibility)
+- **Best of both worlds**: Speed where needed, bash convenience for workflows
 
 ## Usage
 
 ```bash
 # Fast C++ commands (always use these for core operations)
 c <project>           # 50x faster than old bash version
-uw                   # 10x faster parallel updates
+uw                   # 10x faster parallel updates  
 project_env          # 20x faster environment setup
+aliases-cli todo     # Fast todo management
 
-# Bash utilities (complement the C++ commands)
+# Smart Bash aliases (complement the C++ commands)
+td "task"            # Smart todo creation (from todo.ali.sh)
+td-branch "task"     # Git-integrated todos
+td-done "search"     # Smart todo completion
 mvn-shortcuts        # From maven.ali.sh
 npm-helpers          # From npm.ali.sh  
 basic-utils          # From basic.ali.sh

@@ -3,6 +3,33 @@
 #                      SETUP SCRIPT FOR C++ ALIASES-CLI                     #
 ##############################################################################
 
+# Parse command line arguments
+FORCE_MODE=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -f|--force)
+            FORCE_MODE=true
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: $0 [-f|--force] [-h|--help]"
+            echo ""
+            echo "Options:"
+            echo "  -f, --force    Force installation by automatically:"
+            echo "                 - Killing running aliases-cli processes"
+            echo "                 - Auto-accepting .bash_aliases updates"
+            echo "                 - Overriding permission checks"
+            echo "  -h, --help     Show this help message"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -28,11 +55,40 @@ error() {
   exit 1
 }
 
+# Function to kill running aliases-cli processes in force mode
+kill_running_processes() {
+    local processes=$(pgrep -f "aliases-cli" 2>/dev/null || true)
+    if [[ -n "$processes" ]]; then
+        if [[ "$FORCE_MODE" == "true" ]]; then
+            status "Force mode: Killing running aliases-cli processes..."
+            pkill -f "aliases-cli" 2>/dev/null || true
+            sleep 1
+            # Double-check and force kill if needed
+            local remaining=$(pgrep -f "aliases-cli" 2>/dev/null || true)
+            if [[ -n "$remaining" ]]; then
+                warning "Some processes still running, force killing..."
+                pkill -9 -f "aliases-cli" 2>/dev/null || true
+                sleep 1
+            fi
+            success "Terminated running aliases-cli processes"
+            return 0
+        else
+            warning "Found running aliases-cli processes (PIDs: $processes)"
+            warning "Please close running instances or use --force flag"
+            return 1
+        fi
+    fi
+    return 0
+}
+
 # Get script directory - detect the actual location of the aliases repository
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 ALIASES_DIR=$SCRIPT_DIR
 
 status "Detected aliases repository at: $ALIASES_DIR"
+if [[ "$FORCE_MODE" == "true" ]]; then
+    status "Running in FORCE MODE - will auto-accept prompts and handle conflicts"
+fi
 
 # 1. Try to build the C++ version if build.sh exists
 if [[ -f "$ALIASES_DIR/build.sh" ]]; then
@@ -48,8 +104,21 @@ if [[ -f "$ALIASES_DIR/build.sh" ]]; then
             
             # Update the distributed binary if build succeeded
             if [[ -f "$ALIASES_DIR/build/aliases-cli" ]]; then
-                cp "$ALIASES_DIR/build/aliases-cli" "$ALIASES_DIR/aliases-cli"
-                success "Updated distributed binary with new build"
+                if ! cp "$ALIASES_DIR/build/aliases-cli" "$ALIASES_DIR/aliases-cli" 2>/dev/null; then
+                    status "Binary copy failed, checking for running processes..."
+                    if kill_running_processes; then
+                        status "Retrying binary copy after process termination..."
+                        if cp "$ALIASES_DIR/build/aliases-cli" "$ALIASES_DIR/aliases-cli" 2>/dev/null; then
+                            success "Updated distributed binary with new build"
+                        else
+                            error "Failed to update distributed binary even after terminating processes - check file permissions"
+                        fi
+                    else
+                        error "Failed to update distributed binary - aliases-cli is currently in use. Please close all running instances or use --force flag."
+                    fi
+                else
+                    success "Updated distributed binary with new build"
+                fi
             fi
         else
             warning "Build failed, using existing binary"
@@ -84,9 +153,23 @@ success "Binary test passed"
 LOCAL_BIN="$HOME/.local/bin"
 if [[ -f "$LOCAL_BIN/aliases-cli" ]]; then
     status "Found existing local installation, updating with new binary..."
-    mkdir -p "$LOCAL_BIN"
-    cp "$BINARY_PATH" "$LOCAL_BIN/aliases-cli"
-    chmod +x "$LOCAL_BIN/aliases-cli"
+    if ! mkdir -p "$LOCAL_BIN"; then
+        error "Failed to create directory $LOCAL_BIN"
+    fi
+    if ! cp "$BINARY_PATH" "$LOCAL_BIN/aliases-cli" 2>/dev/null; then
+        status "Local binary copy failed, checking for running processes..."
+        if kill_running_processes; then
+            status "Retrying local binary copy after process termination..."
+            if ! cp "$BINARY_PATH" "$LOCAL_BIN/aliases-cli"; then
+                error "Failed to copy binary to $LOCAL_BIN/aliases-cli even after terminating processes - check permissions"
+            fi
+        else
+            error "Failed to copy binary to $LOCAL_BIN/aliases-cli - file is in use. Please close all running instances or use --force flag."
+        fi
+    fi
+    if ! chmod +x "$LOCAL_BIN/aliases-cli"; then
+        error "Failed to make $LOCAL_BIN/aliases-cli executable - check permissions"
+    fi
     success "Updated local binary at $LOCAL_BIN/aliases-cli"
 fi
 
@@ -152,7 +235,9 @@ if [ ! -f "$HOME/.bash_aliases" ]; then
   status "Creating .bash_aliases file"
   
   # Create the .bash_aliases file with the template
-  echo "$BASH_ALIASES_TEMPLATE" > "$HOME/.bash_aliases"
+  if ! echo "$BASH_ALIASES_TEMPLATE" > "$HOME/.bash_aliases"; then
+    error "Failed to create .bash_aliases file - check permissions for $HOME"
+  fi
 
   success "Created .bash_aliases file with C++ aliases-cli integration"
 else
@@ -169,15 +254,24 @@ else
     else
       warning ".bash_aliases needs C++ integration added"
       
-      # Ask user if they want to update the file
-      read -p "Do you want to update your .bash_aliases with C++ aliases-cli integration? (y/n): " -n 1 -r
-      echo
+      # Ask user if they want to update the file (auto-accept in force mode)
+      if [[ "$FORCE_MODE" == "true" ]]; then
+        status "Force mode: Auto-accepting .bash_aliases update with C++ integration"
+        REPLY="Y"
+      else
+        read -p "Do you want to update your .bash_aliases with C++ aliases-cli integration? (y/n): " -n 1 -r
+        echo
+      fi
       if [[ $REPLY =~ ^[Yy]$ ]]; then
         # Backup the existing file
-        cp "$HOME/.bash_aliases" "$HOME/.bash_aliases.bak"
+        if ! cp "$HOME/.bash_aliases" "$HOME/.bash_aliases.bak"; then
+          error "Failed to create backup of .bash_aliases - check permissions"
+        fi
         
         # Replace the file
-        echo "$BASH_ALIASES_TEMPLATE" > "$HOME/.bash_aliases"
+        if ! echo "$BASH_ALIASES_TEMPLATE" > "$HOME/.bash_aliases"; then
+          error "Failed to update .bash_aliases - check permissions. Backup is at .bash_aliases.bak"
+        fi
         
         success "Updated .bash_aliases with C++ integration and created backup at .bash_aliases.bak"
       else
@@ -187,15 +281,24 @@ else
   else
     warning ".bash_aliases needs to be updated with the correct repository path"
     
-    # Ask user if they want to update the file
-    read -p "Do you want to update your .bash_aliases to use the current repository path? (y/n): " -n 1 -r
-    echo
+    # Ask user if they want to update the file (auto-accept in force mode)
+    if [[ "$FORCE_MODE" == "true" ]]; then
+      status "Force mode: Auto-accepting .bash_aliases update with correct repository path"
+      REPLY="Y"
+    else
+      read -p "Do you want to update your .bash_aliases to use the current repository path? (y/n): " -n 1 -r
+      echo
+    fi
     if [[ $REPLY =~ ^[Yy]$ ]]; then
       # Backup the existing file
-      cp "$HOME/.bash_aliases" "$HOME/.bash_aliases.bak"
+      if ! cp "$HOME/.bash_aliases" "$HOME/.bash_aliases.bak"; then
+        error "Failed to create backup of .bash_aliases - check permissions"
+      fi
       
       # Replace the file
-      echo "$BASH_ALIASES_TEMPLATE" > "$HOME/.bash_aliases"
+      if ! echo "$BASH_ALIASES_TEMPLATE" > "$HOME/.bash_aliases"; then
+        error "Failed to update .bash_aliases - check permissions. Backup is at .bash_aliases.bak"
+      fi
       
       success "Updated .bash_aliases with correct path and C++ integration, created backup at .bash_aliases.bak"
     else
@@ -207,11 +310,13 @@ fi
 # Check if .bash_aliases is sourced from .bashrc
 if ! grep -q "source ~/.bash_aliases" "$HOME/.bashrc" && ! grep -q ". ~/.bash_aliases" "$HOME/.bashrc"; then
   status "Adding source command to .bashrc"
-  echo "" >> "$HOME/.bashrc"
-  echo "# Source bash aliases" >> "$HOME/.bashrc"
-  echo "if [ -f ~/.bash_aliases ]; then" >> "$HOME/.bashrc"
-  echo "    source ~/.bash_aliases" >> "$HOME/.bashrc"
-  echo "fi" >> "$HOME/.bashrc"
+  {
+    echo ""
+    echo "# Source bash aliases"
+    echo "if [ -f ~/.bash_aliases ]; then"
+    echo "    source ~/.bash_aliases"
+    echo "fi"
+  } >> "$HOME/.bashrc" || error "Failed to update .bashrc - check permissions for $HOME/.bashrc"
   success "Added source command to .bashrc"
 else
   success ".bash_aliases is already sourced from .bashrc"
@@ -239,6 +344,20 @@ if grep -q "# C++ ALIASES-CLI INTEGRATION" "$HOME/.bashrc"; then
 fi
 
 success "Setup complete! Your bash aliases are now configured with C++ aliases-cli integration."
+
+# Log force mode summary if used
+if [[ "$FORCE_MODE" == "true" ]]; then
+    echo ""
+    echo -e "${BLUE}Force Mode Summary:${NC}"
+    if pgrep -f "aliases-cli" >/dev/null 2>&1; then
+        echo -e "  ${GREEN}✓${NC} Terminated running aliases-cli processes"
+    fi
+    if [[ -f "$HOME/.bash_aliases.bak" ]]; then
+        echo -e "  ${GREEN}✓${NC} Auto-accepted .bash_aliases updates (backup created)"
+    fi
+    echo -e "  ${GREEN}✓${NC} Completed installation without user prompts"
+fi
+
 echo ""
 echo -e "${YELLOW}Note:${NC} Changes will take effect in new terminal sessions or after running 'source ~/.bash_aliases'"
 echo -e "      Aliases are sourced from: ${GREEN}$ALIASES_DIR${NC}"

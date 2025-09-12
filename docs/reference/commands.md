@@ -258,9 +258,9 @@ aliases-cli todo ls             # Short form
 ```
 Active todos:
 
-#3 🔴 [bug] Fix authentication system
-#1 🟡 [feature] Implement user dashboard  
-#2 🟢 Complete documentation
+#3 !!! [bug] Fix authentication system     (red)
+#1 !! [feature] Implement user dashboard   (yellow)
+#2 ! Complete documentation               (blue)
 ```
 
 ---
@@ -316,9 +316,9 @@ aliases-cli todo priority <ID> <PRIORITY>
 | Level | Indicator | Description |
 |-------|-----------|-------------|
 | `0` | *(none)* | No priority |
-| `1` | 🟢 | Low priority |
-| `2` | 🟡 | Medium priority |
-| `3` | 🔴 | High priority |
+| `1` | ! | Low priority (blue) |
+| `2` | !! | Medium priority (yellow) |
+| `3` | !!! | High priority (red) |
 
 #### Examples
 ```bash
@@ -362,9 +362,12 @@ aliases-cli todo tui
 |-----|--------|
 | `↑↓` or `j k` | Navigate todos |
 | `Space/Enter` | Toggle completion |
-| `a` | Add new todo |
+| `n` | Add new todo |
 | `e` | Edit selected todo |
-| `d` or `Del` | Delete todo |
+| `x` or `Del` | Delete todo |
+| `d` or `→` | Increase priority |
+| `a` or `←` | Decrease priority |
+| `o` | Toggle sort mode (also re-sorts) |
 | `c` | Toggle completed view |
 | `r` | Refresh from disk |
 | `q` | Quit |

@@ -33,6 +33,7 @@ public:
     Result<bool> remove_todo(int id);
     Result<bool> set_priority(int id, int priority);
     Result<bool> set_category(int id, const std::string& category);
+    Result<bool> set_description(int id, const std::string& description);
     
     // Query operations
     std::vector<TodoItem> get_all_todos() const;
@@ -40,6 +41,9 @@ public:
     std::vector<TodoItem> get_completed_todos() const;
     std::vector<TodoItem> get_todos_by_category(const std::string& category) const;
     std::optional<TodoItem> get_todo_by_id(int id) const;
+    
+    // Search operations
+    std::vector<TodoItem> search_todos(const std::string& query, const std::string& category_filter = "") const;
     
     // Persistence
     bool save_todos();
@@ -75,38 +79,8 @@ private:
     int cmd_remove(const StringVector& args);
     int cmd_priority(const StringVector& args);
     int cmd_category(const StringVector& args);
+    int cmd_search(const StringVector& args);
     
-    // TUI implementation
-    void init_tui();
-    void cleanup_tui();
-    void draw_screen();
-    void draw_todo_list();
-    void draw_bottom_bar();
-    void handle_input();
-    
-    // TUI state
-    struct TuiState {
-        int current_selection = 0;
-        int scroll_offset = 0;
-        bool show_completed = false;
-        std::string current_filter;
-        std::vector<TodoItem> filtered_todos;
-        bool in_edit_mode = false;
-        std::string edit_buffer;
-    };
-    
-    TuiState tui_state_;
-    
-    // TUI helpers
-    void update_filtered_todos();
-    void move_selection(int delta);
-    void toggle_todo_completion();
-    void uncomplete_todo(int id);
-    void delete_current_todo();
-    void start_add_mode();
-    void start_edit_mode();
-    void finish_edit();
-    void cancel_edit();
     std::string get_priority_string(int priority) const;
     std::string get_status_string(bool completed) const;
 };

@@ -20,6 +20,9 @@ cd aliases-cli
 
 # Run the installer (handles everything automatically)
 ./install.sh
+
+# Or use force mode to skip prompts and handle conflicts
+./install.sh --force
 ```
 
 The installer will:
@@ -27,6 +30,18 @@ The installer will:
 2. Set up bash integration
 3. Configure shell aliases
 4. Install tab completion
+
+**Note:** If you encounter errors during installation, the script will now provide clear error messages and stop execution rather than continuing silently. Common issues include binary file being in use or permission problems.
+
+### Force Mode
+
+Use `./install.sh --force` for automated installations that:
+- Automatically kill running aliases-cli processes
+- Auto-accept all .bash_aliases updates without prompting  
+- Override most conflict situations
+- Provide detailed logging of all actions taken
+
+This is useful for CI/CD pipelines, automated setups, or when you want to ensure a clean installation without manual intervention.
 
 ## Manual Installation
 
@@ -152,6 +167,29 @@ The build system includes ncurses, but if you encounter issues:
 # This should not be necessary (ncurses is included)
 sudo apt-get install libncurses5-dev  # Ubuntu/Debian
 brew install ncurses                  # macOS
+```
+
+### Installation Issues
+
+**Binary in use during installation:**
+```bash
+# Error: "Text file busy" during install
+# Option 1: Close all running aliases-cli instances manually
+pkill aliases-cli
+./install.sh
+
+# Option 2: Use force mode (automatically handles this)
+./install.sh --force
+```
+
+**Permission errors during installation:**
+```bash
+# If install fails with permission errors
+# Check write permissions for:
+ls -la ~/.bash_aliases ~/.bashrc ~/.local/bin/
+# Fix permissions if needed:
+chmod 644 ~/.bash_aliases ~/.bashrc
+chmod 755 ~/.local/bin/
 ```
 
 ### Runtime Issues
