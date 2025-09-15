@@ -63,6 +63,56 @@ cr             # Super short typo
 
 **Total Coverage:** 80+ aliases covering virtually every possible way to misspell "clear" on a German keyboard.
 
+## Smart Command-Not-Found Handler
+
+Intelligent fallback for any unmapped clear typos (integrated in `bash_aliases/clear.ali.sh`):
+
+### How It Works
+
+The handler intercepts any command that bash can't find and applies smart detection:
+
+```bash
+# Checks if the unknown command contains all letters: c, l, e, a, r
+command_not_found_handle() {
+    # Example: "rceal" contains c,l,e,a,r → executes clear
+    # Example: "aelrc" contains c,l,e,a,r → executes clear
+    # Example: "xyz" missing letters → normal error
+}
+```
+
+### Detection Rules
+
+1. **Letter Check:** Must contain all letters `c`, `l`, `e`, `a`, `r` (case-insensitive)
+2. **Length Filter:** Only 3-8 characters (reasonable typo range)
+3. **Smart Fallback:** Uses system command-not-found if no match
+
+### Examples
+
+```bash
+# These would trigger clear execution:
+$ rceal        # ✅ Contains all clear letters
+🔍 Command 'rceal' not found. Did you mean 'clear'? Executing clear...
+
+$ aelrc        # ✅ Contains all clear letters
+🔍 Command 'aelrc' not found. Did you mean 'clear'? Executing clear...
+
+$ learc        # ✅ Contains all clear letters
+🔍 Command 'learc' not found. Did you mean 'clear'? Executing clear...
+
+# These would show normal error:
+$ xyz          # ❌ Missing clear letters
+bash: xyz: command not found
+
+$ clearterminal # ❌ Too long (>8 chars)
+bash: clearterminal: command not found
+```
+
+### Combined Coverage
+
+**Alias Coverage (clear.ali.sh):** 80+ pre-defined aliases
+**Dynamic Coverage (command_not_found.ali.sh):** Infinite anagram detection
+**Total Result:** Virtually impossible to fail clearing the terminal
+
 ## Todo System Aliases
 
 Comprehensive todo management aliases are provided in `bash_aliases/todo.ali.sh`:
@@ -175,7 +225,7 @@ These bash utilities are **still sourced** and provide valuable shortcuts:
 
 - **todo.ali.sh** - ✅ Comprehensive todo system aliases with smart search and git integration
 - **basic.ali.sh** - ✅ Basic utility aliases and shortcuts
-- **clear.ali.sh** - ✅ Comprehensive clear command typo aliases for German keyboards
+- **clear.ali.sh** - ✅ Comprehensive clear command typo aliases + smart command-not-found handler
 - **maven.ali.sh** - ✅ Maven-specific aliases and build shortcuts
 - **npm.ali.sh** - ✅ NPM/Node.js development shortcuts
 

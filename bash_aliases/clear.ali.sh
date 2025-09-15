@@ -186,3 +186,39 @@ alias cr='clear'
 alias cl='clear'
 alias ce='clear'
 alias le='clear'
+
+##############################################################################
+#                     SMART COMMAND-NOT-FOUND HANDLER                       #
+##############################################################################
+
+# Smart command-not-found handler for clear command
+command_not_found_handle() {
+    local cmd="$1"
+
+    # Convert to lowercase for comparison
+    local lower_cmd=$(echo "$cmd" | tr '[:upper:]' '[:lower:]')
+
+    # Check if command contains all letters of "clear" (c, l, e, a, r)
+    if [[ "$lower_cmd" =~ c ]] && [[ "$lower_cmd" =~ l ]] && [[ "$lower_cmd" =~ e ]] && [[ "$lower_cmd" =~ a ]] && [[ "$lower_cmd" =~ r ]]; then
+        # Additional checks to avoid false positives
+        local cmd_length=${#lower_cmd}
+
+        # Only trigger for commands between 3-8 characters (reasonable for clear typos)
+        if [ "$cmd_length" -ge 3 ] && [ "$cmd_length" -le 8 ]; then
+            clear
+            return 0
+        fi
+    fi
+
+    # Fall back to default command not found behavior
+    if [ -x /usr/lib/command-not-found ]; then
+        /usr/lib/command-not-found -- "$1"
+        return $?
+    elif [ -x /usr/share/command-not-found/command-not-found ]; then
+        /usr/share/command-not-found/command-not-found -- "$1"
+        return $?
+    else
+        echo "bash: $1: command not found" >&2
+        return 127
+    fi
+}
