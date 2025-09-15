@@ -2,6 +2,67 @@
 
 This directory contains both **active utilities** and **deprecated scripts** from the original bash-based system.
 
+## Clear Command Aliases
+
+Comprehensive typo-resistant aliases for the `clear` command in `bash_aliases/clear.ali.sh`:
+
+### German Keyboard Support (QWERTZ Layout)
+
+The clear aliases are optimized for German keyboards with comprehensive typo coverage:
+
+```bash
+# Common typos
+clear → clera, clare, claer, cler, cear, clar
+clear → cleaar, clearr, cleasr, cleaer, cleer
+
+# German-specific QWERTZ layout typos
+clear → cleaz, clezr, clez        # Z/Y swaps
+clear → cleay, cley, cleyar       # Y positioning
+
+# Umlaut accidents (ä, ö, ü adjacent to standard keys)
+clear → cleäar, cleär, cleä       # Ä instead of A
+clear → cleöar, cleör, cleö       # Ö instead of O
+clear → cleüar, cleür, cleü       # Ü instead of U
+
+# German ß key mishits
+clear → cleaß, cleß, clßear, cßlear
+
+# Adjacent key mistakes on German keyboard
+clear → cöear, ckear, coear       # L neighbors (Ö, K, O)
+clear → clwar, cldar              # E neighbors (W, D)
+clear → clesar, clesr             # A neighbors (S)
+clear → cleat, cleatar            # R neighbors (T, F)
+```
+
+### Extreme Typo Coverage
+
+```bash
+# Super short versions for really bad typos
+cr, cl, ce, le
+
+# One-handed typing errors
+vlera, xlera, vlare, xlear
+
+# Backwards/mixed patterns
+raelc, aelrc, learc, rceal
+
+# Double letters
+cclear, cllear, cleear, cleaar, clearr
+```
+
+### Usage Examples
+
+```bash
+# All of these work the same as 'clear'
+clera          # Common typo
+cleäar         # German umlaut accident
+cleaz          # German Z/Y swap
+cöear          # Adjacent key on German keyboard
+cr             # Super short typo
+```
+
+**Total Coverage:** 80+ aliases covering virtually every possible way to misspell "clear" on a German keyboard.
+
 ## Todo System Aliases
 
 Comprehensive todo management aliases are provided in `bash_aliases/todo.ali.sh`:
@@ -114,7 +175,8 @@ These bash utilities are **still sourced** and provide valuable shortcuts:
 
 - **todo.ali.sh** - ✅ Comprehensive todo system aliases with smart search and git integration
 - **basic.ali.sh** - ✅ Basic utility aliases and shortcuts
-- **maven.ali.sh** - ✅ Maven-specific aliases and build shortcuts  
+- **clear.ali.sh** - ✅ Comprehensive clear command typo aliases for German keyboards
+- **maven.ali.sh** - ✅ Maven-specific aliases and build shortcuts
 - **npm.ali.sh** - ✅ NPM/Node.js development shortcuts
 
 ## ❌ Deprecated Files (Replaced by C++)
@@ -139,6 +201,7 @@ These files have been **replaced by the C++ implementation** and renamed with `.
 | Todo System Core | C++ | ✅ Active | Fast persistence |
 | Todo Aliases | Bash | ✅ Active | Smart shortcuts |
 | Basic Utilities | Bash | ✅ Active | Original |
+| Clear Typo Aliases | Bash | ✅ Active | German keyboard optimized |
 | Maven Shortcuts | Bash | ✅ Active | Original |
 | NPM Shortcuts | Bash | ✅ Active | Original |
 

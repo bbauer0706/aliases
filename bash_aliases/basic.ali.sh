@@ -10,8 +10,6 @@ alias la='ls -alh'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ~='cd ~'
-alias clera='clear'
-alias clare='clear'
 
 # Kill process on port
 kp() {
