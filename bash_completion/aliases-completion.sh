@@ -82,80 +82,17 @@ _complete_project_specs() {
       fi
     fi
     
-  # Handle composite project completion: dipws, dipsw, etc.
+  # Handle project completion with current input
   elif [[ -n "$cur" ]]; then
-    # Parse each project line and add completions
+    # Parse each project line and add matching completions
     while IFS='|' read -r display_name full_name has_server has_web; do
       if [[ -n "$display_name" ]]; then
-        # Basic project name completion - only if project name starts with current input
+        # Basic project name
         if [[ "$display_name" == "$cur"* ]]; then
           projects+=("$display_name")
-          
-          # Add component completions
-          if [[ "$has_server" == "s" ]]; then
-            projects+=("${display_name}s")
-          fi
-          if [[ "$has_web" == "w" ]]; then
-            projects+=("${display_name}w")
-          fi
-          
-          # Add bracket notation if components are available
-          local variants=""
-          if [[ "$has_server" == "s" ]]; then
-            variants+="s"
-          fi
-          if [[ "$has_web" == "w" ]]; then
-            variants+="w"
-          fi
-          
-          if [[ -n "$variants" ]]; then
-            projects+=("$display_name[$variants]")
-          fi
         fi
-        
-        # Handle composite patterns (dipws, dipsw, etc.) - only for exact matches
-        if [[ "$cur" == "${display_name}"* && ${#cur} -gt ${#display_name} ]]; then
-          local suffix="${cur#$display_name}"
-          
-          # Check if suffix is valid combination of s and w
-          if [[ "$suffix" =~ ^[sw]+$ ]]; then
-            local valid=true
-            
-            # Validate each suffix character
-            for (( i=0; i<${#suffix}; i++ )); do
-              local char="${suffix:$i:1}"
-              if [[ "$char" == "s" && "$has_server" != "s" ]]; then
-                valid=false
-                break
-              elif [[ "$char" == "w" && "$has_web" != "w" ]]; then
-                valid=false
-                break
-              fi
-            done
-            
-            if [[ "$valid" == "true" ]]; then
-              projects+=("$cur")
-            fi
-          fi
-        fi
-      fi
-    done <<< "$_ALIASES_PROJECTS_CACHE"
-    
-  else
-    # No current input - show all available projects with their variants
-    while IFS='|' read -r display_name full_name has_server has_web; do
-      if [[ -n "$display_name" ]]; then
-        projects+=("$display_name")
-        
-        # Add component completions
-        if [[ "$has_server" == "s" ]]; then
-          projects+=("${display_name}s")
-        fi
-        if [[ "$has_web" == "w" ]]; then
-          projects+=("${display_name}w")
-        fi
-        
-        # Add bracket notation if components are available
+
+        # Bracket notation (only if it matches and components exist)
         local variants=""
         if [[ "$has_server" == "s" ]]; then
           variants+="s"
@@ -163,17 +100,48 @@ _complete_project_specs() {
         if [[ "$has_web" == "w" ]]; then
           variants+="w"
         fi
-        
+        if [[ -n "$variants" && "$display_name[$variants]" == "$cur"* ]]; then
+          projects+=("$display_name[$variants]")
+        fi
+      fi
+    done <<< "$_ALIASES_PROJECTS_CACHE"
+
+  else
+    # No current input - show projects with bracket notation only
+    while IFS='|' read -r display_name full_name has_server has_web; do
+      if [[ -n "$display_name" ]]; then
+        # Add bracket notation if components are available, otherwise just project name
+        local variants=""
+        if [[ "$has_server" == "s" ]]; then
+          variants+="s"
+        fi
+        if [[ "$has_web" == "w" ]]; then
+          variants+="w"
+        fi
+
         if [[ -n "$variants" ]]; then
           projects+=("$display_name[$variants]")
+        else
+          projects+=("$display_name")
         fi
       fi
     done <<< "$_ALIASES_PROJECTS_CACHE"
   fi
   
+  # Remove duplicates from projects array using associative array for efficiency
+  local unique_projects=()
+  declare -A seen_map
+
+  for project in "${projects[@]}"; do
+    if [[ -z "${seen_map[$project]}" ]]; then
+      unique_projects+=("$project")
+      seen_map["$project"]=1
+    fi
+  done
+
   # Generate completions
-  COMPREPLY=($(compgen -W "${projects[*]}" -- "$cur"))
-  
+  COMPREPLY=($(compgen -W "${unique_projects[*]}" -- "$cur"))
+
   # Handle special cases for bracket completions
   if [[ ${#COMPREPLY[@]} -eq 1 && ${COMPREPLY[0]} =~ \[([sw]+)$ ]]; then
     # If we have a single bracket completion without closing bracket, add it
@@ -189,4 +157,4 @@ _complete_project_specs() {
 complete -F _aliases_code_completion c
 
 # Clear cache on new shell or when completion is reloaded
-_ALIASES_PROJECTS_CACHE=""
+unset _ALIASES_PROJECTS_CACHE
