@@ -13,6 +13,7 @@ alias jes='npm run test:watch'
 alias story='npm run start:storybook'
 alias npmi='npm i'
 alias lint='npm run lint'
+alias pipeline='npm run pipeline:dry-run'
 
 # Package manager - alias npm to pnpm if pnpm is available
 if command -v pnpm >/dev/null 2>&1; then

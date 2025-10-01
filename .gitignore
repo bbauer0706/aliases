@@ -109,3 +109,5 @@ vcpkg_installed/
 # added by .workspace
 .bashrc
 .bash_aliases
+
+*changelist.md
