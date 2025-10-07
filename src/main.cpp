@@ -4,10 +4,12 @@
 #include <memory>
 
 #include "aliases/project_mapper.h"
+#include "aliases/config.h"
+#include "aliases/config_sync.h"
 #include "aliases/commands/code_navigator.h"
-#include "aliases/commands/workspace_updater.h"
 #include "aliases/commands/project_env.h"
 #include "aliases/commands/todo.h"
+#include "aliases/commands/config_cmd.h"
 
 namespace {
     constexpr const char* VERSION = "1.0.0";
@@ -26,9 +28,9 @@ void show_help() {
     std::cout << std::endl;
     std::cout << "Commands:" << std::endl;
     std::cout << "  code, c          VS Code project navigation" << std::endl;
-    std::cout << "  update, uw       Update workspace projects" << std::endl;
     std::cout << "  env              Setup project environment variables" << std::endl;
     std::cout << "  todo             Todo list manager with CLI and TUI modes" << std::endl;
+    std::cout << "  config           Manage aliases-cli configuration" << std::endl;
     std::cout << "  completion       Generate completion data (for bash completion)" << std::endl;
     std::cout << "  version          Show version information" << std::endl;
     std::cout << "  help             Show this help message" << std::endl;
@@ -37,10 +39,10 @@ void show_help() {
     std::cout << std::endl;
     std::cout << "Examples:" << std::endl;
     std::cout << "  " << PROGRAM_NAME << " code urm          # Open project 'urm' in VS Code" << std::endl;
-    std::cout << "  " << PROGRAM_NAME << " update            # Update all projects" << std::endl;
     std::cout << "  " << PROGRAM_NAME << " env -p 3000       # Setup environment with port 3000" << std::endl;
     std::cout << "  " << PROGRAM_NAME << " todo              # Launch interactive todo TUI" << std::endl;
     std::cout << "  " << PROGRAM_NAME << " todo add \"Fix bug\" # Add a new todo via CLI" << std::endl;
+    std::cout << "  " << PROGRAM_NAME << " config list       # View all configuration" << std::endl;
 }
 
 int handle_completion(std::shared_ptr<aliases::ProjectMapper> project_mapper, const std::vector<std::string>& args) {
@@ -119,25 +121,37 @@ int main(int argc, char* argv[]) {
     for (int i = 1; i < argc; ++i) {
         args.emplace_back(argv[i]);
     }
-    
+
     // Handle no arguments
     if (args.empty()) {
         show_help();
         return 0;
     }
-    
+
     // Handle global flags
     const std::string& command = args[0];
     if (command == "--version" || command == "-v") {
         show_version();
         return 0;
     }
-    
+
     if (command == "--help" || command == "-h" || command == "help") {
         show_help();
         return 0;
     }
-    
+
+    // Initialize configuration (must be done first)
+    auto& config = aliases::Config::instance();
+    if (!config.initialize()) {
+        std::cerr << "Warning: Failed to initialize configuration, using defaults" << std::endl;
+    }
+
+    // Auto-sync if enabled and needed (except for config commands themselves)
+    if (command != "config") {
+        aliases::ConfigSync sync_manager;
+        sync_manager.auto_sync_if_needed();
+    }
+
     // Initialize project mapper (shared across all commands)
     auto project_mapper = std::make_shared<aliases::ProjectMapper>();
     if (!project_mapper->initialize()) {
@@ -154,10 +168,6 @@ int main(int argc, char* argv[]) {
             aliases::commands::CodeNavigator navigator(project_mapper);
             return navigator.execute(subcommand_args);
         }
-        else if (command == "update" || command == "uw") {
-            aliases::commands::WorkspaceUpdater updater(project_mapper);
-            return updater.execute(subcommand_args);
-        }
         else if (command == "env") {
             aliases::commands::ProjectEnv env_setup(project_mapper);
             return env_setup.execute(subcommand_args);
@@ -165,6 +175,10 @@ int main(int argc, char* argv[]) {
         else if (command == "todo") {
             aliases::commands::Todo todo_cmd(project_mapper);
             return todo_cmd.execute(subcommand_args);
+        }
+        else if (command == "config") {
+            aliases::commands::ConfigCmd config_cmd(project_mapper);
+            return config_cmd.execute(subcommand_args);
         }
         else if (command == "completion") {
             return handle_completion(project_mapper, subcommand_args);

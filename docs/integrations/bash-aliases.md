@@ -234,10 +234,10 @@ These bash utilities are **still sourced** and provide valuable shortcuts:
 These files have been **replaced by the C++ implementation** and renamed with `.ali-deprecated.sh` extension:
 
 - **code.ali-deprecated.sh** - ❌ Project navigation (→ `aliases-cli code`)
-- **update-workspaces.ali-deprecated.sh** - ❌ Workspace updates (→ `aliases-cli update`)
+- **update-workspaces.ali-deprecated.sh** - ❌ Deprecated (removed)
 - **project-selection.ali-deprecated.sh** - ❌ Environment setup (→ `aliases-cli env`)
-- **mappings.local.sh** - ❌ Bash mappings (→ `mappings.json`)
-- **mappings.template.sh** - ❌ Bash template (→ `mappings.template.json`)
+- **mappings.local.sh** - ❌ Bash mappings (→ `~/.config/aliases-cli/config.json`)
+- **mappings.template.sh** - ❌ Bash template (→ `config.template.json`)
 - **local-init-workspaces.sh** - ❌ Initialization (→ integrated in C++)
 - **setup.sh.old** - ❌ Original setup (→ new `install.sh`)
 

@@ -67,7 +67,6 @@ Add to your `~/.bashrc` or `~/.zshrc`:
 ```bash
 # Core aliases
 alias c='aliases-cli code'
-alias uw='aliases-cli update'
 
 # Source bash integration
 source /path/to/aliases-cli/bash_integration/project-env.sh
@@ -81,32 +80,40 @@ source /path/to/aliases-cli/bash_aliases/npm.ali.sh
 
 ### 3. Create Configuration
 
-```bash
-# Copy template
-cp mappings.template.json mappings.json
+Configuration is automatically created on first run at `~/.config/aliases-cli/config.json`.
 
-# Edit with your projects
-vim mappings.json
+```bash
+# Edit configuration
+aliases-cli config edit
+
+# Or manually edit
+vim ~/.config/aliases-cli/config.json
 ```
 
 ## Configuration
 
-### Project Mappings
+### Project Settings
 
-Edit `mappings.json` to configure your projects:
+Edit your configuration using the config command or by editing `~/.config/aliases-cli/config.json`:
 
 ```json
 {
-  "project_mappings": {
-    "my-awesome-project": {
-      "shortcuts": ["map", "awesome"],
-      "server_paths": ["backend", "api", "server"],
-      "web_paths": ["frontend", "webapp", "ui"]
+  "projects": {
+    "workspace_directory": "~/workspaces",
+    "shortcuts": {
+      "my-awesome-project": "map"
     },
-    "another-project": {
-      "shortcuts": ["ap"],
-      "server_paths": ["java"],
-      "web_paths": ["react-app"]
+    "server_paths": {
+      "my-awesome-project": "backend",
+      "another-project": "java"
+    },
+    "web_paths": {
+      "my-awesome-project": "frontend",
+      "another-project": "react-app"
+    },
+    "default_paths": {
+      "server": ["java/serverJava", "serverJava", "backend", "server"],
+      "web": ["webapp", "webApp", "web", "frontend", "client"]
     }
   }
 }
@@ -205,7 +212,7 @@ source ~/.bashrc
 
 **Project not found:**
 1. Check workspace structure: `~/workspaces/project-name/`
-2. Verify `mappings.json` configuration
+2. Verify config: `aliases-cli config list`
 3. Test with: `aliases-cli code --list`
 
 **Tab completion not working:**

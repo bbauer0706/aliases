@@ -22,13 +22,15 @@ include_directories(include)
 
 # Find required packages
 find_package(Threads REQUIRED)
+find_package(Curses REQUIRED)
 
 # Core library
 set(CORE_SOURCES
     src/core/project_mapper.cpp
     src/core/git_operations.cpp
     src/core/file_utils.cpp
-    src/core/config_loader.cpp
+    src/core/config.cpp
+    src/core/config_sync.cpp
     src/core/process_utils.cpp
 )
 
@@ -36,7 +38,8 @@ set(CORE_HEADERS
     include/aliases/project_mapper.h
     include/aliases/git_operations.h
     include/aliases/file_utils.h
-    include/aliases/config_loader.h
+    include/aliases/config.h
+    include/aliases/config_sync.h
     include/aliases/process_utils.h
     include/aliases/common.h
 )
@@ -48,19 +51,24 @@ target_link_libraries(aliases_core Threads::Threads)
 # Command implementations
 set(COMMAND_SOURCES
     src/commands/code_navigator.cpp
-    src/commands/workspace_updater.cpp
     src/commands/project_env.cpp
+    src/commands/todo.cpp
+    src/commands/todo_tui.cpp
+    src/commands/config_cmd.cpp
 )
 
 set(COMMAND_HEADERS
     include/aliases/commands/code_navigator.h
-    include/aliases/commands/workspace_updater.h
     include/aliases/commands/project_env.h
+    include/aliases/commands/todo.h
+    include/aliases/commands/todo_tui.h
+    include/aliases/commands/config_cmd.h
 )
 
 # Create commands library
 add_library(aliases_commands STATIC ${COMMAND_SOURCES} ${COMMAND_HEADERS})
-target_link_libraries(aliases_commands aliases_core)
+target_link_libraries(aliases_commands aliases_core ${CURSES_LIBRARIES})
+target_include_directories(aliases_commands PRIVATE ${CURSES_INCLUDE_DIR})
 
 # Main executable
 add_executable(aliases-cli src/main.cpp)

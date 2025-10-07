@@ -195,10 +195,10 @@ build/
 
 **Commands (`src/commands/`):**
 - `code_navigator.cpp` - Project navigation command
-- `workspace_updater.cpp` - Workspace update command
 - `project_env.cpp` - Environment setup command
 - `todo.cpp` - Todo management CLI interface
 - `todo_tui.cpp` - Todo TUI implementation with ncurses
+- `config_cmd.cpp` - Configuration management command
 
 **Main Entry Point:**
 - `src/main.cpp` - Command dispatcher and argument parsing

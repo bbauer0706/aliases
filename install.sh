@@ -345,6 +345,26 @@ fi
 
 success "Setup complete! Your bash aliases are now configured with C++ aliases-cli integration."
 
+# Create config directory and default config if needed
+CONFIG_DIR="$HOME/.config/aliases-cli"
+if [[ ! -d "$CONFIG_DIR" ]]; then
+    status "Creating config directory at $CONFIG_DIR"
+    mkdir -p "$CONFIG_DIR"
+    mkdir -p "$CONFIG_DIR/cache"
+    success "Created config directory"
+fi
+
+# Create default config.json if it doesn't exist
+if [[ ! -f "$CONFIG_DIR/config.json" ]]; then
+    status "Creating default configuration file"
+    if [[ -f "$ALIASES_DIR/config.template.json" ]]; then
+        cp "$ALIASES_DIR/config.template.json" "$CONFIG_DIR/config.json"
+        success "Created default config at $CONFIG_DIR/config.json"
+    else
+        warning "config.template.json not found, config will be auto-generated on first run"
+    fi
+fi
+
 # Log force mode summary if used
 if [[ "$FORCE_MODE" == "true" ]]; then
     echo ""
@@ -375,13 +395,19 @@ elif [[ -f "$ALIASES_DIR/build.sh" ]]; then
 fi
 
 # Check for configuration
-if [[ ! -f "$ALIASES_DIR/mappings.json" ]]; then
+if [[ ! -f "$CONFIG_DIR/config.json" ]]; then
     echo ""
-    echo -e "${YELLOW}Configuration:${NC}"
-    echo -e "  ${BLUE}First-time setup:${NC} cp mappings.template.json mappings.json"
-    echo -e "  ${BLUE}Then edit:${NC} code mappings.json  # Add your project shortcuts"
-    echo -e "  ${BLUE}Note:${NC} mappings.json is git-ignored (safe for local config)"
+    echo -e "${YELLOW}Note:${NC}"
+    echo -e "  Config will be auto-created on first run at: ${GREEN}$CONFIG_DIR/config.json${NC}"
+    echo -e "  Edit projects with: ${GREEN}aliases-cli config edit${NC}"
 fi
+
+echo ""
+echo -e "${YELLOW}Configuration:${NC}"
+echo -e "  • Config directory: ${GREEN}~/.config/aliases-cli/${NC}"
+echo -e "  • Manage settings: ${GREEN}aliases-cli config list${NC}"
+echo -e "  • Edit config: ${GREEN}aliases-cli config edit${NC}"
+echo -e "  • Sync config across machines: ${GREEN}aliases-cli config sync setup <url>${NC}"
 
 echo ""
 echo -e "${YELLOW}File Structure:${NC}"
@@ -392,7 +418,7 @@ echo -e "  • Add new bash utilities with ${GREEN}.ali.sh${NC} extension for au
 echo ""
 echo -e "${BLUE}Available Commands:${NC}"
 echo -e "  • ${GREEN}c <project>${NC}    - Navigate to project (50x faster than bash)"
-echo -e "  • ${GREEN}uw${NC}             - Update all workspaces"
+echo -e "  • ${GREEN}todo${NC}           - Todo list manager (TUI + CLI)"
+echo -e "  • ${GREEN}config${NC}         - Manage configuration"
 echo -e "  • ${GREEN}project_env${NC}    - Setup project environment"
-echo -e "  • ${GREEN}fix_env${NC}        - Refresh environment (legacy compatibility)"
 echo -e "  • Plus bash utilities: basic, maven, npm shortcuts"

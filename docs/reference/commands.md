@@ -18,8 +18,8 @@ aliases-cli [GLOBAL_OPTIONS] <command> [COMMAND_OPTIONS] [ARGUMENTS]
 | Command | Alias | Description |
 |---------|-------|-------------|
 | [`code`](#code-command) | `c` | Navigate to projects and components |
-| [`update`](#update-command) | `uw` | Update git repositories |
 | [`todo`](#todo-command) | - | Manage todos (TUI + CLI) |
+| [`config`](#config-command) | - | Manage aliases-cli configuration |
 | [`env`](#env-command) | `project_env` | Setup environment variables |
 
 ---
@@ -108,12 +108,12 @@ c -l                        # Short form
 The system searches for components in this order:
 
 **Server component (`s`, `server`):**
-1. Paths from `mappings.json` → `server_paths`
-2. Default paths: `dispatch-server`, `server`, `java`, `serverJava`
+1. Paths from `config.json` → `projects.server_paths`
+2. Default paths: `java/serverJava`, `serverJava`, `backend`, `server`
 
 **Web component (`w`, `web`):**
-1. Paths from `mappings.json` → `web_paths` 
-2. Default paths: `dispatch-web`, `web`, `webapp`, `webApp`, `frontend`
+1. Paths from `config.json` → `projects.web_paths`
+2. Default paths: `webapp`, `webApp`, `web`, `frontend`, `client`
 
 ### Tab Completion
 
@@ -127,83 +127,6 @@ Smart tab completion supports:
 c di<TAB>                   # Completes to available projects
 c dispatch <TAB>            # Shows: server, web, s, w
 c dispatch[<TAB>            # Shows bracket completions
-```
-
----
-
-## `update` Command  
-
-Update git repositories in parallel.
-
-### Syntax
-
-```bash
-aliases-cli update [OPTIONS] [PROJECT...]
-# Alias: uw [OPTIONS] [PROJECT...]
-```
-
-### Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--help`, `-h` | Show help for update command | |
-| `--verbose`, `-v` | Verbose output with git details | |
-| `--jobs`, `-j N` | Number of parallel jobs | CPU cores |
-| `--dry-run`, `-n` | Show what would be updated | |
-
-### Arguments
-
-| Argument | Description |
-|----------|-------------|
-| `PROJECT` | Specific projects to update (default: all) |
-
-### Examples
-
-#### Basic Updates
-```bash
-uw                          # Update all projects
-uw dispatch                 # Update specific project
-uw dispatch urm             # Update multiple projects
-```
-
-#### Advanced Options
-```bash
-uw --verbose                # Show git output
-uw --jobs 4                 # Use 4 parallel jobs
-uw --dry-run                # Preview changes
-uw -v -j 8                  # Verbose with 8 jobs
-```
-
-#### Component-Specific Updates
-```bash
-uw dispatch server          # Update only server component
-uw dispatch web             # Update only web component
-uw dispatch[sw]             # Update both components
-```
-
-### Update Process
-
-For each repository:
-1. **Check git status** - Verify it's a clean working directory
-2. **Fetch changes** - `git fetch origin`
-3. **Merge updates** - `git pull` if fast-forward possible
-4. **Report status** - Success, conflicts, or errors
-
-### Output Formats
-
-**Normal output:**
-```
-✓ dispatch: Updated successfully
-✓ urm: Already up to date  
-✗ project3: Merge conflicts detected
-```
-
-**Verbose output:**
-```
-[dispatch] Fetching from origin...
-[dispatch] Fast-forward merge successful
-[dispatch] 3 files changed, 15 insertions(+), 8 deletions(-)
-✓ dispatch: Updated successfully
 ```
 
 ---
@@ -394,6 +317,63 @@ aliases-cli todo tui
 
 ---
 
+## `config` Command
+
+Manage aliases-cli configuration.
+
+### Syntax
+
+```bash
+aliases-cli config <subcommand> [args...]
+```
+
+### Subcommands
+
+| Subcommand | Description |
+|------------|-------------|
+| `get <key>` | Get configuration value |
+| `set <key> <value>` | Set configuration value |
+| `list`, `ls` | List all configuration settings |
+| `reset` | Reset configuration to defaults |
+| `edit` | Open config file in editor |
+| `path` | Show config file path |
+
+### Examples
+
+```bash
+# View all settings
+aliases-cli config list
+
+# Get a specific value
+aliases-cli config get general.editor
+
+# Set a value
+aliases-cli config set general.editor vim
+aliases-cli config set code.reuse_window false
+aliases-cli config set todo.default_priority 2
+
+# Edit configuration file
+aliases-cli config edit
+
+# Show config file location
+aliases-cli config path
+
+# Reset to defaults
+aliases-cli config reset
+```
+
+### Configuration Categories
+
+- `general.*` - General settings (editor, colors, verbosity)
+- `code.*` - Code command settings
+- `todo.*` - Todo command settings
+- `update.*` - Update command settings
+- `env.*` - Environment command settings
+
+See [Configuration Reference](configuration.md) for complete details on all settings.
+
+---
+
 ## `env` Command
 
 Setup project environment variables.
@@ -476,7 +456,7 @@ $ uw project-with-conflicts
 ## Configuration Files
 
 Commands read configuration from:
-- `mappings.json` - Project mappings and shortcuts
+- `~/.config/aliases-cli/config.json` - Main configuration including project mappings
 - `~/.config/aliases-cli/todos.json` - Todo data storage
 
 See [Configuration Guide](../user-guide/configuration.md) for details.

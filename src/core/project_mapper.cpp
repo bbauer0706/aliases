@@ -1,5 +1,5 @@
 #include "aliases/project_mapper.h"
-#include "aliases/config_loader.h"
+#include "aliases/config.h"
 #include "aliases/file_utils.h"
 #include "aliases/common.h"
 
@@ -11,24 +11,37 @@ public:
     StringMap full_to_short_;
     StringMap server_paths_;
     StringMap web_paths_;
-    StringVector default_server_paths_ = {"java/serverJava", "serverJava", "backend", "server"};
-    StringVector default_web_paths_ = {"webapp", "webApp", "web", "frontend", "client"};
-    ConfigLoader config_loader_;
-    
+    StringVector default_server_paths_;
+    StringVector default_web_paths_;
+
     bool initialize() {
+        // Get config instance
+        auto& config = Config::instance();
+
         // Discover all projects in workspace directory
-        auto workspace_dir = get_workspace_directory();
+        auto workspace_dir = config.get_workspace_directory();
+        // Expand ~ to home directory
+        if (!workspace_dir.empty() && workspace_dir[0] == '~') {
+            workspace_dir = get_home_directory() + workspace_dir.substr(1);
+        }
+
         auto project_dirs = FileUtils::discover_workspace_projects(workspace_dir);
-        
+
         full_paths_.clear();
         for (const auto& dir : project_dirs) {
             auto full_name = FileUtils::get_basename(dir);
             full_paths_[full_name] = dir;
         }
-        
-        // Load local mappings
-        config_loader_.load_local_mappings(full_to_short_, server_paths_, web_paths_);
-        
+
+        // Load project mappings from config
+        config.get_project_shortcuts(full_to_short_);
+        config.get_server_paths(server_paths_);
+        config.get_web_paths(web_paths_);
+
+        // Load default paths
+        default_server_paths_ = config.get_default_server_paths();
+        default_web_paths_ = config.get_default_web_paths();
+
         return true;
     }
     

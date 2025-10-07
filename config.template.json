@@ -1,0 +1,43 @@
+{
+  "general": {
+    "editor": "code",
+    "terminal_colors": true,
+    "verbosity": "normal",
+    "confirm_destructive_actions": true
+  },
+  "code": {
+    "vscode_flags": [],
+    "reuse_window": true,
+    "fallback_behavior": "auto",
+    "preferred_component": "server"
+  },
+  "todo": {
+    "default_priority": 0,
+    "default_sort": "priority",
+    "show_completed": false,
+    "auto_categorize": false
+  },
+  "env": {
+    "base_port": 3000,
+    "port_offset": 100,
+    "default_env": "dev"
+  },
+  "sync": {
+    "enabled": false,
+    "remote_url": "",
+    "auto_sync": false,
+    "sync_interval": 86400,
+    "last_sync": 0,
+    "method": "git"
+  },
+  "projects": {
+    "workspace_directory": "~/workspaces",
+    "shortcuts": {},
+    "server_paths": {},
+    "web_paths": {},
+    "default_paths": {
+      "server": ["java/serverJava", "serverJava", "backend", "server"],
+      "web": ["webapp", "webApp", "web", "frontend", "client"]
+    }
+  }
+}

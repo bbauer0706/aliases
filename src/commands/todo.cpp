@@ -1,5 +1,6 @@
 #include "aliases/commands/todo.h"
 #include "aliases/commands/todo_tui.h"
+#include "aliases/config.h"
 #include "aliases/common.h"
 #include <iostream>
 #include <fstream>
@@ -24,16 +25,7 @@ TodoManager::TodoManager() : next_id_(1) {
 }
 
 std::string TodoManager::get_todos_file_path() const {
-    std::string home = get_home_directory();
-    std::string config_dir = home + "/.config/aliases-cli";
-    
-    // Create config directory if it doesn't exist
-    struct stat st;
-    if (stat(config_dir.c_str(), &st) == -1) {
-        mkdir(config_dir.c_str(), 0755);
-    }
-    
-    return config_dir + "/todos.json";
+    return Config::instance().get_todos_file_path();
 }
 
 Result<int> TodoManager::add_todo(const std::string& description, const std::string& category, int priority) {

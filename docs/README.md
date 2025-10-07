@@ -51,8 +51,8 @@ Complete API and command references:
 
 ### Core Commands
 - **`c` (code)** - Lightning-fast project navigation (50x faster than bash)
-- **`uw` (update)** - Parallel git repository updates
 - **`todo`** - Interactive TUI todo management with ncurses
+- **`config`** - Configuration management with sync support
 - **`project_env`** - Automatic environment variable setup
 
 ### Key Features
@@ -82,8 +82,8 @@ Complete API and command references:
 | Operation | Bash Version | C++ Version | Improvement |
 |-----------|-------------|-------------|-------------|
 | Project navigation | ~50ms | ~1ms | **50x faster** |
-| Workspace updates | ~200ms | ~20ms | **10x faster** |
 | Todo operations | N/A | ~0.1ms | **Instant** |
+| Config operations | ~20ms | ~0.5ms | **40x faster** |
 | Memory usage | ~8MB | ~2MB | **75% less** |
 
 ## 🔍 Search and Navigation
@@ -117,7 +117,7 @@ Every command includes built-in help:
 aliases-cli --help              # Global help
 aliases-cli code --help         # Code command help
 aliases-cli todo --help         # Todo command help
-aliases-cli update --help       # Update command help
+aliases-cli config --help       # Config command help
 ```
 
 ### Quick Reference
