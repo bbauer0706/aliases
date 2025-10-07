@@ -1,0 +1,258 @@
+name: CI/CD Pipeline
+
+permissions:
+  contents: write
+  pull-requests: read
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  # ============================================================================
+  # Build and Test
+  # ============================================================================
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for versioning
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential g++
+      
+      - name: Build binary
+        run: ./build.sh
+      
+      - name: Test binary
+        run: |
+          ./build/aliases-cli --version
+          ./build/aliases-cli --help
+      
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: aliases-cli-binary
+          path: build/aliases-cli
+          retention-days: 7
+
+  # ============================================================================
+  # Automatic Versioning and Release (only on main branch)
+  # ============================================================================
+  version-and-release:
+    name: Version and Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Download binary
+        uses: actions/download-artifact@v3
+        with:
+          name: aliases-cli-binary
+          path: build/
+      
+      - name: Make binary executable
+        run: chmod +x build/aliases-cli
+      
+      - name: Determine version bump type
+        id: bump_type
+        run: |
+          # Get commit messages since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s" 2>/dev/null || git log --pretty=format:"%s")
+          
+          echo "Commits since $LAST_TAG:"
+          echo "$COMMITS"
+          
+          # Determine bump type based on conventional commits
+          BUMP_TYPE="patch"
+          
+          # Check for breaking changes (MAJOR)
+          if echo "$COMMITS" | grep -qE "^(feat|fix|refactor|perf)!:|BREAKING CHANGE:"; then
+            BUMP_TYPE="major"
+            echo "Found breaking change - major bump"
+          # Check for new features (MINOR)
+          elif echo "$COMMITS" | grep -qE "^feat(\(.*\))?:"; then
+            BUMP_TYPE="minor"
+            echo "Found new feature - minor bump"
+          # Otherwise patch (BUG FIXES, docs, chores, etc.)
+          else
+            echo "Only fixes/chores/docs - patch bump"
+          fi
+          
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+      
+      - name: Bump version
+        id: bump_version
+        run: |
+          BUMP_TYPE="${{ steps.bump_type.outputs.bump_type }}"
+          
+          # Read current version
+          if [ ! -f VERSION ]; then
+            echo "0.0.0" > VERSION
+          fi
+          
+          CURRENT_VERSION=$(cat VERSION | tr -d '[:space:]')
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Parse version
+          if [[ ! "$CURRENT_VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "Invalid version format, starting at 1.0.0"
+            CURRENT_VERSION="1.0.0"
+          fi
+          
+          MAJOR="${BASH_REMATCH[1]}"
+          MINOR="${BASH_REMATCH[2]}"
+          PATCH="${BASH_REMATCH[3]}"
+          
+          # Bump version
+          case $BUMP_TYPE in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "New version: $NEW_VERSION"
+          
+          # Update VERSION file
+          echo "$NEW_VERSION" > VERSION
+          
+          # Update src/main.cpp
+          sed -i "s/constexpr const char\* VERSION = \"[^\"]*\";/constexpr const char* VERSION = \"$NEW_VERSION\";/" src/main.cpp
+          
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+      
+      - name: Generate changelog entry
+        id: changelog
+        run: |
+          VERSION="${{ steps.bump_version.outputs.version }}"
+          LAST_TAG="${{ steps.bump_type.outputs.last_tag }}"
+          DATE=$(date +%Y-%m-%d)
+          
+          # Get commits for changelog
+          COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" 2>/dev/null || git log --pretty=format:"- %s (%h)")
+          
+          # Categorize commits
+          FEATURES=$(echo "$COMMITS" | grep "^- feat" || echo "")
+          FIXES=$(echo "$COMMITS" | grep "^- fix" || echo "")
+          BREAKING=$(echo "$COMMITS" | grep -E "^- (feat|fix)!|BREAKING" || echo "")
+          DOCS=$(echo "$COMMITS" | grep "^- docs" || echo "")
+          CHORES=$(echo "$COMMITS" | grep "^- chore" || echo "")
+          REFACTOR=$(echo "$COMMITS" | grep "^- refactor" || echo "")
+          PERF=$(echo "$COMMITS" | grep "^- perf" || echo "")
+          
+          # Create changelog entry
+          CHANGELOG_ENTRY="## [$VERSION] - $DATE"$'\n'
+          
+          if [ ! -z "$BREAKING" ]; then
+            CHANGELOG_ENTRY+=$'\n'"### ⚠️ Breaking Changes"$'\n'"$BREAKING"$'\n'
+          fi
+          
+          if [ ! -z "$FEATURES" ]; then
+            CHANGELOG_ENTRY+=$'\n'"### ✨ Added"$'\n'"$FEATURES"$'\n'
+          fi
+          
+          if [ ! -z "$FIXES" ]; then
+            CHANGELOG_ENTRY+=$'\n'"### 🐛 Fixed"$'\n'"$FIXES"$'\n'
+          fi
+          
+          if [ ! -z "$REFACTOR" ]; then
+            CHANGELOG_ENTRY+=$'\n'"### ♻️ Refactored"$'\n'"$REFACTOR"$'\n'
+          fi
+          
+          if [ ! -z "$PERF" ]; then
+            CHANGELOG_ENTRY+=$'\n'"### ⚡ Performance"$'\n'"$PERF"$'\n'
+          fi
+          
+          if [ ! -z "$DOCS" ]; then
+            CHANGELOG_ENTRY+=$'\n'"### 📚 Documentation"$'\n'"$DOCS"$'\n'
+          fi
+          
+          if [ ! -z "$CHORES" ]; then
+            CHANGELOG_ENTRY+=$'\n'"### 🔧 Maintenance"$'\n'"$CHORES"$'\n'
+          fi
+          
+          # Update CHANGELOG.md
+          if [ -f CHANGELOG.md ]; then
+            # Create temp file with new entry
+            (head -n 4 CHANGELOG.md; echo ""; echo "$CHANGELOG_ENTRY"; echo ""; tail -n +5 CHANGELOG.md) > CHANGELOG.md.tmp
+            mv CHANGELOG.md.tmp CHANGELOG.md
+          else
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "## [Unreleased]" >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "$CHANGELOG_ENTRY" >> CHANGELOG.md
+          fi
+          
+          # Save for release notes
+          echo "$CHANGELOG_ENTRY" > release-notes.md
+          
+          echo "Generated changelog entry for v$VERSION"
+      
+      - name: Commit version bump
+        run: |
+          VERSION="${{ steps.bump_version.outputs.version }}"
+          
+          git add VERSION src/main.cpp CHANGELOG.md
+          git commit -m "chore: bump version to $VERSION [skip ci]" || echo "No changes to commit"
+          git push origin main
+      
+      - name: Create and push tag
+        run: |
+          VERSION="${{ steps.bump_version.outputs.version }}"
+          
+          # Create annotated tag with release notes
+          git tag -a "v$VERSION" -F release-notes.md
+          git push origin "v$VERSION"
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.bump_version.outputs.version }}
+          name: v${{ steps.bump_version.outputs.version }}
+          body_path: release-notes.md
+          files: |
+            build/aliases-cli
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
