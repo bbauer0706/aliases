@@ -3,6 +3,17 @@
 All notable changes to aliases-cli will be documented in this file.
 
 
+## [1.1.1] - 2025-10-07
+
+### 🐛 Fixed
+- fix: test CI/CD with branch protection enabled (62f7e2b)
+- fix: test CI/CD with branch protection enabled (6540885)
+
+### 📚 Documentation
+- docs: update README and fix workflow actions [skip ci] (2fd8c3b)
+
+
+
 ## [1.1.0] - 2025-10-07
 
 ### ✨ Added
