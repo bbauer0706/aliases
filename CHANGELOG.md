@@ -2,6 +2,46 @@
 
 All notable changes to aliases-cli will be documented in this file.
 
+
+## [1.1.0] - 2025-10-07
+
+### ✨ Added
+- feat: add automated CI/CD workflows (cdec280)
+- feat: config (ca15479)
+- feat: new stuff (9ead59a)
+- feat: clear cmd not found hanlder (eed03bd)
+- feat: clear (acd3924)
+- feat: todo v1.1 (d106fc7)
+- feat: todo v1 (40db763)
+- feat: git-reset-last (cbf589c)
+- feat: conditional pnpm alias (0748f7a)
+- feat: tab completion for c (ef0606d)
+- feat: enhance code navigator with composite project support (c519e85)
+- feat: some clean up (a18d05f)
+- feat: project env port selection based on user name (21988b1)
+
+### 🐛 Fixed
+- fix: update all workflow actions to v4 and add permissions (175cc6f)
+- fix: update upload-artifact to v4 (3f4cd5c)
+- fix: build (1b21bdf)
+- fix: c completion deduplication (7468793)
+- fix: manual tab completion setup (e7306e3)
+- fix: is server dir compared absolute to relative path (4a68ed9)
+- fix: shell wrapper to accually set the env in the shell (6525f60)
+- fix: call the alias cli bin directly when sourcing (639e6ec)
+- fix: stuff göll :) (70a3d9c)
+- fix: project selection on shell init (9b08222)
+- fix use mappings template insted of the file itself (305410a)
+- fix: type in code alias (afe51cd)
+- fix code script error, when dir ends on s or w (0564796)
+- fix setup.sh bug (2559e5f)
+
+### 🔧 Maintenance
+- chore: build version (6461f36)
+- chore: hopefully replaced all stup impls ... (3f3a037)
+- chore: forgot to remove debug echo (a3630bf)
+
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
