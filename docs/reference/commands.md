@@ -26,7 +26,7 @@ aliases-cli [GLOBAL_OPTIONS] <command> [COMMAND_OPTIONS] [ARGUMENTS]
 
 ## `code` Command
 
-Navigate to project directories and components.
+Navigate to project directories and components with intelligent fallback to VS Code.
 
 ### Syntax
 
@@ -49,6 +49,16 @@ aliases-cli code [OPTIONS] [PROJECT...] [COMPONENT]
 |----------|-------------|---------|
 | `PROJECT` | Project name or shortcut | `dispatch`, `dip` |
 | `COMPONENT` | Component to open | `server`, `web`, `s`, `w` |
+| `PATH` | Any valid path or VS Code argument | `..`, `.`, `/path/to/dir` |
+
+### Behavior
+
+The `c` command intelligently determines how to handle arguments:
+
+1. **Project shortcuts first**: Checks if the argument matches a configured project
+2. **Fallback to VS Code**: If no project matches, passes arguments directly to `code` command
+
+This allows seamless usage for both project shortcuts and regular VS Code operations.
 
 ### Examples
 
@@ -63,6 +73,16 @@ c dispatch server            # Go to server component
 c dispatch web              # Go to web component
 c dip s                     # Shortcut + component abbreviation
 c dip w                     # Web component
+```
+
+#### Fallback to Regular VS Code
+```bash
+# When argument doesn't match a project, acts like 'code'
+c ..                        # Open parent directory in VS Code
+c .                         # Open current directory in VS Code
+c /path/to/folder           # Open any path in VS Code
+c file.txt                  # Open a file in VS Code
+c --new-window              # Pass VS Code flags directly
 ```
 
 #### Multiple Components

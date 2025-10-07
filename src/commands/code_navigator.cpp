@@ -15,21 +15,38 @@ int CodeNavigator::execute(const StringVector& args) {
         show_help();
         return 0;
     }
-    
+
     // No parameters, open home directory
     if (args.empty()) {
         open_home_directory();
         return 0;
     }
-    
-    // Multiple parameters, open each project
+
+    // Multiple parameters, try to open as projects first
     if (args.size() > 1) {
-        open_multiple_projects(args);
+        // Check if all arguments are valid projects
+        bool all_valid = true;
+        for (const auto& arg : args) {
+            if (!is_valid_project_spec(arg)) {
+                all_valid = false;
+                break;
+            }
+        }
+
+        if (all_valid) {
+            open_multiple_projects(args);
+            return 0;
+        }
+
+        // Fall back to regular code command with all arguments
+        fallback_to_code(args);
         return 0;
     }
-    
-    // Single parameter
-    open_project(args[0]);
+
+    // Single parameter - try as project first, fall back to code command
+    if (!open_project(args[0])) {
+        fallback_to_code(args);
+    }
     return 0;
 }
 
@@ -43,28 +60,33 @@ void CodeNavigator::show_help() const {
     std::cout << "  c <project>ws    - Open web and server components (shorthand)" << std::endl;
     std::cout << "  c <project>sw    - Open server and web components (shorthand)" << std::endl;
     std::cout << "  c <proj1> <proj2> ... - Open multiple projects" << std::endl;
+    std::cout << std::endl;
+    std::cout << "Falls back to regular 'code' command if no project matches:" << std::endl;
+    std::cout << "  c ..             - Open parent directory in VS Code" << std::endl;
+    std::cout << "  c <path>         - Open any path in VS Code" << std::endl;
+    std::cout << "  c <file>         - Open file in VS Code" << std::endl;
 }
 
 void CodeNavigator::open_home_directory() const {
     launch_vscode(get_home_directory());
 }
 
-void CodeNavigator::open_project(const std::string& project_spec) const {
+bool CodeNavigator::open_project(const std::string& project_spec) const {
     // Check for bracket notation first
     if (project_spec.find('[') != std::string::npos && project_spec.find(']') != std::string::npos) {
         open_bracket_notation(project_spec);
-        return;
+        return true;
     }
-    
+
     auto [base, suffix] = parse_project_spec(project_spec);
-    
+
     // Check if the exact input matches a project first
     if (project_mapper_->get_project_path(project_spec)) {
         // Full input is a valid project
         open_main_project(project_spec);
-        return;
+        return true;
     }
-    
+
     // Check if base is valid project when we have a suffix
     auto project_path = project_mapper_->get_project_path(base);
     if (!project_path) {
@@ -72,14 +94,13 @@ void CodeNavigator::open_project(const std::string& project_spec) const {
         auto composite_projects = parse_composite_projects(project_spec);
         if (!composite_projects.empty()) {
             open_multiple_projects(composite_projects);
-            return;
+            return true;
         }
-        
-        std::cout << "Unknown project: " << base << std::endl;
-        show_available_projects();
-        return;
+
+        // No valid project found
+        return false;
     }
-    
+
     // Handle different cases
     if (suffix.empty()) {
         open_main_project(base);
@@ -88,6 +109,7 @@ void CodeNavigator::open_project(const std::string& project_spec) const {
     } else if (suffix == "w") {
         open_web_component(base);
     }
+    return true;
 }
 
 void CodeNavigator::open_multiple_projects(const StringVector& project_specs) const {
@@ -259,6 +281,33 @@ StringVector CodeNavigator::parse_composite_projects(const std::string& composit
 
 void CodeNavigator::launch_vscode(const std::string& path) const {
     ProcessUtils::execute("code " + ProcessUtils::escape_shell_argument(path));
+}
+
+bool CodeNavigator::is_valid_project_spec(const std::string& spec) const {
+    // Check for bracket notation
+    if (spec.find('[') != std::string::npos && spec.find(']') != std::string::npos) {
+        return true;
+    }
+
+    auto [base, suffix] = parse_project_spec(spec);
+
+    // Check if exact spec or base is a valid project
+    if (project_mapper_->get_project_path(spec) || project_mapper_->get_project_path(base)) {
+        return true;
+    }
+
+    // Check if it's a composite project
+    auto composite_projects = parse_composite_projects(spec);
+    return !composite_projects.empty();
+}
+
+void CodeNavigator::fallback_to_code(const StringVector& args) const {
+    // Build command to execute regular code command
+    std::string command = "code";
+    for (const auto& arg : args) {
+        command += " " + ProcessUtils::escape_shell_argument(arg);
+    }
+    ProcessUtils::execute(command);
 }
 
 } // namespace aliases::commands

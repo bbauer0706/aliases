@@ -19,8 +19,9 @@ private:
     // Command implementations
     void show_help() const;
     void open_home_directory() const;
-    void open_project(const std::string& project_spec) const;
+    bool open_project(const std::string& project_spec) const;
     void open_multiple_projects(const StringVector& project_specs) const;
+    void fallback_to_code(const StringVector& args) const;
     
     // Project opening logic
     void open_main_project(const std::string& project_name) const;
