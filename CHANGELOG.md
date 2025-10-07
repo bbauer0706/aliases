@@ -3,6 +3,13 @@
 All notable changes to aliases-cli will be documented in this file.
 
 
+## [1.2.0] - 2025-10-07
+
+### ✨ Added
+- feat: npm-clean (7561fca)
+
+
+
 ## [1.1.1] - 2025-10-07
 
 ### 🐛 Fixed
