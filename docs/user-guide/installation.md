@@ -94,29 +94,20 @@ vim ~/.config/aliases-cli/config.json
 
 ### Project Settings
 
-Edit your configuration using the config command or by editing `~/.config/aliases-cli/config.json`:
+Configuration is automatically created on first run at `~/.config/aliases-cli/config.json`. You can manage it using the config command:
 
-```json
-{
-  "projects": {
-    "workspace_directory": "~/workspaces",
-    "shortcuts": {
-      "my-awesome-project": "map"
-    },
-    "server_paths": {
-      "my-awesome-project": "backend",
-      "another-project": "java"
-    },
-    "web_paths": {
-      "my-awesome-project": "frontend",
-      "another-project": "react-app"
-    },
-    "default_paths": {
-      "server": ["java/serverJava", "serverJava", "backend", "server"],
-      "web": ["webapp", "webApp", "web", "frontend", "client"]
-    }
-  }
-}
+```bash
+# View all configuration
+aliases-cli config list
+
+# Edit configuration
+aliases-cli config edit
+
+# Set specific values
+aliases-cli config set projects.workspace_directory ~/dev/projects
+
+# Or manually edit
+vim ~/.config/aliases-cli/config.json
 ```
 
 ### Workspace Structure

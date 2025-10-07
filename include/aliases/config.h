@@ -1,17 +1,13 @@
 #pragma once
 
 #include "common.h"
+#include "third_party/json.hpp"
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
 namespace aliases {
-
-// Forward declaration for JSON type
-namespace nlohmann {
-    class json;
-}
 
 /**
  * Centralized configuration management for aliases CLI

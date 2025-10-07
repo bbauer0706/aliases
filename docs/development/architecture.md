@@ -40,13 +40,14 @@ aliases-cli
   - Commit information extraction
 - **Pattern**: Service class with command execution
 
-### Configuration System (`config_loader.cpp`)
-- **Purpose**: JSON-based configuration management
+### Configuration System (`config.cpp` + `config_sync.cpp`)
+- **Purpose**: JSON-based configuration management with remote sync
 - **Responsibilities**:
-  - Load/save configuration files
-  - Type-safe configuration access
+  - Load/save configuration files (config.cpp)
+  - Type-safe configuration access with singleton pattern
   - Default value handling
-- **Pattern**: Template-based type-safe config
+  - Remote sync support via git/rsync/file/http (config_sync.cpp)
+- **Pattern**: Singleton pattern with comprehensive getters/setters
 
 ## Command Architecture
 

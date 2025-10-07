@@ -203,8 +203,16 @@ bool ConfigSync::push_git() {
         return false;
     }
 
+    // Get hostname for commit message
+    auto hostname_result = ProcessUtils::execute("hostname");
+    std::string hostname = hostname_result.success() ? hostname_result.stdout_output : "unknown";
+    // Remove newline
+    if (!hostname.empty() && hostname.back() == '\n') {
+        hostname.pop_back();
+    }
+
     // Commit and push
-    return git_commit_and_push(repo_dir, "Update config from " + get_hostname());
+    return git_commit_and_push(repo_dir, "Update config from " + hostname);
 }
 
 bool ConfigSync::git_clone_or_pull(const std::string& repo_url, const std::string& target_dir) {
@@ -212,13 +220,13 @@ bool ConfigSync::git_clone_or_pull(const std::string& repo_url, const std::strin
         // Already cloned, just pull
         std::string command = "cd " + ProcessUtils::escape_shell_argument(target_dir) +
                              " && git pull --quiet";
-        return ProcessUtils::execute(command) == 0;
+        return ProcessUtils::execute(command).success();
     } else {
         // Clone
         std::string command = "git clone --quiet " +
                              ProcessUtils::escape_shell_argument(repo_url) + " " +
                              ProcessUtils::escape_shell_argument(target_dir);
-        return ProcessUtils::execute(command) == 0;
+        return ProcessUtils::execute(command).success();
     }
 }
 
@@ -229,7 +237,7 @@ bool ConfigSync::git_commit_and_push(const std::string& repo_dir, const std::str
         "git commit -m " + ProcessUtils::escape_shell_argument(message) + " && " +
         "git push --quiet";
 
-    return ProcessUtils::execute(commands) == 0;
+    return ProcessUtils::execute(commands).success();
 }
 
 bool ConfigSync::is_git_repo(const std::string& dir) const {
@@ -247,7 +255,7 @@ bool ConfigSync::pull_rsync() {
                          ProcessUtils::escape_shell_argument(remote_url + "/") + " " +
                          ProcessUtils::escape_shell_argument(config_dir + "/");
 
-    return ProcessUtils::execute(command) == 0;
+    return ProcessUtils::execute(command).success();
 }
 
 bool ConfigSync::push_rsync() {
@@ -259,7 +267,7 @@ bool ConfigSync::push_rsync() {
                          ProcessUtils::escape_shell_argument(config_dir + "/") + " " +
                          ProcessUtils::escape_shell_argument(remote_url + "/");
 
-    return ProcessUtils::execute(command) == 0;
+    return ProcessUtils::execute(command).success();
 }
 
 // ========== File Copy Implementation ==========
@@ -296,7 +304,7 @@ bool ConfigSync::copy_config_files(const std::string& source_dir, const std::str
                              ProcessUtils::escape_shell_argument(source_file) + " " +
                              ProcessUtils::escape_shell_argument(dest_file);
 
-        if (ProcessUtils::execute(command) != 0) {
+        if (!ProcessUtils::execute(command).success()) {
             std::cerr << "Failed to copy " << file << std::endl;
             return false;
         }
@@ -317,7 +325,7 @@ bool ConfigSync::pull_http() {
                          ProcessUtils::escape_shell_argument(config_dir + "/config.json") + " " +
                          ProcessUtils::escape_shell_argument(remote_url + "/config.json");
 
-    if (ProcessUtils::execute(command) != 0) {
+    if (!ProcessUtils::execute(command).success()) {
         std::cerr << "Failed to download config.json" << std::endl;
         return false;
     }

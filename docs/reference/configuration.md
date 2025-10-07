@@ -177,6 +177,54 @@ aliases-cli config set sync.sync_interval 3600
 
 ---
 
+### Projects Settings (`projects.*`)
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `workspace_directory` | string | `~/workspaces` | Base directory for all projects |
+| `shortcuts` | object | `{}` | Project name shortcuts/aliases |
+| `server_paths` | object | `{}` | Custom server component paths per project |
+| `web_paths` | object | `{}` | Custom web component paths per project |
+| `default_paths.server` | array | `[\"java/serverJava\",\"serverJava\",\"backend\",\"server\"]` | Default server paths to search |
+| `default_paths.web` | array | `[\"webapp\",\"webApp\",\"web\",\"frontend\",\"client\"]` | Default web paths to search |
+
+**Examples:**
+```bash
+# Set workspace directory
+aliases-cli config set projects.workspace_directory ~/dev/projects
+
+# View current project mappings
+aliases-cli config get projects.shortcuts
+aliases-cli config get projects.server_paths
+```
+
+**Configuration via JSON:**
+```json
+{
+  "projects": {
+    "workspace_directory": "~/workspaces",
+    "shortcuts": {
+      "urm20": "urm",
+      "dispatch20": "dip"
+    },
+    "server_paths": {
+      "urm20": "serverJava"
+    },
+    "web_paths": {
+      "urm20": "urm2"
+    },
+    "default_paths": {
+      "server": ["java/serverJava", "serverJava", "backend", "server"],
+      "web": ["webapp", "webApp", "web", "frontend", "client"]
+    }
+  }
+}
+```
+
+**See Also:** [Commands Reference - Code Command](commands.md#code-command)
+
+---
+
 ## Example Configuration File
 
 Here's a complete example `config.json`:
@@ -213,6 +261,23 @@ Here's a complete example `config.json`:
     "sync_interval": 86400,
     "last_sync": 0,
     "method": "git"
+  },
+  "projects": {
+    "workspace_directory": "~/workspaces",
+    "shortcuts": {
+      "urm20": "urm",
+      "dispatch20": "dip"
+    },
+    "server_paths": {
+      "urm20": "serverJava"
+    },
+    "web_paths": {
+      "urm20": "urm2"
+    },
+    "default_paths": {
+      "server": ["java/serverJava", "serverJava", "backend", "server"],
+      "web": ["webapp", "webApp", "web", "frontend", "client"]
+    }
   }
 }
 ```

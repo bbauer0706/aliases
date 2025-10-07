@@ -121,17 +121,18 @@ CORE_SOURCES=(
     "src/core/project_mapper.cpp"
     "src/core/git_operations.cpp"  
     "src/core/file_utils.cpp"
-    "src/core/config_loader.cpp"
     "src/core/process_utils.cpp"
     "src/core/common.cpp"
+    "src/core/config.cpp"
+    "src/core/config_sync.cpp"
 )
 
 COMMAND_SOURCES=(
     "src/commands/code_navigator.cpp"
-    "src/commands/workspace_updater.cpp"
     "src/commands/project_env.cpp"
     "src/commands/todo.cpp"
     "src/commands/todo_tui.cpp"
+    "src/commands/config_cmd.cpp"
 )
 
 MAIN_SOURCE="src/main.cpp"

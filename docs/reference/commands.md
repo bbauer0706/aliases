@@ -337,6 +337,10 @@ aliases-cli config <subcommand> [args...]
 | `reset` | Reset configuration to defaults |
 | `edit` | Open config file in editor |
 | `path` | Show config file path |
+| `sync setup <url> [method]` | Setup config sync |
+| `sync pull` | Pull config from remote |
+| `sync push` | Push config to remote |
+| `sync status` | Show sync status |
 
 ### Examples
 
@@ -360,6 +364,12 @@ aliases-cli config path
 
 # Reset to defaults
 aliases-cli config reset
+
+# Setup config sync
+aliases-cli config sync setup git@github.com:user/aliases-config.git git
+aliases-cli config sync push
+aliases-cli config sync pull
+aliases-cli config sync status
 ```
 
 ### Configuration Categories
@@ -367,8 +377,9 @@ aliases-cli config reset
 - `general.*` - General settings (editor, colors, verbosity)
 - `code.*` - Code command settings
 - `todo.*` - Todo command settings
-- `update.*` - Update command settings
 - `env.*` - Environment command settings
+- `sync.*` - Config sync settings
+- `projects.*` - Project mappings and workspace settings
 
 See [Configuration Reference](configuration.md) for complete details on all settings.
 

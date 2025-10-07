@@ -189,7 +189,8 @@ build/
 - `project_mapper.cpp` - Project discovery and mapping
 - `git_operations.cpp` - Git repository operations
 - `file_utils.cpp` - File system utilities
-- `config_loader.cpp` - JSON configuration loading
+- `config.cpp` - Configuration management with sync support
+- `config_sync.cpp` - Multi-method sync (git/rsync/file/http)
 - `process_utils.cpp` - Process execution utilities
 - `common.cpp` - Common utilities and types
 

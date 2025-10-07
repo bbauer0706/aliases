@@ -8,7 +8,7 @@ Welcome to the aliases-cli documentation. This directory contains comprehensive 
 Complete guides for end users:
 - **[Installation](user-guide/installation.md)** - Setup and configuration
 - **[Todo Management](user-guide/todo-management.md)** - TUI and CLI todo system
-- **Configuration** - Project mappings and customization *(coming soon)*
+- **[Config Sync](user-guide/config-sync.md)** - Sync configuration across machines
 - **Tab Completion** - Smart completion system *(coming soon)*
 
 ### 🔧 [Development](development/)  
@@ -52,8 +52,8 @@ Complete API and command references:
 ### Core Commands
 - **`c` (code)** - Lightning-fast project navigation (50x faster than bash)
 - **`todo`** - Interactive TUI todo management with ncurses
-- **`config`** - Configuration management with sync support
-- **`project_env`** - Automatic environment variable setup
+- **`config`** - Configuration management with multi-method sync (git/rsync/file/http)
+- **`env`** - Automatic environment variable setup
 
 ### Key Features
 - **🎯 Smart Discovery** - Auto-detect projects and components
@@ -134,14 +134,15 @@ project_env                    # Setup environment
 ### ✅ Complete
 - Installation guide
 - Todo management guide  
+- Config sync guide (NEW)
 - Building guide
-- Command reference
+- Command reference (updated with config sync)
+- Configuration reference (updated with projects section)
 - Integration documentation
 
 ### 🚧 In Progress
-- Configuration schema reference
 - Advanced shell integration
-- Architecture documentation
+- Architecture documentation (updated with config module)
 
 ### 📅 Planned
 - Video tutorials
@@ -150,5 +151,7 @@ project_env                    # Setup environment
 - API documentation for embedding
 
 ---
+
+**Last Updated:** October 7, 2025 - Added config sync documentation and updated all references to reflect current implementation
 
 **For questions or suggestions about documentation, please open an issue in the repository.**
