@@ -1,6 +1,6 @@
 # aliases-cli
 
-> A high-performance C++ project management system with lightning-fast workspace navigation and TUI todo management.
+> A high-performance C++ project management system with lightning-fast workspace navigation, TUI todo management, and cloud configuration sync.
 
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -14,7 +14,7 @@
 - 🔧 **JSON-based configuration** for maintainable project mappings
 - 🌐 **Multi-component navigation** (server, web, multiple projects)
 - 🚀 **Environment setup** with automatic detection
-- 🔄 **Parallel workspace updates** with progress tracking
+- 🔄 **Config sync** - Sync settings across machines (git/rsync/file/http)
 
 ## 🚀 Quick Start
 
@@ -28,11 +28,11 @@
 ### First-time Setup
 
 ```bash
-# Copy configuration template
-cp mappings.template.json mappings.json
+# Configure your projects
+aliases-cli config edit projects
 
-# Edit with your project shortcuts
-vim mappings.json  # Add your projects and paths
+# Setup config sync (optional)
+aliases-cli config setup git@github.com:user/aliases-config.git
 ```
 
 ### Basic Usage
@@ -43,13 +43,14 @@ c dispatch              # Go to project
 c dip                  # Use shortcuts  
 c dispatch server      # Open specific component
 
-# Update all workspaces
-uw                     # Update all projects
-uw dispatch            # Update specific project
-
 # Interactive todo management
 aliases-cli todo       # Launch TUI mode
 aliases-cli todo add "Fix bug"  # CLI mode
+
+# Configuration management
+aliases-cli config list         # View all settings
+aliases-cli config sync push    # Push config to remote
+aliases-cli config sync pull    # Pull config from remote
 
 # Setup project environment
 project_env            # Auto-detect and setup
@@ -60,8 +61,8 @@ project_env            # Auto-detect and setup
 | Command | Alias | Description | Performance |
 |---------|-------|-------------|-------------|
 | `aliases-cli code` | `c` | Navigate to projects/components | 50x faster |
-| `aliases-cli update` | `uw` | Update git repositories | 10x faster |
 | `aliases-cli todo` | - | Interactive todo management | TUI + CLI |
+| `aliases-cli config` | - | Configuration management & sync | 40x faster |
 | `aliases-cli env` | `project_env` | Setup environment variables | 20x faster |
 
 ## 📝 Todo Management
@@ -90,22 +91,50 @@ aliases-cli todo done 1                      # Complete todo
 aliases-cli todo priority 1 3               # Set priority (0-3)
 ```
 
+## 🔄 Configuration Sync
+
+Keep your configuration synchronized across multiple machines:
+
+### Sync Methods
+- **Git** - Sync via GitHub/GitLab repository
+- **Rsync** - Sync via SSH/rsync
+- **File** - Direct file system copy
+- **HTTP** - Download from web server
+
+### Setup & Usage
+```bash
+# Setup sync storage
+aliases-cli config setup git@github.com:user/aliases-config.git
+aliases-cli config setup rsync user@host:/path/to/config
+
+# Sync operations
+aliases-cli config sync push      # Push local config to remote
+aliases-cli config sync pull      # Pull remote config to local
+aliases-cli config sync status    # Check sync status
+```
+
+See **[Config Sync Guide](docs/user-guide/config-sync.md)** for detailed documentation.
+
 ## 📁 Project Structure
 
 ```
 ├── src/                    # C++ source code
 │   ├── commands/           # Command implementations
 │   │   ├── code_navigator.cpp
-│   │   ├── workspace_updater.cpp
+│   │   ├── config_cmd.cpp    # 🆕 Config management
 │   │   ├── project_env.cpp
-│   │   └── todo.cpp       # 🆕 TUI todo manager
-│   └── core/              # Core functionality
+│   │   └── todo.cpp          # 🆕 TUI todo manager
+│   └── core/                 # Core functionality
+│       ├── config.cpp        # 🆕 Configuration system
+│       └── config_sync.cpp   # 🆕 Multi-method sync
 ├── include/               # C++ headers
 │   └── third_party/      # Dependencies
 │       ├── json.hpp      # JSON library
 │       └── ncurses/      # 🆕 Built ncurses (1.9M)
 ├── docs/                 # 📚 Documentation
 │   ├── user-guide/       # User documentation
+│   │   ├── config-sync.md   # 🆕 Sync guide
+│   │   └── todo-management.md
 │   ├── development/      # Developer guides
 │   ├── integrations/     # Shell integration docs
 │   └── reference/        # API reference
@@ -116,18 +145,42 @@ aliases-cli todo priority 1 3               # Set priority (0-3)
 
 ## 🔧 Configuration
 
-### Project Mappings (`mappings.json`)
+### Project Mappings
 
+Edit via CLI:
+```bash
+aliases-cli config edit projects
+```
+
+Or manually edit `~/.config/aliases-cli/config.json`:
 ```json
 {
-  "project_mappings": {
+  "projects": {
     "my-project": {
+      "path": "/home/user/projects/my-project",
       "shortcuts": ["mp", "proj"],
-      "server_paths": ["backend", "server"],
-      "web_paths": ["frontend", "webapp", "web"]
+      "components": {
+        "server": "backend",
+        "web": "frontend"
+      }
     }
   }
 }
+```
+
+### Config Sync Storage
+
+```bash
+# View current config
+aliases-cli config list
+
+# Setup sync method
+aliases-cli config setup git@github.com:user/config.git
+aliases-cli config set sync.method git
+
+# Push/pull configuration
+aliases-cli config sync push
+aliases-cli config sync pull
 ```
 
 ### Smart Tab Completion
@@ -164,10 +217,10 @@ The build system automatically detects and uses:
 
 ## 📚 Documentation
 
-- **[User Guide](docs/user-guide/)** - Comprehensive usage guide
+- **[User Guide](docs/user-guide/)** - Installation, todo management, config sync
 - **[Development](docs/development/)** - Building and contributing
 - **[Integrations](docs/integrations/)** - Shell integration details
-- **[Reference](docs/reference/)** - Command reference
+- **[Reference](docs/reference/)** - Command reference and configuration
 
 ## 🤝 Contributing
 
@@ -177,16 +230,9 @@ The build system automatically detects and uses:
 4. Build and test: `./build.sh && aliases-cli --help`
 5. Submit a pull request
 
-**Note:** Keep `mappings.json` private (git-ignored)
+## 🎯 Version History
 
-## 🎯 Migration from Bash
-
-The system is designed for **seamless migration**:
-
-- ✅ **Automatic setup** - `./install.sh` handles everything
-- ✅ **Preserves aliases** - All your existing shortcuts work
-- ✅ **Performance boost** - Same interface, 50x faster
-- ✅ **New features** - TUI todo manager, better error handling
+See [CHANGELOG.md](CHANGELOG.md) for release history and [VERSIONING.md](VERSIONING.md) for versioning guidelines.
 
 ## 📄 License
 
