@@ -15,6 +15,14 @@ alias npmi='npm i'
 alias lint='npm run lint'
 alias pipeline='npm run pipeline:dry-run'
 
+# Clean install - removes .next, node_modules, and package-lock.json before npm install
+npm-clean() {
+    [ -d ".next" ] && echo "  Removing .next..." && rm -rf .next
+    [ -d "node_modules" ] && echo "  Removing node_modules..." && rm -rf node_modules
+    [ -f "package-lock.json" ] && echo "  Removing package-lock.json..." && rm -rf package-lock.json
+    npm i
+}
+
 # Package manager - alias npm to pnpm if pnpm is available
 if command -v pnpm >/dev/null 2>&1; then
     alias npm='pnpm'
