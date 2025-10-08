@@ -209,7 +209,11 @@ jobs:
       - name: Create and push tag
         run: |
           VERSION="${{ steps.bump_version.outputs.version }}"
-          
+
+          # Configure git identity
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
           # Create annotated tag with release notes
           git tag -a "v$VERSION" -F release-notes.md
           git push origin "v$VERSION"
