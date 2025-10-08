@@ -206,6 +206,55 @@ The build system automatically detects and uses:
 ./build.sh --install    # Install to /usr/local/bin
 ```
 
+## 🧪 Testing
+
+The project uses **Google Test** for comprehensive unit testing.
+
+### Running Tests
+
+```bash
+# Build tests
+./build_tests.sh
+
+# Run all tests (summary output)
+./run_tests.sh
+
+# Run with verbose output
+./run_tests.sh -v
+
+# Run specific tests
+./run_tests.sh -f "Common*"
+
+# Run individual test suite
+./build/tests/common_test
+./build/tests/file_utils_test
+```
+
+### Test Structure
+
+```
+tests/
+├── unit/              # Unit tests
+│   ├── common_test.cpp
+│   └── file_utils_test.cpp
+└── integration/       # Integration tests (future)
+```
+
+### Writing Tests
+
+Tests are written using Google Test framework. Example:
+
+```cpp
+#include <gtest/gtest.h>
+#include "aliases/common.h"
+
+TEST(CommonTest, TrimRemovesWhitespace) {
+    EXPECT_EQ(trim("  hello  "), "hello");
+}
+```
+
+See existing tests in `tests/unit/` for more examples.
+
 ## 📊 Performance
 
 | Metric | Bash | C++ | Improvement |
@@ -227,8 +276,9 @@ The build system automatically detects and uses:
 1. Fork the repository
 2. Create a feature branch
 3. Make changes in `src/` directory
-4. Build and test: `./build.sh && aliases-cli --help`
-5. Submit a pull request
+4. Write tests for new functionality in `tests/`
+5. Build and test: `./build.sh && ./build_tests.sh && ./run_tests.sh`
+6. Submit a pull request
 
 ## 🎯 Version History
 

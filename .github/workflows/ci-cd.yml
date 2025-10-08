@@ -18,11 +18,54 @@ env:
 
 jobs:
   # ============================================================================
-  # Build and Test
+  # Test
+  # ============================================================================
+  test:
+    name: Run Test Suite
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential g++ libncurses-dev
+      
+      - name: Build tests
+        run: ./build_tests.sh
+      
+      - name: Run tests with verbose output
+        run: ./run_tests.sh -v
+      
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if ./run_tests.sh > test_output.txt 2>&1; then
+            echo "✅ All tests passed!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            cat test_output.txt | grep -E "Test suites|tests" || true
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some tests failed!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            cat test_output.txt | tail -50
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+  # ============================================================================
+  # Build
   # ============================================================================
   build:
-    name: Build and Test
+    name: Build Binary
     runs-on: ubuntu-latest
+    needs: test
     
     steps:
       - name: Checkout code
