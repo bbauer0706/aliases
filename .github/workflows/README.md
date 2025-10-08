@@ -6,14 +6,13 @@ This directory contains automated CI/CD workflows for aliases-cli.
 
 ### 1. CI/CD Pipeline (`ci-cd.yml`) - **PRIMARY**
 
-**Trigger:** Every push to `main` or `develop` branch  
+**Trigger:** Every push to `main` or `develop` branch
 **What it does:**
 - ✅ Builds and tests the binary
 - 🔍 Analyzes commit messages (conventional commits)
 - 📊 Determines version bump type automatically
-- 🏷️ Creates version tag
-- 📦 Creates GitHub release with binary
-- 📝 Updates CHANGELOG.md automatically
+- 🏷️ Creates version tag (e.g., v1.2.0)
+- 📦 Creates GitHub release with binary and release notes
 
 **Conventional Commit Detection:**
 - `feat:` or `feat!:` → Minor version bump (1.0.0 → 1.1.0)
@@ -225,7 +224,7 @@ No secrets needed! Uses built-in `GITHUB_TOKEN`.
 
 ### Want to change version manually
 - Use "Manual Release" workflow
-- Or update VERSION file and push with `[skip ci]`
+- Manually create and push a git tag (see Tag Release workflow)
 
 ## Best Practices
 
@@ -238,29 +237,31 @@ No secrets needed! Uses built-in `GITHUB_TOKEN`.
 
 ## Migration from Manual Versioning
 
-Old way:
+Old way (deprecated):
 ```bash
-./scripts/bump-version.sh minor
+# Manual version bumping and release creation
+echo "1.1.0" > VERSION
+sed -i 's/VERSION = "[^"]*"/VERSION = "1.1.0"/' src/main.cpp
 vim CHANGELOG.md
 git commit -m "chore: bump version"
-./scripts/create-release.sh
+git tag -a v1.1.0 -m "Release v1.1.0"
+git push origin v1.1.0
 ```
 
-New way:
+New way (automated):
 ```bash
 git commit -m "feat: new feature"
 git push origin main
-# Done! ✨
+# Done! CI/CD handles versioning ✨
 ```
 
 ## Files Modified by Workflows
 
-Workflows automatically update:
-- `VERSION` - Version number
-- `src/main.cpp` - VERSION constant
-- `CHANGELOG.md` - Release history
-- Git tags - Version tags
-- GitHub Releases - Release pages
+Workflows automatically create:
+- Git tags - Version tags (e.g., v1.2.0)
+- GitHub Releases - Release pages with binaries
+
+**Note:** Version is stored only in git tags. The binary gets its version from the tag during build time.
 
 ## Additional Resources
 

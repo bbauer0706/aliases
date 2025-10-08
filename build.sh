@@ -91,6 +91,10 @@ else
     print_status "ncurses not found - TUI mode will be disabled, CLI mode still available"
 fi
 
+# Get version from git tag
+GIT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "dev")
+CXXFLAGS="$CXXFLAGS -DVERSION=\"$GIT_VERSION\""
+
 # Set build flags based on build type
 if [[ "$BUILD_TYPE" == "Debug" ]]; then
     CXXFLAGS="$CXXFLAGS -g -O0 -DDEBUG"

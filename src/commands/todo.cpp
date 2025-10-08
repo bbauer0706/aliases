@@ -1,6 +1,7 @@
 #include "aliases/commands/todo.h"
 #include "aliases/commands/todo_tui.h"
 #include "aliases/config.h"
+#include "aliases/config_sync.h"
 #include "aliases/common.h"
 #include <iostream>
 #include <fstream>
@@ -11,6 +12,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <cctype>
 
 
 // JSON handling
@@ -26,6 +28,10 @@ TodoManager::TodoManager() : next_id_(1) {
 
 std::string TodoManager::get_todos_file_path() const {
     return Config::instance().get_todos_file_path();
+}
+
+std::string TodoManager::get_external_todos_file_path() const {
+    return Config::instance().get_todos_external_file_path();
 }
 
 Result<int> TodoManager::add_todo(const std::string& description, const std::string& category, int priority) {
@@ -158,19 +164,33 @@ Result<bool> TodoManager::set_description(int id, const std::string& description
 }
 
 std::vector<TodoItem> TodoManager::get_all_todos() const {
-    return todos_;
+    // Sync external todos if needed (const_cast for lazy loading)
+    const_cast<TodoManager*>(this)->sync_external_todos_if_needed();
+
+    // Merge local and external todos
+    return merge_todos(todos_, external_todos_);
 }
 
 std::vector<TodoItem> TodoManager::get_active_todos() const {
+    // Sync external todos if needed
+    const_cast<TodoManager*>(this)->sync_external_todos_if_needed();
+
+    // Merge and filter
+    auto merged = merge_todos(todos_, external_todos_);
     std::vector<TodoItem> active;
-    std::copy_if(todos_.begin(), todos_.end(), std::back_inserter(active),
+    std::copy_if(merged.begin(), merged.end(), std::back_inserter(active),
                 [](const TodoItem& todo) { return !todo.completed; });
     return active;
 }
 
 std::vector<TodoItem> TodoManager::get_completed_todos() const {
+    // Sync external todos if needed
+    const_cast<TodoManager*>(this)->sync_external_todos_if_needed();
+
+    // Merge and filter
+    auto merged = merge_todos(todos_, external_todos_);
     std::vector<TodoItem> completed;
-    std::copy_if(todos_.begin(), todos_.end(), std::back_inserter(completed),
+    std::copy_if(merged.begin(), merged.end(), std::back_inserter(completed),
                 [](const TodoItem& todo) { return todo.completed; });
     return completed;
 }
@@ -193,26 +213,32 @@ std::optional<TodoItem> TodoManager::get_todo_by_id(int id) const {
 }
 
 std::vector<TodoItem> TodoManager::search_todos(const std::string& query, const std::string& category_filter) const {
+    // Sync external todos if needed
+    const_cast<TodoManager*>(this)->sync_external_todos_if_needed();
+
+    // Merge todos first
+    auto merged = merge_todos(todos_, external_todos_);
+
     std::vector<TodoItem> matches;
-    
+
     // Convert query to lowercase for case-insensitive search
     std::string lower_query = query;
     std::transform(lower_query.begin(), lower_query.end(), lower_query.begin(), ::tolower);
-    
-    for (const auto& todo : todos_) {
+
+    for (const auto& todo : merged) {
         // Skip completed todos
         if (todo.completed) continue;
-        
+
         // Category filter
         if (!category_filter.empty() && todo.category != category_filter) {
             continue;
         }
-        
+
         // Description search (case-insensitive)
         std::string lower_description = todo.description;
-        std::transform(lower_description.begin(), lower_description.end(), 
+        std::transform(lower_description.begin(), lower_description.end(),
                       lower_description.begin(), ::tolower);
-        
+
         if (lower_description.find(lower_query) != std::string::npos) {
             matches.push_back(todo);
         }
@@ -286,16 +312,16 @@ bool TodoManager::load_todos() {
             // File doesn't exist yet, that's OK
             return true;
         }
-        
+
         json root;
         file >> root;
-        
+
         if (root.contains("next_id")) {
             next_id_ = root["next_id"];
         }
-        
+
         todos_.clear();
-        
+
         if (root.contains("todos") && root["todos"].is_array()) {
             for (const auto& todo_json : root["todos"]) {
                 TodoItem todo;
@@ -305,25 +331,206 @@ bool TodoManager::load_todos() {
                 todo.priority = todo_json.value("priority", 0);
                 todo.category = todo_json.value("category", "");
                 todo.created_at = static_cast<std::time_t>(todo_json.value("created_at", 0));
-                
+
                 if (todo_json.contains("completed_at")) {
                     todo.completed_at = static_cast<std::time_t>(todo_json["completed_at"]);
                 }
-                
+
                 if (todo_json.contains("due_date")) {
                     todo.due_date = static_cast<std::time_t>(todo_json["due_date"]);
                 }
-                
+
                 todos_.push_back(todo);
             }
         }
-        
+
         return true;
     }
     catch (const std::exception& e) {
         std::cerr << "Error loading todos: " << e.what() << std::endl;
         return false;
     }
+}
+
+// ========== External Todo Sync Implementation ==========
+
+bool TodoManager::should_sync_external_todos() const {
+    auto& config = Config::instance();
+
+    // Check if todo syncing is enabled
+    if (!config.get_sync_enabled() || !config.get_sync_todos()) {
+        return false;
+    }
+
+    // Check if enough time has passed since last sync
+    std::time_t now = std::time(nullptr);
+    int64_t last_sync = config.get_sync_last_todo_sync();
+    int interval = config.get_sync_interval();
+
+    return (now - last_sync) >= interval;
+}
+
+void TodoManager::sync_external_todos_if_needed() {
+    if (!should_sync_external_todos()) {
+        return;
+    }
+
+    // Fetch external todos in background
+    if (fetch_external_todos()) {
+        // Load the fetched external todos
+        load_external_todos();
+
+        // Update last sync time in config
+        auto& config = Config::instance();
+        config.set_sync_last_todo_sync(std::time(nullptr));
+        config.save();
+    }
+}
+
+bool TodoManager::fetch_external_todos() {
+    auto& config = Config::instance();
+
+    if (!config.get_sync_enabled() || !config.get_sync_todos()) {
+        return false;
+    }
+
+    std::string local_todos = get_todos_file_path();
+    std::string external_todos = get_external_todos_file_path();
+    std::string backup_todos = local_todos + ".backup";
+
+    // Backup local todos.json before pulling
+    {
+        std::ifstream src(local_todos, std::ios::binary);
+        if (src.is_open()) {
+            std::ofstream dst(backup_todos, std::ios::binary);
+            dst << src.rdbuf();
+        }
+    }
+
+    // Use ConfigSync to pull todos from remote
+    ConfigSync sync_manager;
+
+    // Pull (this will overwrite local todos.json with remote version)
+    bool pull_success = sync_manager.pull();
+
+    if (pull_success) {
+        // Copy the fetched todos.json to todos-external.json
+        {
+            std::ifstream src(local_todos, std::ios::binary);
+            if (src.is_open()) {
+                std::ofstream dst(external_todos, std::ios::binary);
+                dst << src.rdbuf();
+            }
+        }
+
+        // Restore the local todos.json from backup
+        {
+            std::ifstream src(backup_todos, std::ios::binary);
+            if (src.is_open()) {
+                std::ofstream dst(local_todos, std::ios::binary);
+                dst << src.rdbuf();
+            }
+        }
+
+        // Clean up backup
+        std::remove(backup_todos.c_str());
+        return true;
+    }
+
+    // Restore backup if pull failed
+    {
+        std::ifstream src(backup_todos, std::ios::binary);
+        if (src.is_open()) {
+            std::ofstream dst(local_todos, std::ios::binary);
+            dst << src.rdbuf();
+        }
+    }
+    std::remove(backup_todos.c_str());
+
+    return false;
+}
+
+bool TodoManager::load_external_todos() {
+    try {
+        std::ifstream file(get_external_todos_file_path());
+        if (!file.is_open()) {
+            // No external todos yet, that's OK
+            external_todos_.clear();
+            return true;
+        }
+
+        json root;
+        file >> root;
+
+        external_todos_.clear();
+
+        if (root.contains("todos") && root["todos"].is_array()) {
+            for (const auto& todo_json : root["todos"]) {
+                TodoItem todo;
+                todo.id = todo_json["id"];
+                todo.description = todo_json["description"];
+                todo.completed = todo_json.value("completed", false);
+                todo.priority = todo_json.value("priority", 0);
+                todo.category = todo_json.value("category", "");
+                todo.created_at = static_cast<std::time_t>(todo_json.value("created_at", 0));
+
+                if (todo_json.contains("completed_at")) {
+                    todo.completed_at = static_cast<std::time_t>(todo_json["completed_at"]);
+                }
+
+                if (todo_json.contains("due_date")) {
+                    todo.due_date = static_cast<std::time_t>(todo_json["due_date"]);
+                }
+
+                external_todos_.push_back(todo);
+            }
+        }
+
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error loading external todos: " << e.what() << std::endl;
+        external_todos_.clear();
+        return false;
+    }
+}
+
+bool TodoManager::is_duplicate_description(const std::string& desc1, const std::string& desc2) const {
+    // Case-insensitive comparison
+    std::string lower_desc1 = desc1;
+    std::string lower_desc2 = desc2;
+
+    std::transform(lower_desc1.begin(), lower_desc1.end(), lower_desc1.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    std::transform(lower_desc2.begin(), lower_desc2.end(), lower_desc2.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+
+    return lower_desc1 == lower_desc2;
+}
+
+std::vector<TodoItem> TodoManager::merge_todos(const std::vector<TodoItem>& local,
+                                                const std::vector<TodoItem>& external) const {
+    std::vector<TodoItem> merged = local;
+
+    // Add external todos that don't exist in local (by description)
+    for (const auto& ext_todo : external) {
+        bool is_duplicate = false;
+
+        // Check if this todo already exists locally
+        for (const auto& local_todo : local) {
+            if (is_duplicate_description(local_todo.description, ext_todo.description)) {
+                is_duplicate = true;
+                break;
+            }
+        }
+
+        // Add if not duplicate
+        if (!is_duplicate) {
+            merged.push_back(ext_todo);
+        }
+    }
+
+    return merged;
 }
 
 // Todo command implementation

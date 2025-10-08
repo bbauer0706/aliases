@@ -66,11 +66,6 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-      
       - name: Download binary
         uses: actions/download-artifact@v4
         with:
@@ -109,29 +104,31 @@ jobs:
           echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
           echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
       
-      - name: Bump version
+      - name: Calculate new version
         id: bump_version
         run: |
           BUMP_TYPE="${{ steps.bump_type.outputs.bump_type }}"
-          
-          # Read current version
-          if [ ! -f VERSION ]; then
-            echo "0.0.0" > VERSION
+          LAST_TAG="${{ steps.bump_type.outputs.last_tag }}"
+
+          # Get current version from last tag
+          if [ "$LAST_TAG" = "v0.0.0" ]; then
+            CURRENT_VERSION="0.0.0"
+          else
+            CURRENT_VERSION="${LAST_TAG#v}"
           fi
-          
-          CURRENT_VERSION=$(cat VERSION | tr -d '[:space:]')
+
           echo "Current version: $CURRENT_VERSION"
-          
+
           # Parse version
           if [[ ! "$CURRENT_VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
             echo "Invalid version format, starting at 1.0.0"
             CURRENT_VERSION="1.0.0"
           fi
-          
+
           MAJOR="${BASH_REMATCH[1]}"
           MINOR="${BASH_REMATCH[2]}"
           PATCH="${BASH_REMATCH[3]}"
-          
+
           # Bump version
           case $BUMP_TYPE in
             major)
@@ -147,29 +144,23 @@ jobs:
               PATCH=$((PATCH + 1))
               ;;
           esac
-          
+
           NEW_VERSION="$MAJOR.$MINOR.$PATCH"
           echo "New version: $NEW_VERSION"
-          
-          # Update VERSION file
-          echo "$NEW_VERSION" > VERSION
-          
-          # Update src/main.cpp
-          sed -i "s/constexpr const char\* VERSION = \"[^\"]*\";/constexpr const char* VERSION = \"$NEW_VERSION\";/" src/main.cpp
-          
+
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
       
-      - name: Generate changelog entry
-        id: changelog
+      - name: Generate release notes
+        id: release_notes
         run: |
           VERSION="${{ steps.bump_version.outputs.version }}"
           LAST_TAG="${{ steps.bump_type.outputs.last_tag }}"
           DATE=$(date +%Y-%m-%d)
-          
-          # Get commits for changelog
+
+          # Get commits for release notes
           COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" 2>/dev/null || git log --pretty=format:"- %s (%h)")
-          
+
           # Categorize commits
           FEATURES=$(echo "$COMMITS" | grep "^- feat" || echo "")
           FIXES=$(echo "$COMMITS" | grep "^- fix" || echo "")
@@ -178,63 +169,42 @@ jobs:
           CHORES=$(echo "$COMMITS" | grep "^- chore" || echo "")
           REFACTOR=$(echo "$COMMITS" | grep "^- refactor" || echo "")
           PERF=$(echo "$COMMITS" | grep "^- perf" || echo "")
-          
-          # Create changelog entry
-          CHANGELOG_ENTRY="## [$VERSION] - $DATE"$'\n'
-          
+
+          # Create release notes
+          RELEASE_NOTES="## [$VERSION] - $DATE"$'\n'
+
           if [ ! -z "$BREAKING" ]; then
-            CHANGELOG_ENTRY+=$'\n'"### ⚠️ Breaking Changes"$'\n'"$BREAKING"$'\n'
+            RELEASE_NOTES+=$'\n'"### ⚠️ Breaking Changes"$'\n'"$BREAKING"$'\n'
           fi
-          
+
           if [ ! -z "$FEATURES" ]; then
-            CHANGELOG_ENTRY+=$'\n'"### ✨ Added"$'\n'"$FEATURES"$'\n'
+            RELEASE_NOTES+=$'\n'"### ✨ Added"$'\n'"$FEATURES"$'\n'
           fi
-          
+
           if [ ! -z "$FIXES" ]; then
-            CHANGELOG_ENTRY+=$'\n'"### 🐛 Fixed"$'\n'"$FIXES"$'\n'
+            RELEASE_NOTES+=$'\n'"### 🐛 Fixed"$'\n'"$FIXES"$'\n'
           fi
-          
+
           if [ ! -z "$REFACTOR" ]; then
-            CHANGELOG_ENTRY+=$'\n'"### ♻️ Refactored"$'\n'"$REFACTOR"$'\n'
+            RELEASE_NOTES+=$'\n'"### ♻️ Refactored"$'\n'"$REFACTOR"$'\n'
           fi
-          
+
           if [ ! -z "$PERF" ]; then
-            CHANGELOG_ENTRY+=$'\n'"### ⚡ Performance"$'\n'"$PERF"$'\n'
+            RELEASE_NOTES+=$'\n'"### ⚡ Performance"$'\n'"$PERF"$'\n'
           fi
-          
+
           if [ ! -z "$DOCS" ]; then
-            CHANGELOG_ENTRY+=$'\n'"### 📚 Documentation"$'\n'"$DOCS"$'\n'
+            RELEASE_NOTES+=$'\n'"### 📚 Documentation"$'\n'"$DOCS"$'\n'
           fi
-          
+
           if [ ! -z "$CHORES" ]; then
-            CHANGELOG_ENTRY+=$'\n'"### 🔧 Maintenance"$'\n'"$CHORES"$'\n'
+            RELEASE_NOTES+=$'\n'"### 🔧 Maintenance"$'\n'"$CHORES"$'\n'
           fi
-          
-          # Update CHANGELOG.md
-          if [ -f CHANGELOG.md ]; then
-            # Create temp file with new entry
-            (head -n 4 CHANGELOG.md; echo ""; echo "$CHANGELOG_ENTRY"; echo ""; tail -n +5 CHANGELOG.md) > CHANGELOG.md.tmp
-            mv CHANGELOG.md.tmp CHANGELOG.md
-          else
-            echo "# Changelog" > CHANGELOG.md
-            echo "" >> CHANGELOG.md
-            echo "## [Unreleased]" >> CHANGELOG.md
-            echo "" >> CHANGELOG.md
-            echo "$CHANGELOG_ENTRY" >> CHANGELOG.md
-          fi
-          
+
           # Save for release notes
-          echo "$CHANGELOG_ENTRY" > release-notes.md
-          
-          echo "Generated changelog entry for v$VERSION"
-      
-      - name: Commit version bump
-        run: |
-          VERSION="${{ steps.bump_version.outputs.version }}"
-          
-          git add VERSION src/main.cpp CHANGELOG.md
-          git commit -m "chore: bump version to $VERSION [skip ci]" || echo "No changes to commit"
-          git push origin main
+          echo "$RELEASE_NOTES" > release-notes.md
+
+          echo "Generated release notes for v$VERSION"
       
       - name: Create and push tag
         run: |

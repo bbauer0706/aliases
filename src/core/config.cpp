@@ -83,6 +83,10 @@ std::string Config::get_todos_file_path() const {
     return get_config_directory() + "/todos.json";
 }
 
+std::string Config::get_todos_external_file_path() const {
+    return get_config_directory() + "/todos-external.json";
+}
+
 std::string Config::get_cache_directory() const {
     return get_config_directory() + "/cache";
 }
@@ -269,6 +273,29 @@ std::string Config::get_sync_method() const {
 
 void Config::set_sync_method(const std::string& method) {
     (*config_data_)["sync"]["method"] = method;
+}
+
+bool Config::get_sync_todos() const {
+    auto& value = (*config_data_)["sync"]["sync_todos"];
+    if (value.is_boolean()) {
+        return value.get<bool>();
+    } else if (value.is_string()) {
+        std::string str_val = value.get<std::string>();
+        return str_val == "true" || str_val == "1";
+    }
+    return false;
+}
+
+void Config::set_sync_todos(bool sync_todos) {
+    (*config_data_)["sync"]["sync_todos"] = sync_todos;
+}
+
+int64_t Config::get_sync_last_todo_sync() const {
+    return (*config_data_)["sync"]["last_todo_sync"].get<int64_t>();
+}
+
+void Config::set_sync_last_todo_sync(int64_t timestamp) {
+    (*config_data_)["sync"]["last_todo_sync"] = timestamp;
 }
 
 // ========== Projects Settings ==========
@@ -555,6 +582,8 @@ void Config::apply_defaults() {
     if (!cfg["sync"].contains("sync_interval")) cfg["sync"]["sync_interval"] = DEFAULT_SYNC_INTERVAL;
     if (!cfg["sync"].contains("last_sync")) cfg["sync"]["last_sync"] = DEFAULT_SYNC_LAST_SYNC;
     if (!cfg["sync"].contains("method")) cfg["sync"]["method"] = DEFAULT_SYNC_METHOD;
+    if (!cfg["sync"].contains("sync_todos")) cfg["sync"]["sync_todos"] = DEFAULT_SYNC_TODOS;
+    if (!cfg["sync"].contains("last_todo_sync")) cfg["sync"]["last_todo_sync"] = DEFAULT_SYNC_LAST_TODO_SYNC;
 
     // Projects
     if (!cfg.contains("projects")) cfg["projects"] = json::object();

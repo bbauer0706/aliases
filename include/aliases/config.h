@@ -105,6 +105,12 @@ public:
     std::string get_sync_method() const; // "git", "rsync", "http", "file"
     void set_sync_method(const std::string& method);
 
+    bool get_sync_todos() const;
+    void set_sync_todos(bool sync_todos);
+
+    int64_t get_sync_last_todo_sync() const;
+    void set_sync_last_todo_sync(int64_t timestamp);
+
     // ========== Projects Settings ==========
 
     std::string get_workspace_directory() const;
@@ -122,6 +128,7 @@ public:
     std::string get_config_directory() const;
     std::string get_config_file_path() const;
     std::string get_todos_file_path() const;
+    std::string get_todos_external_file_path() const;
     std::string get_cache_directory() const;
 
     // ========== Generic Getters/Setters ==========
@@ -178,6 +185,8 @@ private:
     static constexpr int DEFAULT_SYNC_INTERVAL = 86400; // 24 hours
     static constexpr int64_t DEFAULT_SYNC_LAST_SYNC = 0;
     static constexpr const char* DEFAULT_SYNC_METHOD = "git";
+    static constexpr bool DEFAULT_SYNC_TODOS = false;
+    static constexpr int64_t DEFAULT_SYNC_LAST_TODO_SYNC = 0;
 };
 
 } // namespace aliases

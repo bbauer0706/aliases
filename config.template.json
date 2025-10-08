@@ -28,7 +28,9 @@
     "auto_sync": false,
     "sync_interval": 86400,
     "last_sync": 0,
-    "method": "git"
+    "method": "git",
+    "sync_todos": false,
+    "last_todo_sync": 0
   },
   "projects": {
     "workspace_directory": "~/workspaces",

@@ -279,9 +279,17 @@ void TodoTUI::draw_todo_list() {
         int edit_y = max_y - 4;
         
         if (state_.edit_buffer_is_new_todo) {
-            mvprintw(edit_y, 0, "Add todo: %s", state_.edit_buffer.c_str());
-            curs_set(1); // Show cursor
-            move(edit_y, 10 + state_.edit_buffer.length());
+            if (state_.edit_mode_is_category) {
+                mvprintw(edit_y, 0, "Add category: %s", state_.edit_category_buffer.c_str());
+                mvprintw(edit_y + 1, 0, "(Tab: switch to description, Enter: save)");
+                curs_set(1); // Show cursor
+                move(edit_y, 14 + state_.edit_category_buffer.length());
+            } else {
+                mvprintw(edit_y, 0, "Add description: %s", state_.edit_buffer.c_str());
+                mvprintw(edit_y + 1, 0, "(Tab: switch to category, Enter: save)");
+                curs_set(1); // Show cursor
+                move(edit_y, 17 + state_.edit_buffer.length());
+            }
         } else if (state_.edit_mode_is_category) {
             mvprintw(edit_y, 0, "Edit category: %s", state_.edit_category_buffer.c_str());
             mvprintw(edit_y + 1, 0, "(Tab: switch to description, Enter: save)");
@@ -315,6 +323,7 @@ void TodoTUI::draw_bottom_bar() {
         if (state_.edit_buffer_is_new_todo) {
             help_items = {
                 "Enter:Save",
+                "Tab:Switch Mode",
                 "Esc:Cancel"
             };
         } else {
@@ -463,11 +472,11 @@ void TodoTUI::handle_edit_input(int ch) {
         cancel_edit();
     } else if (ch == '\n' || ch == '\r') { // Enter
         finish_edit();
-    } else if (ch == '\t' && !state_.edit_buffer_is_new_todo) { // Tab - switch between description and category
+    } else if (ch == '\t') { // Tab - switch between description and category
         state_.edit_mode_is_category = !state_.edit_mode_is_category;
     } else if (ch == KEY_BACKSPACE || ch == 127 || ch == '\b') {
         // Handle backspace for current edit buffer
-        if (state_.edit_mode_is_category && !state_.edit_buffer_is_new_todo) {
+        if (state_.edit_mode_is_category) {
             if (!state_.edit_category_buffer.empty()) {
                 state_.edit_category_buffer.pop_back();
             }
@@ -478,7 +487,7 @@ void TodoTUI::handle_edit_input(int ch) {
         }
     } else if (ch >= 32 && ch <= 126) { // Printable characters
         // Add to appropriate buffer
-        if (state_.edit_mode_is_category && !state_.edit_buffer_is_new_todo) {
+        if (state_.edit_mode_is_category) {
             state_.edit_category_buffer += static_cast<char>(ch);
         } else {
             state_.edit_buffer += static_cast<char>(ch);
@@ -607,8 +616,10 @@ void TodoTUI::uncomplete_todo(int id) {
 void TodoTUI::start_add_mode() {
     state_.in_edit_mode = true;
     state_.edit_buffer.clear();
+    state_.edit_category_buffer.clear();
     state_.edit_buffer_is_new_todo = true;
     state_.edit_todo_id = -1;
+    state_.edit_mode_is_category = false;
 }
 
 void TodoTUI::start_edit_mode() {
@@ -642,8 +653,8 @@ void TodoTUI::finish_edit() {
         todo_manager_->set_description(todo.id, state_.edit_buffer);
         todo_manager_->set_category(todo.id, state_.edit_category_buffer);
     } else {
-        // Add new todo
-        todo_manager_->add_todo(state_.edit_buffer);
+        // Add new todo with category
+        todo_manager_->add_todo(state_.edit_buffer, state_.edit_category_buffer);
     }
     
     state_.in_edit_mode = false;

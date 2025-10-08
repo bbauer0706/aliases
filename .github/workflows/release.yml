@@ -40,7 +40,6 @@ jobs:
         with:
           files: |
             build/aliases-cli-${{ steps.get_version.outputs.VERSION }}-linux-x86_64
-            CHANGELOG.md
-          body_path: CHANGELOG.md
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

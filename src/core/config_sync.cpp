@@ -289,8 +289,14 @@ bool ConfigSync::push_file() {
 }
 
 bool ConfigSync::copy_config_files(const std::string& source_dir, const std::string& dest_dir) {
-    // Copy config.json (but not todos.json - that's local)
+    // Copy config.json and optionally todos.json
     std::vector<std::string> files_to_sync = {"config.json"};
+
+    // Add todos.json if todo syncing is enabled
+    auto& config = Config::instance();
+    if (config.get_sync_todos()) {
+        files_to_sync.push_back("todos.json");
+    }
 
     for (const auto& file : files_to_sync) {
         std::string source_file = source_dir + "/" + file;

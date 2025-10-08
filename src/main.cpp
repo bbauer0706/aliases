@@ -12,7 +12,9 @@
 #include "aliases/commands/config_cmd.h"
 
 namespace {
-    constexpr const char* VERSION = "1.2.0";
+    #ifndef VERSION
+    #define VERSION "dev"
+    #endif
     constexpr const char* PROGRAM_NAME = "aliases-cli";
 }
 

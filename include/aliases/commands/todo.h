@@ -44,15 +44,28 @@ public:
     
     // Search operations
     std::vector<TodoItem> search_todos(const std::string& query, const std::string& category_filter = "") const;
-    
+
     // Persistence
     bool save_todos();
     bool load_todos();
-    
+
+    // External todo sync
+    void sync_external_todos_if_needed();
+
 private:
     std::vector<TodoItem> todos_;
+    std::vector<TodoItem> external_todos_;
     int next_id_;
+
     std::string get_todos_file_path() const;
+    std::string get_external_todos_file_path() const;
+
+    // External todo helpers
+    bool should_sync_external_todos() const;
+    bool load_external_todos();
+    bool fetch_external_todos();
+    std::vector<TodoItem> merge_todos(const std::vector<TodoItem>& local, const std::vector<TodoItem>& external) const;
+    bool is_duplicate_description(const std::string& desc1, const std::string& desc2) const;
 };
 
 class Todo {

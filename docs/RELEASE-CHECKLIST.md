@@ -1,104 +1,127 @@
 # Release Checklist
 
-Use this checklist when creating a new release.
+## Automated Release (Recommended)
 
-## Pre-Release
-
-- [ ] All features/fixes are committed and pushed
+### Pre-Release
+- [ ] All features/fixes are committed
 - [ ] Tests pass (if applicable)
 - [ ] Documentation is updated
-- [ ] No uncommitted changes
+- [ ] Commit messages follow conventional commits format
 
-## Release Process
+### Release Process
 
-### 1. Bump Version
-
+**Just push to main:**
 ```bash
-# Choose appropriate bump type
-./scripts/bump-version.sh patch   # Bug fixes (1.0.0 → 1.0.1)
-./scripts/bump-version.sh minor   # New features (1.0.0 → 1.1.0)
-./scripts/bump-version.sh major   # Breaking changes (1.0.0 → 2.0.0)
-```
-
-This updates:
-- `VERSION` file
-- `src/main.cpp` VERSION constant
-
-### 2. Update CHANGELOG.md
-
-```bash
-vim CHANGELOG.md
-```
-
-Add entry for new version:
-```markdown
-## [1.1.0] - 2025-10-07
-
-### Added
-- New feature 1
-- New feature 2
-
-### Changed
-- Changed behavior 1
-
-### Fixed
-- Bug fix 1
-- Bug fix 2
-```
-
-### 3. Review Changes
-
-```bash
-git diff VERSION src/main.cpp CHANGELOG.md
-```
-
-### 4. Commit Version Bump
-
-```bash
-git add VERSION src/main.cpp CHANGELOG.md
-git commit -m "chore: bump version to 1.1.0"
+# Commit with conventional commit message
+git commit -m "feat: add new feature"
 git push origin main
+
+# CI/CD automatically:
+# ✅ Analyzes commits
+# ✅ Determines version bump
+# ✅ Creates git tag (e.g., v1.1.0)
+# ✅ Builds binary
+# ✅ Creates GitHub release
 ```
 
-### 5. Create Release
+### Post-Release
+- [ ] Check GitHub Actions completed successfully
+- [ ] Verify tag exists: `git tag -l`
+- [ ] Check GitHub release page
+- [ ] Test binary download from release
+
+---
+
+## Manual Tag Release
+
+If you prefer manual control over when releases happen:
+
+### 1. Determine Version
+
+Based on changes since last tag:
+- **Patch** (1.0.0 → 1.0.1): Bug fixes, docs
+- **Minor** (1.0.0 → 1.1.0): New features
+- **Major** (1.0.0 → 2.0.0): Breaking changes
+
+### 2. Create and Push Tag
 
 ```bash
-# Option A: Use automated script (recommended)
-./scripts/create-release.sh
-
-# Option B: Manual process
-# Build binary
-./build.sh
-
-# Create and push tag
+# Create annotated tag
 git tag -a v1.1.0 -m "Release version 1.1.0
 
-[Copy content from CHANGELOG.md]
-"
-git push origin v1.1.0
+New Features:
+- Feature 1
+- Feature 2
 
-# Create GitHub release
-gh release create v1.1.0 \
-  --title "v1.1.0" \
-  --notes-file CHANGELOG.md \
-  build/aliases-cli
+Bug Fixes:
+- Fix 1"
+
+# Push tag
+git push origin v1.1.0
 ```
 
-## Post-Release
+### 3. Verify Release
 
-- [ ] Verify tag exists: `git tag -l`
-- [ ] Check GitHub release: https://github.com/bbauer0706/aliases/releases
-- [ ] Test download: `curl -L https://github.com/bbauer0706/aliases/releases/download/v1.1.0/aliases-cli-1.1.0-linux-x86_64 -o test-binary`
-- [ ] Announce release (if public)
-- [ ] Update any dependent projects
+The release workflow will automatically:
+- Build the binary
+- Create GitHub release
+- Attach binary to release
 
-## Quick Commands
+---
+
+## Commit Message Examples
+
+### Features (Minor Bump)
+```bash
+git commit -m "feat(config): add HTTP sync support"
+git commit -m "feat: add search functionality"
+```
+
+### Bug Fixes (Patch Bump)
+```bash
+git commit -m "fix(build): resolve linking issues"
+git commit -m "fix: correct timeout handling"
+```
+
+### Breaking Changes (Major Bump)
+```bash
+git commit -m "feat!: redesign configuration structure
+
+BREAKING CHANGE: Config format has changed.
+Users need to migrate their config files."
+```
+
+### Documentation (Patch Bump)
+```bash
+git commit -m "docs: update versioning guide"
+git commit -m "docs(readme): add installation section"
+```
+
+---
+
+## Version Bump Reference
+
+| Commit Type | Version Bump | Example |
+|-------------|--------------|---------|
+| `fix:`, `docs:`, `chore:` | Patch | 1.0.0 → 1.0.1 |
+| `feat:` | Minor | 1.0.0 → 1.1.0 |
+| `feat!:` or `BREAKING CHANGE:` | Major | 1.0.0 → 2.0.0 |
+
+---
+
+## Useful Commands
 
 ```bash
+# Check current version
+./build/aliases-cli --version
+
 # List all tags
 git tag -l
 
-# Show tag details
+# Show latest tag
+git describe --tags --abbrev=0
+
+# View tag details
 git show v1.0.0
 
 # Delete local tag (if mistake)
@@ -110,66 +133,43 @@ git push --delete origin v1.0.0
 # Delete GitHub release
 gh release delete v1.0.0
 
-# View current version
-./build/aliases-cli --version
-cat VERSION
+# View releases
+gh release list
 ```
 
-## Commit Message Examples
-
-```bash
-# Feature
-git commit -m "feat(config): add sync support with multiple methods"
-
-# Bug fix
-git commit -m "fix(build): resolve config module linking issues"
-
-# Documentation
-git commit -m "docs: update versioning guide"
-
-# Version bump
-git commit -m "chore: bump version to 1.1.0"
-
-# Breaking change
-git commit -m "feat!: redesign configuration structure
-
-BREAKING CHANGE: Configuration format has changed.
-Users need to migrate their config files."
-```
-
-## Semantic Versioning Quick Reference
-
-| Change Type | Version Bump | Example |
-|-------------|--------------|---------|
-| Bug fixes, docs, patches | PATCH | 1.0.0 → 1.0.1 |
-| New features (backward-compatible) | MINOR | 1.0.0 → 1.1.0 |
-| Breaking changes | MAJOR | 1.0.0 → 2.0.0 |
+---
 
 ## Troubleshooting
 
-**Tag already exists:**
+### CI/CD workflow didn't trigger
+- Check commit is on `main` branch
+- Verify workflow file exists: `.github/workflows/ci-cd.yml`
+- Check GitHub Actions tab for errors
+
+### Wrong version bump
+- Check commit message format
+- Ensure using conventional commits
+- Review "Determine version bump" step in workflow logs
+
+### Release failed
+- Check GitHub Actions logs
+- Verify GITHUB_TOKEN permissions
+- Ensure tag doesn't already exist
+
+### Need to rollback
 ```bash
+# Delete tag locally and remotely
 git tag -d v1.1.0
 git push --delete origin v1.1.0
+
+# Delete GitHub release
+gh release delete v1.1.0
 ```
 
-**Wrong version committed:**
-```bash
-# Reset to previous commit
-git reset --hard HEAD~1
+---
 
-# Re-run version bump script
-./scripts/bump-version.sh patch
-```
+## See Also
 
-**GitHub release failed:**
-```bash
-# Install GitHub CLI
-sudo apt install gh
-
-# Login
-gh auth login
-
-# Retry release
-gh release create v1.1.0 --title "v1.1.0" --notes-file CHANGELOG.md build/aliases-cli
-```
+- [VERSIONING.md](./VERSIONING.md) - Full versioning guide
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [Semantic Versioning](https://semver.org/)

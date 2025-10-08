@@ -363,6 +363,94 @@ if [[ ! -f "$CONFIG_DIR/config.json" ]]; then
     else
         warning "config.template.json not found, config will be auto-generated on first run"
     fi
+else
+    # Migrate/repair existing config by adding missing fields
+    if [[ -f "$ALIASES_DIR/config.template.json" ]]; then
+        status "Checking for config updates..."
+
+        # Use Python to merge configs if available (most robust)
+        if command -v python3 >/dev/null 2>&1; then
+            python3 << PYTHON_SCRIPT
+import json
+import sys
+
+try:
+    # Load template and existing config
+    with open("$ALIASES_DIR/config.template.json", "r") as f:
+        template = json.load(f)
+
+    with open("$CONFIG_DIR/config.json", "r") as f:
+        config = json.load(f)
+
+    # Function to recursively merge template into config
+    def merge_config(target, source):
+        updated = False
+        for key, value in source.items():
+            if key not in target:
+                target[key] = value
+                updated = True
+                print(f"  Added missing field: {key}", file=sys.stderr)
+            elif isinstance(value, dict) and isinstance(target[key], dict):
+                if merge_config(target[key], value):
+                    updated = True
+        return updated
+
+    # Merge template into config
+    if merge_config(config, template):
+        # Backup original
+        with open("$CONFIG_DIR/config.json.bak", "w") as f:
+            json.dump(config, f)
+
+        # Save updated config
+        with open("$CONFIG_DIR/config.json", "w") as f:
+            json.dump(config, f, indent=2)
+
+        print("UPDATED", file=sys.stderr)
+    else:
+        print("NO_CHANGES", file=sys.stderr)
+
+    sys.exit(0)
+except Exception as e:
+    print(f"ERROR: {e}", file=sys.stderr)
+    sys.exit(1)
+PYTHON_SCRIPT
+
+            MIGRATION_RESULT=$?
+            if [[ $MIGRATION_RESULT -eq 0 ]]; then
+                # Check if any updates were made by checking for backup file
+                if [[ -f "$CONFIG_DIR/config.json.bak" ]] && [[ "$CONFIG_DIR/config.json.bak" -nt "$CONFIG_DIR/config.json.old" ]] 2>/dev/null || [[ -f "$CONFIG_DIR/config.json.bak" ]]; then
+                    success "Config updated with new fields (backup at config.json.bak)"
+                else
+                    success "Config is up to date"
+                fi
+            else
+                warning "Could not auto-migrate config, will be handled at runtime"
+            fi
+        else
+            # Fallback: Just check for critical missing fields
+            if ! grep -q "sync_todos" "$CONFIG_DIR/config.json"; then
+                status "Adding missing sync_todos field..."
+                # Create backup
+                cp "$CONFIG_DIR/config.json" "$CONFIG_DIR/config.json.bak"
+
+                # Add sync_todos field using sed (simple append to sync section)
+                sed -i '/"method": "git"/a\    "sync_todos": false,' "$CONFIG_DIR/config.json"
+                success "Added sync_todos field (backup at config.json.bak)"
+            fi
+
+            if ! grep -q "last_todo_sync" "$CONFIG_DIR/config.json"; then
+                status "Adding missing last_todo_sync field..."
+                # Create backup if not already done
+                if [[ ! -f "$CONFIG_DIR/config.json.bak" ]]; then
+                    cp "$CONFIG_DIR/config.json" "$CONFIG_DIR/config.json.bak"
+                fi
+
+                # Add last_todo_sync field
+                sed -i '/"sync_todos":/a\    "last_todo_sync": 0,' "$CONFIG_DIR/config.json"
+                success "Added last_todo_sync field (backup at config.json.bak)"
+            fi
+        fi
+    fi
 fi
 
 # Log force mode summary if used
