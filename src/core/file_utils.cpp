@@ -83,20 +83,40 @@ std::string FileUtils::resolve_path(const std::string& path) {
 }
 
 std::vector<std::string> FileUtils::discover_workspace_projects(const std::string& workspace_dir) {
+    return discover_workspace_projects(workspace_dir, {});
+}
+
+std::vector<std::string> FileUtils::discover_workspace_projects(
+    const std::string& workspace_dir,
+    const std::vector<std::string>& ignore_patterns
+) {
     std::vector<std::string> projects;
-    
+
     if (!directory_exists(workspace_dir)) {
         return projects;
     }
-    
+
     auto subdirs = list_directories(workspace_dir);
     for (const auto& subdir : subdirs) {
+        // Check if directory should be ignored
+        bool should_ignore = false;
+        for (const auto& pattern : ignore_patterns) {
+            if (subdir == pattern) {
+                should_ignore = true;
+                break;
+            }
+        }
+
+        if (should_ignore) {
+            continue;
+        }
+
         auto full_path = join_path(workspace_dir, subdir);
         if (directory_exists(full_path)) {
             projects.push_back(full_path);
         }
     }
-    
+
     return projects;
 }
 

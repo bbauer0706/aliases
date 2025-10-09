@@ -113,8 +113,8 @@ public:
 
     // ========== Projects Settings ==========
 
-    std::string get_workspace_directory() const;
-    void set_workspace_directory(const std::string& dir);
+    std::vector<std::string> get_workspace_directories() const;
+    void set_workspace_directories(const std::vector<std::string>& dirs);
 
     // Get project mappings (returns JSON object references)
     bool get_project_shortcuts(StringMap& shortcuts) const;
@@ -122,6 +122,9 @@ public:
     bool get_web_paths(StringMap& paths) const;
     std::vector<std::string> get_default_server_paths() const;
     std::vector<std::string> get_default_web_paths() const;
+
+    std::vector<std::string> get_workspace_ignore() const;
+    void set_workspace_ignore(const std::vector<std::string>& ignore_patterns);
 
     // ========== Path Management ==========
 

@@ -449,6 +449,58 @@ PYTHON_SCRIPT
                 sed -i '/"sync_todos":/a\    "last_todo_sync": 0,' "$CONFIG_DIR/config.json"
                 success "Added last_todo_sync field (backup at config.json.bak)"
             fi
+
+            if ! grep -q '"ignore"' "$CONFIG_DIR/config.json"; then
+                status "Adding missing projects.ignore field..."
+                # Create backup if not already done
+                if [[ ! -f "$CONFIG_DIR/config.json.bak" ]]; then
+                    cp "$CONFIG_DIR/config.json" "$CONFIG_DIR/config.json.bak"
+                fi
+
+                # Add ignore field to projects section (after web_paths)
+                sed -i '/"web_paths":/a\    "ignore": [],' "$CONFIG_DIR/config.json"
+                success "Added projects.ignore field (backup at config.json.bak)"
+            fi
+
+            # Migrate workspace_directory to workspace_directories array
+            if grep -q '"workspace_directory"' "$CONFIG_DIR/config.json" && ! grep -q '"workspace_directories"' "$CONFIG_DIR/config.json"; then
+                status "Migrating workspace_directory to workspace_directories array..."
+                # Create backup if not already done
+                if [[ ! -f "$CONFIG_DIR/config.json.bak" ]]; then
+                    cp "$CONFIG_DIR/config.json" "$CONFIG_DIR/config.json.bak"
+                fi
+
+                # Use Python for reliable JSON manipulation
+                if command -v python3 >/dev/null 2>&1; then
+                    python3 << 'PYTHON_SCRIPT'
+import json
+import sys
+
+try:
+    with open("$CONFIG_DIR/config.json", "r") as f:
+        config = json.load(f)
+
+    if "projects" in config and "workspace_directory" in config["projects"]:
+        old_dir = config["projects"]["workspace_directory"]
+        config["projects"]["workspace_directories"] = [old_dir]
+        del config["projects"]["workspace_directory"]
+
+        with open("$CONFIG_DIR/config.json", "w") as f:
+            json.dump(config, f, indent=2)
+
+        print("MIGRATED", file=sys.stderr)
+        sys.exit(0)
+except Exception as e:
+    print(f"ERROR: {e}", file=sys.stderr)
+    sys.exit(1)
+PYTHON_SCRIPT
+                    if [[ $? -eq 0 ]]; then
+                        success "Migrated to workspace_directories array (backup at config.json.bak)"
+                    else
+                        warning "Could not auto-migrate workspace_directory, will be handled at runtime"
+                    fi
+                fi
+            fi
         fi
     fi
 fi

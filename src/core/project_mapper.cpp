@@ -18,19 +18,26 @@ public:
         // Get config instance
         auto& config = Config::instance();
 
-        // Discover all projects in workspace directory
-        auto workspace_dir = config.get_workspace_directory();
-        // Expand ~ to home directory
-        if (!workspace_dir.empty() && workspace_dir[0] == '~') {
-            workspace_dir = get_home_directory() + workspace_dir.substr(1);
-        }
+        // Get ignore patterns from config
+        auto ignore_patterns = config.get_workspace_ignore();
 
-        auto project_dirs = FileUtils::discover_workspace_projects(workspace_dir);
+        // Discover all projects from all workspace directories
+        auto workspace_dirs = config.get_workspace_directories();
 
         full_paths_.clear();
-        for (const auto& dir : project_dirs) {
-            auto full_name = FileUtils::get_basename(dir);
-            full_paths_[full_name] = dir;
+        for (const auto& workspace_dir : workspace_dirs) {
+            // Expand ~ to home directory
+            std::string expanded_dir = workspace_dir;
+            if (!expanded_dir.empty() && expanded_dir[0] == '~') {
+                expanded_dir = get_home_directory() + expanded_dir.substr(1);
+            }
+
+            auto project_dirs = FileUtils::discover_workspace_projects(expanded_dir, ignore_patterns);
+
+            for (const auto& dir : project_dirs) {
+                auto full_name = FileUtils::get_basename(dir);
+                full_paths_[full_name] = dir;
+            }
         }
 
         // Load project mappings from config

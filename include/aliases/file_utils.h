@@ -23,6 +23,10 @@ public:
     
     // Workspace-specific utilities
     static std::vector<std::string> discover_workspace_projects(const std::string& workspace_dir);
+    static std::vector<std::string> discover_workspace_projects(
+        const std::string& workspace_dir,
+        const std::vector<std::string>& ignore_patterns
+    );
     static std::optional<std::string> find_component_directory(
         const std::string& project_path,
         const std::vector<std::string>& candidate_paths

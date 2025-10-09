@@ -156,17 +156,64 @@ Or manually edit `~/.config/aliases-cli/config.json`:
 ```json
 {
   "projects": {
-    "my-project": {
-      "path": "/home/user/projects/my-project",
-      "shortcuts": ["mp", "proj"],
-      "components": {
-        "server": "backend",
-        "web": "frontend"
-      }
-    }
+    "workspace_directories": ["~/workspaces", "~/dev/personal"],
+    "shortcuts": {
+      "my-project": "mp"
+    },
+    "server_paths": {
+      "my-project": "backend"
+    },
+    "web_paths": {
+      "my-project": "frontend"
+    },
+    "ignore": ["node_modules", "temp", ".cache"]
   }
 }
 ```
+
+### Multiple Workspace Sources
+
+Scan for projects from multiple directories:
+
+```bash
+# Edit config to add multiple workspace sources
+aliases-cli config edit
+```
+
+Add to the `projects` section:
+```json
+{
+  "projects": {
+    "workspace_directories": [
+      "~/workspaces",
+      "~/dev/personal-projects",
+      "/mnt/shared/team-projects"
+    ]
+  }
+}
+```
+
+All projects from all directories will be discovered and available via the `c` command.
+
+### Ignoring Workspace Directories
+
+You can configure directories to ignore when scanning your workspaces:
+
+```bash
+# Edit config to add ignore patterns
+aliases-cli config edit
+```
+
+Add to the `projects` section:
+```json
+{
+  "projects": {
+    "ignore": ["build", "temp", "node_modules", ".git"]
+  }
+}
+```
+
+This is useful for excluding non-project directories, build artifacts, or symlinks from appearing in your project list.
 
 ### Config Sync Storage
 

@@ -300,18 +300,36 @@ void Config::set_sync_last_todo_sync(int64_t timestamp) {
 
 // ========== Projects Settings ==========
 
-std::string Config::get_workspace_directory() const {
-    if (config_data_->contains("projects") && (*config_data_)["projects"].contains("workspace_directory")) {
-        return (*config_data_)["projects"]["workspace_directory"].get<std::string>();
+std::vector<std::string> Config::get_workspace_directories() const {
+    std::vector<std::string> directories;
+
+    if (config_data_->contains("projects")) {
+        // Check for new array format
+        if ((*config_data_)["projects"].contains("workspace_directories") &&
+            (*config_data_)["projects"]["workspace_directories"].is_array()) {
+            for (const auto& dir : (*config_data_)["projects"]["workspace_directories"]) {
+                directories.push_back(dir.get<std::string>());
+            }
+        }
+        // Fallback to old singular format for backwards compatibility
+        else if ((*config_data_)["projects"].contains("workspace_directory")) {
+            directories.push_back((*config_data_)["projects"]["workspace_directory"].get<std::string>());
+        }
     }
-    return "~/workspaces"; // Default fallback
+
+    // Default if nothing configured
+    if (directories.empty()) {
+        directories.push_back("~/workspaces");
+    }
+
+    return directories;
 }
 
-void Config::set_workspace_directory(const std::string& dir) {
+void Config::set_workspace_directories(const std::vector<std::string>& dirs) {
     if (!config_data_->contains("projects")) {
         (*config_data_)["projects"] = json::object();
     }
-    (*config_data_)["projects"]["workspace_directory"] = dir;
+    (*config_data_)["projects"]["workspace_directories"] = dirs;
 }
 
 bool Config::get_project_shortcuts(StringMap& shortcuts) const {
@@ -377,6 +395,23 @@ std::vector<std::string> Config::get_default_web_paths() const {
         paths = {"webapp", "webApp", "web", "frontend", "client"};
     }
     return paths;
+}
+
+std::vector<std::string> Config::get_workspace_ignore() const {
+    std::vector<std::string> ignore_patterns;
+    if (config_data_->contains("projects") && (*config_data_)["projects"].contains("ignore")) {
+        for (const auto& pattern : (*config_data_)["projects"]["ignore"]) {
+            ignore_patterns.push_back(pattern.get<std::string>());
+        }
+    }
+    return ignore_patterns;
+}
+
+void Config::set_workspace_ignore(const std::vector<std::string>& ignore_patterns) {
+    if (!config_data_->contains("projects")) {
+        (*config_data_)["projects"] = json::object();
+    }
+    (*config_data_)["projects"]["ignore"] = ignore_patterns;
 }
 
 // ========== Generic Getters/Setters ==========
@@ -587,10 +622,22 @@ void Config::apply_defaults() {
 
     // Projects
     if (!cfg.contains("projects")) cfg["projects"] = json::object();
-    if (!cfg["projects"].contains("workspace_directory")) cfg["projects"]["workspace_directory"] = "~/workspaces";
+
+    // Handle migration from old workspace_directory to new workspace_directories
+    if (cfg["projects"].contains("workspace_directory") && !cfg["projects"].contains("workspace_directories")) {
+        // Migrate old singular format to new array format
+        std::string old_dir = cfg["projects"]["workspace_directory"].get<std::string>();
+        cfg["projects"]["workspace_directories"] = json::array({old_dir});
+        cfg["projects"].erase("workspace_directory");
+    }
+
+    if (!cfg["projects"].contains("workspace_directories")) {
+        cfg["projects"]["workspace_directories"] = json::array({"~/workspaces"});
+    }
     if (!cfg["projects"].contains("shortcuts")) cfg["projects"]["shortcuts"] = json::object();
     if (!cfg["projects"].contains("server_paths")) cfg["projects"]["server_paths"] = json::object();
     if (!cfg["projects"].contains("web_paths")) cfg["projects"]["web_paths"] = json::object();
+    if (!cfg["projects"].contains("ignore")) cfg["projects"]["ignore"] = json::array();
     if (!cfg["projects"].contains("default_paths")) {
         cfg["projects"]["default_paths"] = json::object();
         cfg["projects"]["default_paths"]["server"] = json::array({"java/serverJava", "serverJava", "backend", "server"});

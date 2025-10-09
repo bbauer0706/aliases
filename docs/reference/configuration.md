@@ -181,28 +181,62 @@ aliases-cli config set sync.sync_interval 3600
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `workspace_directory` | string | `~/workspaces` | Base directory for all projects |
+| `workspace_directories` | array | `[\"~/workspaces\"]` | Base directories to scan for projects (supports multiple sources) |
 | `shortcuts` | object | `{}` | Project name shortcuts/aliases |
 | `server_paths` | object | `{}` | Custom server component paths per project |
 | `web_paths` | object | `{}` | Custom web component paths per project |
+| `ignore` | array | `[]` | Directory names to ignore when scanning workspace |
 | `default_paths.server` | array | `[\"java/serverJava\",\"serverJava\",\"backend\",\"server\"]` | Default server paths to search |
 | `default_paths.web` | array | `[\"webapp\",\"webApp\",\"web\",\"frontend\",\"client\"]` | Default web paths to search |
 
 **Examples:**
 ```bash
-# Set workspace directory
-aliases-cli config set projects.workspace_directory ~/dev/projects
-
 # View current project mappings
 aliases-cli config get projects.shortcuts
 aliases-cli config get projects.server_paths
+
+# Add multiple workspace directories
+aliases-cli config edit  # Then modify: "workspace_directories": ["~/workspaces", "~/dev/projects", "/opt/projects"]
+
+# Ignore specific directories in workspace
+aliases-cli config edit  # Then add to projects: "ignore": ["node_modules", "temp", ".git"]
+```
+
+**Multiple Workspace Sources:**
+The `workspace_directories` array allows you to discover projects from multiple locations. All directories will be scanned and projects from all sources will be available:
+
+```json
+{
+  "projects": {
+    "workspace_directories": [
+      "~/workspaces",
+      "~/dev/personal-projects",
+      "/mnt/shared/team-projects"
+    ]
+  }
+}
+```
+
+**Ignore Patterns:**
+The `ignore` array specifies directory names to exclude when scanning the workspace directory. This is useful for:
+- Ignoring build artifacts or temporary directories
+- Excluding symlinks or special directories
+- Filtering out non-project directories
+
+Example:
+```json
+{
+  "projects": {
+    "ignore": ["node_modules", "temp", "build", ".cache"]
+  }
+}
 ```
 
 **Configuration via JSON:**
 ```json
 {
   "projects": {
-    "workspace_directory": "~/workspaces",
+    "workspace_directories": ["~/workspaces", "~/dev/projects"],
     "shortcuts": {
       "urm20": "urm",
       "dispatch20": "dip"
@@ -213,6 +247,7 @@ aliases-cli config get projects.server_paths
     "web_paths": {
       "urm20": "urm2"
     },
+    "ignore": [],
     "default_paths": {
       "server": ["java/serverJava", "serverJava", "backend", "server"],
       "web": ["webapp", "webApp", "web", "frontend", "client"]
@@ -263,7 +298,7 @@ Here's a complete example `config.json`:
     "method": "git"
   },
   "projects": {
-    "workspace_directory": "~/workspaces",
+    "workspace_directories": ["~/workspaces"],
     "shortcuts": {
       "urm20": "urm",
       "dispatch20": "dip"
@@ -274,6 +309,7 @@ Here's a complete example `config.json`:
     "web_paths": {
       "urm20": "urm2"
     },
+    "ignore": [],
     "default_paths": {
       "server": ["java/serverJava", "serverJava", "backend", "server"],
       "web": ["webapp", "webApp", "web", "frontend", "client"]
