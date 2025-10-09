@@ -148,8 +148,8 @@ int main(int argc, char* argv[]) {
         std::cerr << "Warning: Failed to initialize configuration, using defaults" << std::endl;
     }
 
-    // Auto-sync if enabled and needed (except for config commands themselves)
-    if (command != "config") {
+    // Auto-sync if enabled and needed (only for config and todo commands)
+    if (command == "config" || command == "todo") {
         aliases::ConfigSync sync_manager;
         sync_manager.auto_sync_if_needed();
     }
