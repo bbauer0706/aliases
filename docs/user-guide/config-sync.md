@@ -1,175 +1,103 @@
 # Configuration Sync
 
-Sync your aliases-cli configuration across multiple machines using various storage backends.
+Sync your aliases-cli configuration across multiple machines using simple HTTP fetch.
 
 ## Why Use Config Sync?
 
 - **Consistency**: Keep settings identical across all your development machines
-- **Backup**: Automatically backup your configuration to remote storage
-- **Easy Setup**: Configure once, sync everywhere
-- **Multiple Methods**: Choose from git, rsync, file copy, or HTTP
+- **Easy Setup**: Just provide HTTP URLs to your config files
+- **Team Distribution**: Share configurations across teams easily
+- **Simple & Reliable**: No complex setup, just HTTP fetch with curl
 
 ## Quick Start
 
-### 1. Setup Sync (One-Time Per Machine)
+### 1. Host Your Config Files
 
-Choose your preferred sync method:
+Upload your `config.json` (and optionally `todos.json`) to a web server or Git repository:
 
-#### Git Repository (Recommended)
-
+**Option A: GitHub (Recommended)**
 ```bash
-# Create a private git repo (GitHub, GitLab, etc.)
-# Then setup sync
-aliases-cli config sync setup git@github.com:yourusername/aliases-config.git git
-
-# Or use HTTPS
-aliases-cli config sync setup https://github.com:yourusername/aliases-config.git git
+# 1. Create a private GitHub repo: github.com/yourusername/aliases-config
+# 2. Push your config.json to the repo
+# 3. Get raw file URL: https://raw.githubusercontent.com/yourusername/aliases-config/main/config.json
 ```
 
-#### Network Drive / NFS
-
+**Option B: Web Server**
 ```bash
-aliases-cli config sync setup /mnt/network-drive/aliases-config file
+# Upload config.json to your web server
+# URL: https://example.com/configs/aliases/config.json
 ```
 
-#### Rsync
+### 2. Setup Sync on Each Machine
 
 ```bash
-aliases-cli config sync setup user@server:/path/to/config rsync
+# Setup with just config file
+aliases-cli config sync setup https://raw.githubusercontent.com/you/aliases-config/main/config.json
+
+# Or include todos file
+aliases-cli config sync setup \
+  https://raw.githubusercontent.com/you/aliases-config/main/config.json \
+  https://raw.githubusercontent.com/you/aliases-config/main/todos.json
 ```
 
-#### HTTP Endpoint (Read-Only)
+### 3. Pull Config
 
 ```bash
-aliases-cli config sync setup https://example.com/my-config http
-```
-
-### 2. First Machine: Push Your Config
-
-```bash
-# Push your current configuration to remote
-aliases-cli config sync push
-```
-
-### 3. Other Machines: Pull Config
-
-```bash
-# Pull configuration from remote
+# Fetch latest configuration
 aliases-cli config sync pull
 ```
 
 ### 4. Enable Auto-Sync (Optional)
 
-```bash
-# Enable automatic syncing on startup
-aliases-cli config set sync.auto_sync true
-
-# Set sync interval (default: 24 hours / 86400 seconds)
-aliases-cli config set sync.sync_interval 3600  # 1 hour
-```
-
-## Sync Methods Comparison
-
-| Method | Push | Pull | Auto-Sync | Best For |
-|--------|------|------|-----------|----------|
-| **Git** | ✅ | ✅ | ✅ | Version control, multiple machines, conflict resolution |
-| **Rsync** | ✅ | ✅ | ✅ | Network drives, fast sync, direct file access |
-| **File** | ✅ | ✅ | ✅ | Local network shares, Dropbox/Google Drive |
-| **HTTP** | ❌ | ✅ | ✅ | Read-only config distribution, CI/CD |
-
-## Detailed Setup Guides
-
-### Git Method (Recommended)
-
-**Advantages:**
-- Version history
-- Conflict resolution
-- Easy collaboration
-- Works anywhere
-
-**Setup:**
+Edit your config to enable automatic syncing:
 
 ```bash
-# 1. Create a private GitHub/GitLab repo
-#    (e.g., https://github.com/username/aliases-config)
-
-# 2. Setup sync
-aliases-cli config sync setup git@github.com:username/aliases-config.git git
-
-# 3. Push your current config
-aliases-cli config sync push
-
-# 4. On other machines, pull the config
-aliases-cli config sync pull
-
-# 5. Enable auto-sync
-aliases-cli config set sync.auto_sync true
+aliases-cli config edit
 ```
 
-**What Gets Synced:**
-- `config.json` - All settings including project mappings
-
-**What Doesn't Get Synced:**
-- `todos.json` - Kept local (task lists are machine-specific)
-- `cache/` - Temporary files
-
-### Rsync Method
-
-**Advantages:**
-- Fast incremental syncing
-- Works over SSH
-- No git needed
-
-**Setup:**
-
-```bash
-# 1. Setup rsync sync
-aliases-cli config sync setup user@server:/path/to/config rsync
-
-# 2. Push config
-aliases-cli config sync push
-
-# 3. Pull from other machines
-aliases-cli config sync pull
+Then modify the sync section:
+```json
+{
+  "sync": {
+    "enabled": true,
+    "auto_sync": {
+      "enabled": true,
+      "interval": 3600
+    },
+    "config_file_url": "https://...",
+    "todo_file_url": ""
+  }
+}
 ```
 
-### File Copy Method
+## Configuration
 
-**Advantages:**
-- Simple file system copies
-- Works with Dropbox, Google Drive, OneDrive
-- No external tools needed
+### Sync Settings
 
-**Setup:**
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `enabled` | boolean | `false` | Enable/disable config sync |
+| `config_file_url` | string | `""` | HTTP URL to remote config.json |
+| `todo_file_url` | string | `""` | HTTP URL to remote todos.json (optional) |
+| `auto_sync.enabled` | boolean | `false` | Auto-sync on startup |
+| `auto_sync.interval` | integer | `86400` | Seconds between syncs (default: 24 hours) |
+| `last_sync` | integer | `0` | Unix timestamp of last sync (auto-managed) |
 
-```bash
-# Using a network drive
-aliases-cli config sync setup /mnt/network/aliases-config file
-
-# Using Dropbox
-aliases-cli config sync setup ~/Dropbox/aliases-config file
-
-# Using Google Drive
-aliases-cli config sync setup ~/Google\ Drive/aliases-config file
+Example configuration:
+```json
+{
+  "sync": {
+    "enabled": true,
+    "auto_sync": {
+      "enabled": true,
+      "interval": 3600
+    },
+    "last_sync": 0,
+    "config_file_url": "https://raw.githubusercontent.com/user/config/main/config.json",
+    "todo_file_url": "https://raw.githubusercontent.com/user/config/main/todos.json"
+  }
+}
 ```
-
-### HTTP Method (Read-Only)
-
-**Advantages:**
-- Centralized config distribution
-- Good for teams/organizations
-- Read-only prevents accidental changes
-
-**Setup:**
-
-```bash
-# Host config.json on a web server
-# Then pull from machines
-aliases-cli config sync setup https://config.example.com/aliases http
-aliases-cli config sync pull
-```
-
-**Note:** HTTP method only supports pull, not push.
 
 ## Common Workflows
 
@@ -182,18 +110,15 @@ When auto-sync is enabled, config is automatically pulled on startup if the sync
 c myproject
 ```
 
-Auto-sync runs silently in the background.
+Config is silently fetched in the background when needed.
 
-### Manual Sync After Changes
+### Manual Sync
 
 ```bash
-# After making changes locally
-aliases-cli config set general.editor vim
+# Check current sync status
+aliases-cli config sync status
 
-# Push to remote
-aliases-cli config sync push
-
-# On other machines
+# Pull latest config
 aliases-cli config sync pull
 ```
 
@@ -207,66 +132,123 @@ Output:
 ```
 Sync Configuration:
   Enabled: yes
-  Remote URL: git@github.com:user/aliases-config.git
-  Method: git
-  Auto-sync: yes
-  Sync interval: 86400 seconds
+  Config file URL: https://raw.githubusercontent.com/user/repo/main/config.json
+  Todo file URL: https://raw.githubusercontent.com/user/repo/main/todos.json
+  Auto-sync enabled: yes
+  Auto-sync interval: 3600 seconds
   Last sync: Tue Oct  7 09:15:32 2025
-  Time since last sync: 3600 seconds
+  Time since last sync: 1800 seconds
 ```
 
-### Disable Sync
+### Update Remote Config
+
+To update the config that others will fetch:
 
 ```bash
-aliases-cli config set sync.enabled false
+# 1. Make your changes locally
+aliases-cli config set general.editor vim
+
+# 2. Copy your config to the remote location
+cp ~/.config/aliases-cli/config.json /path/to/your/git/repo/
+cd /path/to/your/git/repo
+git add config.json
+git commit -m "Update config"
+git push
+
+# 3. Others will get the update on next sync pull
 ```
 
-### Change Sync URL
+## Hosting Options
+
+### GitHub (Recommended)
+
+**Advantages:**
+- Free private repositories
+- Easy to share within teams
+- Version control included
+- Raw file URLs are simple
+
+**Setup:**
+```bash
+# 1. Create private repo: github.com/username/aliases-config
+# 2. Upload config.json
+# 3. Get raw URL:
+#    https://raw.githubusercontent.com/username/aliases-config/main/config.json
+# 4. Setup sync:
+aliases-cli config sync setup https://raw.githubusercontent.com/username/aliases-config/main/config.json
+```
+
+### GitLab
+
+Similar to GitHub:
+```
+https://gitlab.com/username/aliases-config/-/raw/main/config.json
+```
+
+### Your Own Web Server
 
 ```bash
-# Setup with new URL
-aliases-cli config sync setup new-url@server:/path git
+# Upload config.json to your server
+scp ~/.config/aliases-cli/config.json user@server:/var/www/html/config/
+
+# Setup sync
+aliases-cli config sync setup https://your-server.com/config/config.json
 ```
 
-## Configuration Options
+### Internal File Server
 
-All sync settings are in the `sync` section of `config.json`:
+```bash
+# For organization-wide config distribution
+aliases-cli config sync setup https://intranet.company.com/tools/aliases/config.json
+```
 
+## Migration from Old Sync Format
+
+If you were using the old sync system with git/rsync/file methods, your config will be automatically migrated on next startup:
+
+**Old format:**
 ```json
 {
   "sync": {
     "enabled": true,
-    "remote_url": "git@github.com:user/aliases-config.git",
+    "remote_url": "git@github.com:user/config.git",
+    "method": "git",
     "auto_sync": true,
-    "sync_interval": 86400,
-    "last_sync": 1696676132,
-    "method": "git"
+    "sync_interval": 86400
   }
 }
 ```
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `enabled` | boolean | `false` | Enable/disable config sync |
-| `remote_url` | string | `""` | Remote storage location |
-| `auto_sync` | boolean | `false` | Auto-sync on startup |
-| `sync_interval` | integer | `86400` | Seconds between auto-syncs (24 hours) |
-| `last_sync` | integer | `0` | Unix timestamp of last sync |
-| `method` | string | `"git"` | Sync method: `git`, `rsync`, `file`, `http` |
+**New format (auto-migrated):**
+```json
+{
+  "sync": {
+    "enabled": true,
+    "auto_sync": {
+      "enabled": true,
+      "interval": 86400
+    },
+    "config_file_url": "",
+    "todo_file_url": ""
+  }
+}
+```
+
+Note: `remote_url` will be moved to `config_file_url` if it's an HTTP URL.
 
 ## Troubleshooting
 
-### Git Authentication Issues
+### Connection Issues
 
 ```bash
-# Use SSH keys (recommended)
-ssh-add ~/.ssh/id_rsa
+# Test URL manually
+curl -f -s https://raw.githubusercontent.com/user/repo/main/config.json
 
-# Or use HTTPS with credential caching
-git config --global credential.helper cache
+# Check network connectivity
+ping raw.githubusercontent.com
 ```
 
-### Sync Fails Silently
+### Sync Fails
 
 Check sync status:
 ```bash
@@ -278,32 +260,32 @@ Try manual sync to see errors:
 aliases-cli config sync pull
 ```
 
-### Conflicts in Git Repo
+### Invalid JSON After Sync
 
+If the fetched config is invalid:
 ```bash
-# Reset local git cache and re-sync
-rm -rf ~/.config/aliases-cli/cache/sync
-aliases-cli config sync pull
+# Validate downloaded config
+python3 -m json.tool ~/.config/aliases-cli/config.json
+
+# Restore from backup
+cp ~/.config/aliases-cli/config.json.backup ~/.config/aliases-cli/config.json
 ```
 
-### Different Configs for Different Machines
+### Rate Limiting
 
-Config sync allows machine-specific settings to coexist. Consider keeping different workspace directories per machine while syncing other settings, or use sync selectively with git branches for machine-specific configs.
-
-### Disable Auto-Sync Temporarily
-
-```bash
-aliases-cli config set sync.auto_sync false
-```
+If using GitHub raw URLs, you might hit rate limits:
+- Use authenticated requests (create a personal access token)
+- Use longer sync intervals
+- Host on your own server for unlimited access
 
 ## Best Practices
 
-1. **Use Git for Most Cases**: Provides version history and conflict resolution
-2. **Private Repos Only**: Never use public repos for your config
-3. **Enable Auto-Sync**: Keep configs in sync automatically
-4. **Short Sync Intervals**: Use 1-4 hour intervals for active development
-5. **Manual Push After Big Changes**: Don't rely only on auto-sync for important changes
-6. **Keep Todos Local**: The system intentionally doesn't sync todos.json
+1. **Use Private Repositories**: Never expose your config publicly
+2. **Enable Auto-Sync**: Keep configs synchronized automatically
+3. **Reasonable Intervals**: Use 1-6 hour intervals for active use
+4. **Test URLs First**: Verify URLs work with curl before setting up sync
+5. **Keep Todos Local**: Only sync todos if needed (it's optional)
+6. **Version Control**: Use Git hosting for automatic versioning
 
 ## Security Considerations
 
@@ -317,60 +299,75 @@ aliases-cli config set sync.auto_sync false
 ### What to Keep Local
 
 - API keys or tokens (use environment variables instead)
-- Machine-specific paths that vary
+- Machine-specific paths
 - Sensitive project information
 
 ### Repository Security
 
 - Use private repositories only
 - Enable two-factor authentication
-- Use SSH keys with passphrases
+- Use HTTPS URLs for GitHub (no SSH keys needed)
 - Audit repository access regularly
 
 ## Examples
 
-### Example 1: Two Development Machines
+### Example 1: Personal Configuration
 
-**Machine 1 (Work):**
 ```bash
-aliases-cli config sync setup git@github.com:me/aliases-config.git
-aliases-cli config sync push
-aliases-cli config set sync.auto_sync true
-```
+# Machine 1
+aliases-cli config sync setup https://raw.githubusercontent.com/me/aliases/main/config.json
 
-**Machine 2 (Home):**
-```bash
-aliases-cli config sync setup git@github.com:me/aliases-config.git
+# Enable auto-sync in config.json
+aliases-cli config edit
+# Set auto_sync.enabled to true
+
+# Pull config
 aliases-cli config sync pull
-aliases-cli config set sync.auto_sync true
 ```
-
-Now both machines stay in sync automatically!
 
 ### Example 2: Team Configuration
 
-**Team Lead:**
+**Team lead hosts config on GitHub:**
 ```bash
-# Setup HTTP distribution
-# Host config.json at https://team.example.com/config/
+# Create repo: github.com/company/aliases-cli-config
+# Upload team config.json
+```
 
-# Each team member:
-aliases-cli config sync setup https://team.example.com/config http
+**Each team member:**
+```bash
+# Setup sync with team config
+aliases-cli config sync setup https://raw.githubusercontent.com/company/aliases-cli-config/main/config.json
+
+# Enable hourly checks
+aliases-cli config edit
+# Set: "auto_sync": { "enabled": true, "interval": 3600 }
+
+# Initial pull
 aliases-cli config sync pull
-aliases-cli config set sync.sync_interval 3600  # Check hourly
-aliases-cli config set sync.auto_sync true
 ```
 
-### Example 3: Dropbox Sync
+### Example 3: Multiple Configs
 
 ```bash
-# All machines with Dropbox
-aliases-cli config sync setup ~/Dropbox/aliases-config file
-aliases-cli config set sync.auto_sync true
-aliases-cli config set sync.sync_interval 1800  # 30 minutes
+# Work config
+aliases-cli config sync setup https://company.com/configs/aliases-work.json
 
-# Dropbox handles the actual syncing
+# Or personal config
+aliases-cli config sync setup https://raw.githubusercontent.com/me/aliases/main/config.json
+
+# Switch by re-running setup with different URL
 ```
+
+## Comparison with Old Sync
+
+| Feature | Old (Git/Rsync/File) | New (HTTP-Only) |
+|---------|---------------------|-----------------|
+| **Push** | ✅ Supported | ❌ Not supported (manual upload) |
+| **Pull** | ✅ Supported | ✅ Supported |
+| **Auto-sync** | ✅ Supported | ✅ Supported |
+| **Setup** | Complex (SSH keys, git, rsync) | Simple (just a URL) |
+| **Code** | ~220 lines | ~60 lines |
+| **Best for** | Advanced users, two-way sync | Simple distribution, teams |
 
 ## See Also
 

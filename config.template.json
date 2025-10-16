@@ -24,13 +24,13 @@
   },
   "sync": {
     "enabled": false,
-    "remote_url": "",
-    "auto_sync": false,
-    "sync_interval": 86400,
+    "auto_sync": {
+      "enabled": false,
+      "interval": 86400
+    },
     "last_sync": 0,
-    "method": "git",
-    "sync_todos": false,
-    "last_todo_sync": 0
+    "config_file_url": "",
+    "todo_file_url": ""
   },
   "projects": {
     "workspace_directories": ["~/workspaces"],

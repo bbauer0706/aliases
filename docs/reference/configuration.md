@@ -149,29 +149,45 @@ Project 3: base_port + (port_offset * 2) (3200)
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
 | `enabled` | boolean | `false` | Enable/disable config sync |
-| `remote_url` | string | `""` | Remote storage location (git repo, rsync path, file path, or HTTP URL) |
-| `auto_sync` | boolean | `false` | Automatically sync on startup |
-| `sync_interval` | integer | `86400` | Seconds between automatic syncs (default: 24 hours) |
+| `config_file_url` | string | `""` | HTTP URL to remote config.json file |
+| `todo_file_url` | string | `""` | HTTP URL to remote todos.json file (optional) |
+| `auto_sync.enabled` | boolean | `false` | Automatically sync on startup |
+| `auto_sync.interval` | integer | `86400` | Seconds between automatic syncs (default: 24 hours) |
 | `last_sync` | integer | `0` | Unix timestamp of last sync (auto-managed) |
-| `method` | string | `git` | Sync method: `git`, `rsync`, `file`, `http` |
 
 **Examples:**
 ```bash
-# Setup git sync
-aliases-cli config sync setup git@github.com:user/aliases-config.git git
+# Setup sync with HTTP URLs
+aliases-cli config sync setup https://example.com/config.json https://example.com/todos.json
 
-# Enable auto-sync
-aliases-cli config set sync.auto_sync true
+# Or just config file (todos optional)
+aliases-cli config sync setup https://raw.githubusercontent.com/user/repo/main/config.json
 
-# Set sync interval to 1 hour
-aliases-cli config set sync.sync_interval 3600
+# Pull latest config
+aliases-cli config sync pull
+
+# Check sync status
+aliases-cli config sync status
+
+# Enable auto-sync via JSON edit
+aliases-cli config edit
+# Then modify:
+#   "auto_sync": {
+#     "enabled": true,
+#     "interval": 3600
+#   }
 ```
 
-**Sync Methods:**
-- `git`: Version-controlled sync with commit history (recommended)
-- `rsync`: Fast incremental sync over SSH or local paths
-- `file`: Simple file copy (works with Dropbox, Google Drive, network drives)
-- `http`: Read-only HTTP fetch (good for distributing team configs)
+**Simplified HTTP-Only Model:**
+
+The sync feature now uses a simple HTTP fetch model for read-only config distribution. This is ideal for:
+- Sharing team configurations via Git repositories (using raw.githubusercontent.com)
+- Distributing configs from a web server
+- Simple, reliable config synchronization without complex setup
+
+**Migration from Old Format:**
+
+If you have an old config with `remote_url` and `method` fields, they will be automatically migrated to the new format on next startup.
 
 **See Also:** [Config Sync Guide](../user-guide/config-sync.md)
 
@@ -291,11 +307,13 @@ Here's a complete example `config.json`:
   },
   "sync": {
     "enabled": false,
-    "remote_url": "",
-    "auto_sync": false,
-    "sync_interval": 86400,
+    "auto_sync": {
+      "enabled": false,
+      "interval": 86400
+    },
     "last_sync": 0,
-    "method": "git"
+    "config_file_url": "",
+    "todo_file_url": ""
   },
   "projects": {
     "workspace_directories": ["~/workspaces"],

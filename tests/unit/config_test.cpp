@@ -271,82 +271,182 @@ TEST_F(ConfigTest, GetSetEnvDefaultEnv) {
 TEST_F(ConfigTest, GetSetSyncEnabled) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_sync_enabled(true);
     EXPECT_TRUE(config.get_sync_enabled());
-    
+
     config.set_sync_enabled(false);
     EXPECT_FALSE(config.get_sync_enabled());
 }
 
-TEST_F(ConfigTest, GetSetSyncRemoteUrl) {
+TEST_F(ConfigTest, GetSetSyncConfigFileUrl) {
     auto& config = Config::instance();
     config.initialize();
-    
-    config.set_sync_remote_url("git@github.com:user/config.git");
-    EXPECT_EQ(config.get_sync_remote_url(), "git@github.com:user/config.git");
-    
-    config.set_sync_remote_url("https://example.com/config");
-    EXPECT_EQ(config.get_sync_remote_url(), "https://example.com/config");
+
+    config.set_sync_config_file_url("https://example.com/config.json");
+    EXPECT_EQ(config.get_sync_config_file_url(), "https://example.com/config.json");
+
+    config.set_sync_config_file_url("https://raw.githubusercontent.com/user/repo/main/config.json");
+    EXPECT_EQ(config.get_sync_config_file_url(), "https://raw.githubusercontent.com/user/repo/main/config.json");
 }
 
-TEST_F(ConfigTest, GetSetSyncAutoSync) {
+TEST_F(ConfigTest, GetSetSyncTodoFileUrl) {
     auto& config = Config::instance();
     config.initialize();
-    
-    config.set_sync_auto_sync(true);
-    EXPECT_TRUE(config.get_sync_auto_sync());
-    
-    config.set_sync_auto_sync(false);
-    EXPECT_FALSE(config.get_sync_auto_sync());
+
+    config.set_sync_todo_file_url("https://example.com/todos.json");
+    EXPECT_EQ(config.get_sync_todo_file_url(), "https://example.com/todos.json");
+
+    config.set_sync_todo_file_url("https://raw.githubusercontent.com/user/repo/main/todos.json");
+    EXPECT_EQ(config.get_sync_todo_file_url(), "https://raw.githubusercontent.com/user/repo/main/todos.json");
 }
 
-TEST_F(ConfigTest, GetSetSyncMethod) {
+TEST_F(ConfigTest, GetSetSyncAutoSyncEnabled) {
     auto& config = Config::instance();
     config.initialize();
-    
-    config.set_sync_method("git");
-    EXPECT_EQ(config.get_sync_method(), "git");
-    
-    config.set_sync_method("rsync");
-    EXPECT_EQ(config.get_sync_method(), "rsync");
-    
-    config.set_sync_method("file");
-    EXPECT_EQ(config.get_sync_method(), "file");
+
+    config.set_sync_auto_sync_enabled(true);
+    EXPECT_TRUE(config.get_sync_auto_sync_enabled());
+
+    config.set_sync_auto_sync_enabled(false);
+    EXPECT_FALSE(config.get_sync_auto_sync_enabled());
 }
 
-TEST_F(ConfigTest, GetSetSyncInterval) {
+TEST_F(ConfigTest, GetSetSyncAutoSyncInterval) {
     auto& config = Config::instance();
     config.initialize();
-    
-    config.set_sync_interval(3600);
-    EXPECT_EQ(config.get_sync_interval(), 3600);
-    
-    config.set_sync_interval(7200);
-    EXPECT_EQ(config.get_sync_interval(), 7200);
+
+    config.set_sync_auto_sync_interval(3600);
+    EXPECT_EQ(config.get_sync_auto_sync_interval(), 3600);
+
+    config.set_sync_auto_sync_interval(7200);
+    EXPECT_EQ(config.get_sync_auto_sync_interval(), 7200);
+}
+
+TEST_F(ConfigTest, GetSetSyncLastSync) {
+    auto& config = Config::instance();
+    config.initialize();
+
+    config.set_sync_last_sync(1234567890);
+    EXPECT_EQ(config.get_sync_last_sync(), 1234567890);
+
+    config.set_sync_last_sync(9876543210);
+    EXPECT_EQ(config.get_sync_last_sync(), 9876543210);
 }
 
 // ========== Workspace Settings Tests ==========
 
-TEST_F(ConfigTest, GetSetWorkspaceDirectory) {
+TEST_F(ConfigTest, GetSetWorkspaceDirectories) {
     auto& config = Config::instance();
     config.initialize();
-    
-    config.set_workspace_directory("/home/user/projects");
-    EXPECT_EQ(config.get_workspace_directory(), "/home/user/projects");
-    
-    config.set_workspace_directory("~/workspaces");
-    EXPECT_EQ(config.get_workspace_directory(), "~/workspaces");
+
+    std::vector<std::string> dirs = {"/home/user/projects", "/home/user/work"};
+    config.set_workspace_directories(dirs);
+
+    auto retrieved = config.get_workspace_directories();
+    ASSERT_EQ(retrieved.size(), 2u);
+    EXPECT_EQ(retrieved[0], "/home/user/projects");
+    EXPECT_EQ(retrieved[1], "/home/user/work");
+}
+
+TEST_F(ConfigTest, GetSetWorkspaceDirectoriesSingle) {
+    auto& config = Config::instance();
+    config.initialize();
+
+    std::vector<std::string> dirs = {"~/workspaces"};
+    config.set_workspace_directories(dirs);
+
+    auto retrieved = config.get_workspace_directories();
+    ASSERT_EQ(retrieved.size(), 1u);
+    EXPECT_EQ(retrieved[0], "~/workspaces");
+}
+
+TEST_F(ConfigTest, GetSetWorkspaceDirectoriesEmpty) {
+    auto& config = Config::instance();
+    config.initialize();
+
+    std::vector<std::string> empty_dirs;
+    config.set_workspace_directories(empty_dirs);
+
+    auto retrieved = config.get_workspace_directories();
+    EXPECT_TRUE(retrieved.empty());
+}
+
+TEST_F(ConfigTest, GetSetWorkspaceDirectoriesMultiple) {
+    auto& config = Config::instance();
+    config.initialize();
+
+    std::vector<std::string> dirs = {
+        "/home/user/personal",
+        "/home/user/work",
+        "/opt/projects",
+        "~/git"
+    };
+    config.set_workspace_directories(dirs);
+
+    auto retrieved = config.get_workspace_directories();
+    ASSERT_EQ(retrieved.size(), 4u);
+    EXPECT_EQ(retrieved[0], "/home/user/personal");
+    EXPECT_EQ(retrieved[1], "/home/user/work");
+    EXPECT_EQ(retrieved[2], "/opt/projects");
+    EXPECT_EQ(retrieved[3], "~/git");
+}
+
+TEST_F(ConfigTest, GetSetWorkspaceIgnore) {
+    auto& config = Config::instance();
+    config.initialize();
+
+    std::vector<std::string> ignore = {"node_modules", ".git", "build"};
+    config.set_workspace_ignore(ignore);
+
+    auto retrieved = config.get_workspace_ignore();
+    ASSERT_EQ(retrieved.size(), 3u);
+    EXPECT_EQ(retrieved[0], "node_modules");
+    EXPECT_EQ(retrieved[1], ".git");
+    EXPECT_EQ(retrieved[2], "build");
+}
+
+TEST_F(ConfigTest, GetSetWorkspaceIgnoreEmpty) {
+    auto& config = Config::instance();
+    config.initialize();
+
+    std::vector<std::string> empty_ignore;
+    config.set_workspace_ignore(empty_ignore);
+
+    auto retrieved = config.get_workspace_ignore();
+    EXPECT_TRUE(retrieved.empty());
+}
+
+TEST_F(ConfigTest, GetSetWorkspaceIgnoreWithPatterns) {
+    auto& config = Config::instance();
+    config.initialize();
+
+    std::vector<std::string> ignore = {
+        "*.tmp",
+        "temp-*",
+        ".cache",
+        "dist",
+        "vendor"
+    };
+    config.set_workspace_ignore(ignore);
+
+    auto retrieved = config.get_workspace_ignore();
+    ASSERT_EQ(retrieved.size(), 5u);
+    EXPECT_EQ(retrieved[0], "*.tmp");
+    EXPECT_EQ(retrieved[1], "temp-*");
+    EXPECT_EQ(retrieved[2], ".cache");
+    EXPECT_EQ(retrieved[3], "dist");
+    EXPECT_EQ(retrieved[4], "vendor");
 }
 
 TEST_F(ConfigTest, GetProjectShortcuts) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     StringMap shortcuts;
     // Test getting shortcuts (may or may not be empty)
     config.get_project_shortcuts(shortcuts);
-    
+
     // Just verify the method works without crashing
     EXPECT_TRUE(true);
 }

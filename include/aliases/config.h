@@ -90,26 +90,20 @@ public:
     bool get_sync_enabled() const;
     void set_sync_enabled(bool enabled);
 
-    std::string get_sync_remote_url() const;
-    void set_sync_remote_url(const std::string& url);
+    bool get_sync_auto_sync_enabled() const;
+    void set_sync_auto_sync_enabled(bool enabled);
 
-    bool get_sync_auto_sync() const;
-    void set_sync_auto_sync(bool auto_sync);
-
-    int get_sync_interval() const; // Seconds between syncs
-    void set_sync_interval(int interval);
+    int get_sync_auto_sync_interval() const; // Seconds between syncs
+    void set_sync_auto_sync_interval(int interval);
 
     int64_t get_sync_last_sync() const; // Unix timestamp
     void set_sync_last_sync(int64_t timestamp);
 
-    std::string get_sync_method() const; // "git", "rsync", "http", "file"
-    void set_sync_method(const std::string& method);
+    std::string get_sync_config_file_url() const;
+    void set_sync_config_file_url(const std::string& url);
 
-    bool get_sync_todos() const;
-    void set_sync_todos(bool sync_todos);
-
-    int64_t get_sync_last_todo_sync() const;
-    void set_sync_last_todo_sync(int64_t timestamp);
+    std::string get_sync_todo_file_url() const;
+    void set_sync_todo_file_url(const std::string& url);
 
     // ========== Projects Settings ==========
 
@@ -183,13 +177,11 @@ private:
     static constexpr const char* DEFAULT_ENV_DEFAULT_ENV = "dev";
 
     static constexpr bool DEFAULT_SYNC_ENABLED = false;
-    static constexpr const char* DEFAULT_SYNC_REMOTE_URL = "";
-    static constexpr bool DEFAULT_SYNC_AUTO_SYNC = false;
-    static constexpr int DEFAULT_SYNC_INTERVAL = 86400; // 24 hours
+    static constexpr bool DEFAULT_SYNC_AUTO_SYNC_ENABLED = false;
+    static constexpr int DEFAULT_SYNC_AUTO_SYNC_INTERVAL = 86400; // 24 hours
     static constexpr int64_t DEFAULT_SYNC_LAST_SYNC = 0;
-    static constexpr const char* DEFAULT_SYNC_METHOD = "git";
-    static constexpr bool DEFAULT_SYNC_TODOS = false;
-    static constexpr int64_t DEFAULT_SYNC_LAST_TODO_SYNC = 0;
+    static constexpr const char* DEFAULT_SYNC_CONFIG_FILE_URL = "";
+    static constexpr const char* DEFAULT_SYNC_TODO_FILE_URL = "";
 };
 
 } // namespace aliases

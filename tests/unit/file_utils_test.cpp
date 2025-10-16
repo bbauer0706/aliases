@@ -149,3 +149,83 @@ TEST_F(FileUtilsTest, NormalizePathHandlesRelative) {
     auto result = FileUtils::normalize_path("../project");
     EXPECT_FALSE(result.empty());
 }
+
+// Workspace project discovery tests
+TEST_F(FileUtilsTest, DiscoverWorkspaceProjectsBasic) {
+    // Create subdirectories
+    system(("mkdir -p " + test_dir + "/project1").c_str());
+    system(("mkdir -p " + test_dir + "/project2").c_str());
+    system(("mkdir -p " + test_dir + "/project3").c_str());
+
+    auto projects = FileUtils::discover_workspace_projects(test_dir);
+    EXPECT_GE(projects.size(), 3);
+}
+
+TEST_F(FileUtilsTest, DiscoverWorkspaceProjectsWithIgnorePatterns) {
+    // Create subdirectories
+    system(("mkdir -p " + test_dir + "/project1").c_str());
+    system(("mkdir -p " + test_dir + "/project2").c_str());
+    system(("mkdir -p " + test_dir + "/node_modules").c_str());
+    system(("mkdir -p " + test_dir + "/.git").c_str());
+    system(("mkdir -p " + test_dir + "/build").c_str());
+
+    std::vector<std::string> ignore_patterns = {"node_modules", ".git", "build"};
+    auto projects = FileUtils::discover_workspace_projects(test_dir, ignore_patterns);
+
+    // Should find project1 and project2, but not ignored directories
+    bool found_project1 = false, found_project2 = false;
+    bool found_node_modules = false, found_git = false, found_build = false;
+
+    for (const auto& proj : projects) {
+        if (proj.find("project1") != std::string::npos) found_project1 = true;
+        if (proj.find("project2") != std::string::npos) found_project2 = true;
+        if (proj.find("node_modules") != std::string::npos) found_node_modules = true;
+        if (proj.find(".git") != std::string::npos) found_git = true;
+        if (proj.find("build") != std::string::npos) found_build = true;
+    }
+
+    EXPECT_TRUE(found_project1);
+    EXPECT_TRUE(found_project2);
+    EXPECT_FALSE(found_node_modules);
+    EXPECT_FALSE(found_git);
+    EXPECT_FALSE(found_build);
+}
+
+TEST_F(FileUtilsTest, DiscoverWorkspaceProjectsWithWildcardIgnore) {
+    // Create subdirectories
+    system(("mkdir -p " + test_dir + "/project1").c_str());
+    system(("mkdir -p " + test_dir + "/temp-files").c_str());
+    system(("mkdir -p " + test_dir + "/temp-backup").c_str());
+    system(("mkdir -p " + test_dir + "/important-temp").c_str());
+
+    std::vector<std::string> ignore_patterns = {"temp-*"};
+    auto projects = FileUtils::discover_workspace_projects(test_dir, ignore_patterns);
+
+    // Should find project1 and important-temp, but not temp-files or temp-backup
+    bool found_project1 = false, found_important = false;
+    bool found_temp_files = false, found_temp_backup = false;
+
+    for (const auto& proj : projects) {
+        if (proj.find("project1") != std::string::npos) found_project1 = true;
+        if (proj.find("important-temp") != std::string::npos) found_important = true;
+        if (proj.find("temp-files") != std::string::npos) found_temp_files = true;
+        if (proj.find("temp-backup") != std::string::npos) found_temp_backup = true;
+    }
+
+    EXPECT_TRUE(found_project1);
+    EXPECT_TRUE(found_important);
+    EXPECT_FALSE(found_temp_files);
+    EXPECT_FALSE(found_temp_backup);
+}
+
+TEST_F(FileUtilsTest, DiscoverWorkspaceProjectsEmptyIgnorePatterns) {
+    // Create subdirectories
+    system(("mkdir -p " + test_dir + "/project1").c_str());
+    system(("mkdir -p " + test_dir + "/node_modules").c_str());
+
+    std::vector<std::string> empty_ignore;
+    auto projects = FileUtils::discover_workspace_projects(test_dir, empty_ignore);
+
+    // Should find all directories when no ignore patterns
+    EXPECT_GE(projects.size(), 2);
+}

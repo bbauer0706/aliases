@@ -235,28 +235,46 @@ void Config::set_sync_enabled(bool enabled) {
     (*config_data_)["sync"]["enabled"] = enabled;
 }
 
-std::string Config::get_sync_remote_url() const {
-    return (*config_data_)["sync"]["remote_url"].get<std::string>();
+bool Config::get_sync_auto_sync_enabled() const {
+    if (config_data_->contains("sync") && (*config_data_)["sync"].contains("auto_sync")) {
+        auto& auto_sync = (*config_data_)["sync"]["auto_sync"];
+        if (auto_sync.is_object() && auto_sync.contains("enabled")) {
+            return auto_sync["enabled"].get<bool>();
+        }
+        // Backward compatibility: if it's a boolean, return it directly
+        if (auto_sync.is_boolean()) {
+            return auto_sync.get<bool>();
+        }
+    }
+    return DEFAULT_SYNC_AUTO_SYNC_ENABLED;
 }
 
-void Config::set_sync_remote_url(const std::string& url) {
-    (*config_data_)["sync"]["remote_url"] = url;
+void Config::set_sync_auto_sync_enabled(bool enabled) {
+    if (!(*config_data_)["sync"].contains("auto_sync") || !(*config_data_)["sync"]["auto_sync"].is_object()) {
+        (*config_data_)["sync"]["auto_sync"] = json::object();
+    }
+    (*config_data_)["sync"]["auto_sync"]["enabled"] = enabled;
 }
 
-bool Config::get_sync_auto_sync() const {
-    return (*config_data_)["sync"]["auto_sync"].get<bool>();
+int Config::get_sync_auto_sync_interval() const {
+    if (config_data_->contains("sync") && (*config_data_)["sync"].contains("auto_sync")) {
+        auto& auto_sync = (*config_data_)["sync"]["auto_sync"];
+        if (auto_sync.is_object() && auto_sync.contains("interval")) {
+            return auto_sync["interval"].get<int>();
+        }
+    }
+    // Backward compatibility: check for old sync_interval field
+    if (config_data_->contains("sync") && (*config_data_)["sync"].contains("sync_interval")) {
+        return (*config_data_)["sync"]["sync_interval"].get<int>();
+    }
+    return DEFAULT_SYNC_AUTO_SYNC_INTERVAL;
 }
 
-void Config::set_sync_auto_sync(bool auto_sync) {
-    (*config_data_)["sync"]["auto_sync"] = auto_sync;
-}
-
-int Config::get_sync_interval() const {
-    return (*config_data_)["sync"]["sync_interval"].get<int>();
-}
-
-void Config::set_sync_interval(int interval) {
-    (*config_data_)["sync"]["sync_interval"] = interval;
+void Config::set_sync_auto_sync_interval(int interval) {
+    if (!(*config_data_)["sync"].contains("auto_sync") || !(*config_data_)["sync"]["auto_sync"].is_object()) {
+        (*config_data_)["sync"]["auto_sync"] = json::object();
+    }
+    (*config_data_)["sync"]["auto_sync"]["interval"] = interval;
 }
 
 int64_t Config::get_sync_last_sync() const {
@@ -267,35 +285,30 @@ void Config::set_sync_last_sync(int64_t timestamp) {
     (*config_data_)["sync"]["last_sync"] = timestamp;
 }
 
-std::string Config::get_sync_method() const {
-    return (*config_data_)["sync"]["method"].get<std::string>();
-}
-
-void Config::set_sync_method(const std::string& method) {
-    (*config_data_)["sync"]["method"] = method;
-}
-
-bool Config::get_sync_todos() const {
-    auto& value = (*config_data_)["sync"]["sync_todos"];
-    if (value.is_boolean()) {
-        return value.get<bool>();
-    } else if (value.is_string()) {
-        std::string str_val = value.get<std::string>();
-        return str_val == "true" || str_val == "1";
+std::string Config::get_sync_config_file_url() const {
+    if (config_data_->contains("sync") && (*config_data_)["sync"].contains("config_file_url")) {
+        return (*config_data_)["sync"]["config_file_url"].get<std::string>();
     }
-    return false;
+    // Backward compatibility: fall back to old remote_url
+    if (config_data_->contains("sync") && (*config_data_)["sync"].contains("remote_url")) {
+        return (*config_data_)["sync"]["remote_url"].get<std::string>();
+    }
+    return DEFAULT_SYNC_CONFIG_FILE_URL;
 }
 
-void Config::set_sync_todos(bool sync_todos) {
-    (*config_data_)["sync"]["sync_todos"] = sync_todos;
+void Config::set_sync_config_file_url(const std::string& url) {
+    (*config_data_)["sync"]["config_file_url"] = url;
 }
 
-int64_t Config::get_sync_last_todo_sync() const {
-    return (*config_data_)["sync"]["last_todo_sync"].get<int64_t>();
+std::string Config::get_sync_todo_file_url() const {
+    if (config_data_->contains("sync") && (*config_data_)["sync"].contains("todo_file_url")) {
+        return (*config_data_)["sync"]["todo_file_url"].get<std::string>();
+    }
+    return DEFAULT_SYNC_TODO_FILE_URL;
 }
 
-void Config::set_sync_last_todo_sync(int64_t timestamp) {
-    (*config_data_)["sync"]["last_todo_sync"] = timestamp;
+void Config::set_sync_todo_file_url(const std::string& url) {
+    (*config_data_)["sync"]["todo_file_url"] = url;
 }
 
 // ========== Projects Settings ==========
@@ -609,16 +622,40 @@ void Config::apply_defaults() {
     if (!cfg["env"].contains("port_offset")) cfg["env"]["port_offset"] = DEFAULT_ENV_PORT_OFFSET;
     if (!cfg["env"].contains("default_env")) cfg["env"]["default_env"] = DEFAULT_ENV_DEFAULT_ENV;
 
-    // Sync
+    // Sync - new structure with migration from old format
     if (!cfg.contains("sync")) cfg["sync"] = json::object();
     if (!cfg["sync"].contains("enabled")) cfg["sync"]["enabled"] = DEFAULT_SYNC_ENABLED;
-    if (!cfg["sync"].contains("remote_url")) cfg["sync"]["remote_url"] = DEFAULT_SYNC_REMOTE_URL;
-    if (!cfg["sync"].contains("auto_sync")) cfg["sync"]["auto_sync"] = DEFAULT_SYNC_AUTO_SYNC;
-    if (!cfg["sync"].contains("sync_interval")) cfg["sync"]["sync_interval"] = DEFAULT_SYNC_INTERVAL;
     if (!cfg["sync"].contains("last_sync")) cfg["sync"]["last_sync"] = DEFAULT_SYNC_LAST_SYNC;
-    if (!cfg["sync"].contains("method")) cfg["sync"]["method"] = DEFAULT_SYNC_METHOD;
-    if (!cfg["sync"].contains("sync_todos")) cfg["sync"]["sync_todos"] = DEFAULT_SYNC_TODOS;
-    if (!cfg["sync"].contains("last_todo_sync")) cfg["sync"]["last_todo_sync"] = DEFAULT_SYNC_LAST_TODO_SYNC;
+    if (!cfg["sync"].contains("config_file_url")) cfg["sync"]["config_file_url"] = DEFAULT_SYNC_CONFIG_FILE_URL;
+    if (!cfg["sync"].contains("todo_file_url")) cfg["sync"]["todo_file_url"] = DEFAULT_SYNC_TODO_FILE_URL;
+
+    // Handle auto_sync: migrate old boolean format to new object format
+    if (!cfg["sync"].contains("auto_sync")) {
+        cfg["sync"]["auto_sync"] = json::object();
+        cfg["sync"]["auto_sync"]["enabled"] = DEFAULT_SYNC_AUTO_SYNC_ENABLED;
+        cfg["sync"]["auto_sync"]["interval"] = DEFAULT_SYNC_AUTO_SYNC_INTERVAL;
+    } else if (cfg["sync"]["auto_sync"].is_boolean()) {
+        // Migrate old boolean to new object format
+        bool old_value = cfg["sync"]["auto_sync"].get<bool>();
+        cfg["sync"]["auto_sync"] = json::object();
+        cfg["sync"]["auto_sync"]["enabled"] = old_value;
+        cfg["sync"]["auto_sync"]["interval"] = DEFAULT_SYNC_AUTO_SYNC_INTERVAL;
+    } else if (cfg["sync"]["auto_sync"].is_object()) {
+        // Ensure both fields exist
+        if (!cfg["sync"]["auto_sync"].contains("enabled")) {
+            cfg["sync"]["auto_sync"]["enabled"] = DEFAULT_SYNC_AUTO_SYNC_ENABLED;
+        }
+        if (!cfg["sync"]["auto_sync"].contains("interval")) {
+            cfg["sync"]["auto_sync"]["interval"] = DEFAULT_SYNC_AUTO_SYNC_INTERVAL;
+        }
+    }
+
+    // Clean up old sync fields if they exist (migration)
+    if (cfg["sync"].contains("remote_url")) cfg["sync"].erase("remote_url");
+    if (cfg["sync"].contains("method")) cfg["sync"].erase("method");
+    if (cfg["sync"].contains("sync_todos")) cfg["sync"].erase("sync_todos");
+    if (cfg["sync"].contains("last_todo_sync")) cfg["sync"].erase("last_todo_sync");
+    if (cfg["sync"].contains("sync_interval")) cfg["sync"].erase("sync_interval");
 
     // Projects
     if (!cfg.contains("projects")) cfg["projects"] = json::object();

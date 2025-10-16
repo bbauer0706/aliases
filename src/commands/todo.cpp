@@ -357,15 +357,20 @@ bool TodoManager::load_todos() {
 bool TodoManager::should_sync_external_todos() const {
     auto& config = Config::instance();
 
-    // Check if todo syncing is enabled
-    if (!config.get_sync_enabled() || !config.get_sync_todos()) {
+    // Check if todo syncing is enabled and todo_file_url is configured
+    if (!config.get_sync_enabled() || config.get_sync_todo_file_url().empty()) {
+        return false;
+    }
+
+    // Check if auto-sync is enabled
+    if (!config.get_sync_auto_sync_enabled()) {
         return false;
     }
 
     // Check if enough time has passed since last sync
     std::time_t now = std::time(nullptr);
-    int64_t last_sync = config.get_sync_last_todo_sync();
-    int interval = config.get_sync_interval();
+    int64_t last_sync = config.get_sync_last_sync();
+    int interval = config.get_sync_auto_sync_interval();
 
     return (now - last_sync) >= interval;
 }
@@ -382,7 +387,7 @@ void TodoManager::sync_external_todos_if_needed() {
 
         // Update last sync time in config
         auto& config = Config::instance();
-        config.set_sync_last_todo_sync(std::time(nullptr));
+        config.set_sync_last_sync(std::time(nullptr));
         config.save();
     }
 }
@@ -390,7 +395,7 @@ void TodoManager::sync_external_todos_if_needed() {
 bool TodoManager::fetch_external_todos() {
     auto& config = Config::instance();
 
-    if (!config.get_sync_enabled() || !config.get_sync_todos()) {
+    if (!config.get_sync_enabled() || config.get_sync_todo_file_url().empty()) {
         return false;
     }
 
