@@ -1,19 +1,18 @@
 #include "aliases/commands/todo.h"
 #include "aliases/commands/todo_tui.h"
+#include "aliases/common.h"
 #include "aliases/config.h"
 #include "aliases/config_sync.h"
-#include "aliases/common.h"
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <algorithm>
-#include <iomanip>
+#include <cctype>
+#include <cstdlib>
 #include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <cstdlib>
-#include <cctype>
-
 
 // JSON handling
 #include "third_party/json.hpp"
@@ -22,13 +21,9 @@ using json = nlohmann::json;
 namespace aliases::commands {
 
 // TodoManager implementation
-TodoManager::TodoManager() : next_id_(1) {
-    load_todos();
-}
+TodoManager::TodoManager() : next_id_(1) { load_todos(); }
 
-std::string TodoManager::get_todos_file_path() const {
-    return Config::instance().get_todos_file_path();
-}
+std::string TodoManager::get_todos_file_path() const { return Config::instance().get_todos_file_path(); }
 
 std::string TodoManager::get_external_todos_file_path() const {
     return Config::instance().get_todos_external_file_path();
@@ -38,107 +33,102 @@ Result<int> TodoManager::add_todo(const std::string& description, const std::str
     if (description.empty()) {
         return Result<int>::error("Todo description cannot be empty");
     }
-    
+
     TodoItem todo;
     todo.id = next_id_++;
     todo.description = description;
     todo.category = category;
     todo.priority = std::max(0, std::min(3, priority)); // Clamp to 0-3
     todo.created_at = std::time(nullptr);
-    
+
     todos_.push_back(todo);
-    
+
     if (!save_todos()) {
         return Result<int>::error("Failed to save todos");
     }
-    
+
     return Result<int>::success_with(std::move(todo.id));
 }
 
 Result<bool> TodoManager::complete_todo(int id) {
-    auto it = std::find_if(todos_.begin(), todos_.end(), 
-                          [id](const TodoItem& todo) { return todo.id == id; });
-    
+    auto it = std::find_if(todos_.begin(), todos_.end(), [id](const TodoItem& todo) { return todo.id == id; });
+
     if (it == todos_.end()) {
         return Result<bool>::error("Todo not found");
     }
-    
+
     it->completed = true;
     it->completed_at = std::time(nullptr);
-    
+
     if (!save_todos()) {
         return Result<bool>::error("Failed to save todos");
     }
-    
+
     return Result<bool>::success_with(true);
 }
 
 Result<bool> TodoManager::uncomplete_todo(int id) {
-    auto it = std::find_if(todos_.begin(), todos_.end(), 
-                          [id](const TodoItem& todo) { return todo.id == id; });
-    
+    auto it = std::find_if(todos_.begin(), todos_.end(), [id](const TodoItem& todo) { return todo.id == id; });
+
     if (it == todos_.end()) {
         return Result<bool>::error("Todo not found");
     }
-    
+
     it->completed = false;
     it->completed_at = std::nullopt;
-    
+
     if (!save_todos()) {
         return Result<bool>::error("Failed to save todos");
     }
-    
+
     return Result<bool>::success_with(true);
 }
 
 Result<bool> TodoManager::remove_todo(int id) {
-    auto it = std::find_if(todos_.begin(), todos_.end(),
-                          [id](const TodoItem& todo) { return todo.id == id; });
-    
+    auto it = std::find_if(todos_.begin(), todos_.end(), [id](const TodoItem& todo) { return todo.id == id; });
+
     if (it == todos_.end()) {
         return Result<bool>::error("Todo not found");
     }
-    
+
     todos_.erase(it);
-    
+
     if (!save_todos()) {
         return Result<bool>::error("Failed to save todos");
     }
-    
+
     return Result<bool>::success_with(true);
 }
 
 Result<bool> TodoManager::set_priority(int id, int priority) {
-    auto it = std::find_if(todos_.begin(), todos_.end(),
-                          [id](const TodoItem& todo) { return todo.id == id; });
-    
+    auto it = std::find_if(todos_.begin(), todos_.end(), [id](const TodoItem& todo) { return todo.id == id; });
+
     if (it == todos_.end()) {
         return Result<bool>::error("Todo not found");
     }
-    
+
     it->priority = std::max(0, std::min(3, priority));
-    
+
     if (!save_todos()) {
         return Result<bool>::error("Failed to save todos");
     }
-    
+
     return Result<bool>::success_with(true);
 }
 
 Result<bool> TodoManager::set_category(int id, const std::string& category) {
-    auto it = std::find_if(todos_.begin(), todos_.end(),
-                          [id](const TodoItem& todo) { return todo.id == id; });
-    
+    auto it = std::find_if(todos_.begin(), todos_.end(), [id](const TodoItem& todo) { return todo.id == id; });
+
     if (it == todos_.end()) {
         return Result<bool>::error("Todo not found");
     }
-    
+
     it->category = category;
-    
+
     if (!save_todos()) {
         return Result<bool>::error("Failed to save todos");
     }
-    
+
     return Result<bool>::success_with(true);
 }
 
@@ -146,20 +136,19 @@ Result<bool> TodoManager::set_description(int id, const std::string& description
     if (description.empty()) {
         return Result<bool>::error("Description cannot be empty");
     }
-    
-    auto it = std::find_if(todos_.begin(), todos_.end(),
-                          [id](const TodoItem& todo) { return todo.id == id; });
-    
+
+    auto it = std::find_if(todos_.begin(), todos_.end(), [id](const TodoItem& todo) { return todo.id == id; });
+
     if (it == todos_.end()) {
         return Result<bool>::error("Todo not found");
     }
-    
+
     it->description = description;
-    
+
     if (!save_todos()) {
         return Result<bool>::error("Failed to save todos");
     }
-    
+
     return Result<bool>::success_with(true);
 }
 
@@ -179,7 +168,7 @@ std::vector<TodoItem> TodoManager::get_active_todos() const {
     auto merged = merge_todos(todos_, external_todos_);
     std::vector<TodoItem> active;
     std::copy_if(merged.begin(), merged.end(), std::back_inserter(active),
-                [](const TodoItem& todo) { return !todo.completed; });
+                 [](const TodoItem& todo) { return !todo.completed; });
     return active;
 }
 
@@ -191,21 +180,20 @@ std::vector<TodoItem> TodoManager::get_completed_todos() const {
     auto merged = merge_todos(todos_, external_todos_);
     std::vector<TodoItem> completed;
     std::copy_if(merged.begin(), merged.end(), std::back_inserter(completed),
-                [](const TodoItem& todo) { return todo.completed; });
+                 [](const TodoItem& todo) { return todo.completed; });
     return completed;
 }
 
 std::vector<TodoItem> TodoManager::get_todos_by_category(const std::string& category) const {
     std::vector<TodoItem> filtered;
     std::copy_if(todos_.begin(), todos_.end(), std::back_inserter(filtered),
-                [&category](const TodoItem& todo) { return todo.category == category; });
+                 [&category](const TodoItem& todo) { return todo.category == category; });
     return filtered;
 }
 
 std::optional<TodoItem> TodoManager::get_todo_by_id(int id) const {
-    auto it = std::find_if(todos_.begin(), todos_.end(),
-                          [id](const TodoItem& todo) { return todo.id == id; });
-    
+    auto it = std::find_if(todos_.begin(), todos_.end(), [id](const TodoItem& todo) { return todo.id == id; });
+
     if (it != todos_.end()) {
         return *it;
     }
@@ -227,7 +215,8 @@ std::vector<TodoItem> TodoManager::search_todos(const std::string& query, const 
 
     for (const auto& todo : merged) {
         // Skip completed todos
-        if (todo.completed) continue;
+        if (todo.completed)
+            continue;
 
         // Category filter
         if (!category_filter.empty() && todo.category != category_filter) {
@@ -236,14 +225,13 @@ std::vector<TodoItem> TodoManager::search_todos(const std::string& query, const 
 
         // Description search (case-insensitive)
         std::string lower_description = todo.description;
-        std::transform(lower_description.begin(), lower_description.end(),
-                      lower_description.begin(), ::tolower);
+        std::transform(lower_description.begin(), lower_description.end(), lower_description.begin(), ::tolower);
 
         if (lower_description.find(lower_query) != std::string::npos) {
             matches.push_back(todo);
         }
     }
-    
+
     // Sort matches by priority (high to low), then by creation time
     std::sort(matches.begin(), matches.end(), [](const TodoItem& a, const TodoItem& b) {
         if (a.priority != b.priority) {
@@ -251,14 +239,14 @@ std::vector<TodoItem> TodoManager::search_todos(const std::string& query, const 
         }
         return a.created_at < b.created_at;
     });
-    
+
     return matches;
 }
 
 bool TodoManager::save_todos() {
     try {
         json j = json::array();
-        
+
         for (const auto& todo : todos_) {
             json todo_json;
             todo_json["id"] = todo.id;
@@ -267,39 +255,38 @@ bool TodoManager::save_todos() {
             todo_json["priority"] = todo.priority;
             todo_json["category"] = todo.category;
             todo_json["created_at"] = static_cast<int64_t>(todo.created_at);
-            
+
             if (todo.completed_at) {
                 todo_json["completed_at"] = static_cast<int64_t>(*todo.completed_at);
             }
-            
+
             if (todo.due_date) {
                 todo_json["due_date"] = static_cast<int64_t>(*todo.due_date);
             }
-            
+
             j.push_back(todo_json);
         }
-        
+
         // Update next_id to be safe
         if (!todos_.empty()) {
             next_id_ = std::max_element(todos_.begin(), todos_.end(),
-                                       [](const TodoItem& a, const TodoItem& b) {
-                                           return a.id < b.id;
-                                       })->id + 1;
+                                        [](const TodoItem& a, const TodoItem& b) { return a.id < b.id; })
+                           ->id +
+                       1;
         }
-        
+
         json root;
         root["todos"] = j;
         root["next_id"] = next_id_;
-        
+
         std::ofstream file(get_todos_file_path());
         if (!file.is_open()) {
             return false;
         }
-        
+
         file << root.dump(2);
         return true;
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         std::cerr << "Error saving todos: " << e.what() << std::endl;
         return false;
     }
@@ -345,8 +332,7 @@ bool TodoManager::load_todos() {
         }
 
         return true;
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         std::cerr << "Error loading todos: " << e.what() << std::endl;
         return false;
     }
@@ -393,66 +379,9 @@ void TodoManager::sync_external_todos_if_needed() {
 }
 
 bool TodoManager::fetch_external_todos() {
-    auto& config = Config::instance();
-
-    if (!config.get_sync_enabled() || config.get_sync_todo_file_url().empty()) {
-        return false;
-    }
-
-    std::string local_todos = get_todos_file_path();
-    std::string external_todos = get_external_todos_file_path();
-    std::string backup_todos = local_todos + ".backup";
-
-    // Backup local todos.json before pulling
-    {
-        std::ifstream src(local_todos, std::ios::binary);
-        if (src.is_open()) {
-            std::ofstream dst(backup_todos, std::ios::binary);
-            dst << src.rdbuf();
-        }
-    }
-
-    // Use ConfigSync to pull todos from remote
+    // Use ConfigSync to handle the actual HTTP fetching
     ConfigSync sync_manager;
-
-    // Pull (this will overwrite local todos.json with remote version)
-    bool pull_success = sync_manager.pull();
-
-    if (pull_success) {
-        // Copy the fetched todos.json to todos-external.json
-        {
-            std::ifstream src(local_todos, std::ios::binary);
-            if (src.is_open()) {
-                std::ofstream dst(external_todos, std::ios::binary);
-                dst << src.rdbuf();
-            }
-        }
-
-        // Restore the local todos.json from backup
-        {
-            std::ifstream src(backup_todos, std::ios::binary);
-            if (src.is_open()) {
-                std::ofstream dst(local_todos, std::ios::binary);
-                dst << src.rdbuf();
-            }
-        }
-
-        // Clean up backup
-        std::remove(backup_todos.c_str());
-        return true;
-    }
-
-    // Restore backup if pull failed
-    {
-        std::ifstream src(backup_todos, std::ios::binary);
-        if (src.is_open()) {
-            std::ofstream dst(local_todos, std::ios::binary);
-            dst << src.rdbuf();
-        }
-    }
-    std::remove(backup_todos.c_str());
-
-    return false;
+    return sync_manager.pull_todo_file();
 }
 
 bool TodoManager::load_external_todos() {
@@ -492,8 +421,7 @@ bool TodoManager::load_external_todos() {
         }
 
         return true;
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         std::cerr << "Error loading external todos: " << e.what() << std::endl;
         external_todos_.clear();
         return false;
@@ -514,7 +442,7 @@ bool TodoManager::is_duplicate_description(const std::string& desc1, const std::
 }
 
 std::vector<TodoItem> TodoManager::merge_todos(const std::vector<TodoItem>& local,
-                                                const std::vector<TodoItem>& external) const {
+                                               const std::vector<TodoItem>& external) const {
     std::vector<TodoItem> merged = local;
 
     // Add external todos that don't exist in local (by description)
@@ -539,26 +467,25 @@ std::vector<TodoItem> TodoManager::merge_todos(const std::vector<TodoItem>& loca
 }
 
 // Todo command implementation
-Todo::Todo(std::shared_ptr<ProjectMapper> mapper) 
-    : project_mapper_(mapper), todo_manager_(std::make_unique<TodoManager>()) {
-}
+Todo::Todo(std::shared_ptr<ProjectMapper> mapper)
+    : project_mapper_(mapper), todo_manager_(std::make_unique<TodoManager>()) {}
 
 int Todo::execute(const StringVector& args) {
     if (args.empty()) {
         return run_interactive_tui();
     }
-    
+
     const std::string& subcommand = args[0];
-    
+
     if (subcommand == "--help" || subcommand == "-h" || subcommand == "help") {
         show_help();
         return 0;
     }
-    
+
     if (subcommand == "--interactive" || subcommand == "-i" || subcommand == "tui") {
         return run_interactive_tui();
     }
-    
+
     return handle_cli_command(args);
 }
 
@@ -608,9 +535,9 @@ int Todo::handle_cli_command(const StringVector& args) {
         show_help();
         return 1;
     }
-    
+
     const std::string& command = args[0];
-    
+
     if (command == "add") {
         return cmd_add(args);
     } else if (command == "list" || command == "ls") {
@@ -637,22 +564,22 @@ int Todo::cmd_add(const StringVector& args) {
         std::cerr << "Usage: todo add <description> [--priority|-p <0-3>] [--category|-c <category>]" << std::endl;
         return 1;
     }
-    
+
     std::string description;
     std::string category;
     int priority = 0;
-    
+
     // Parse arguments for description, priority, and category
     bool parsing_description = true;
     for (size_t i = 1; i < args.size(); ++i) {
         const std::string& arg = args[i];
-        
+
         if ((arg == "--priority" || arg == "-p") && i + 1 < args.size()) {
             // Parse priority
             try {
                 priority = std::stoi(args[i + 1]);
                 priority = std::max(0, std::min(3, priority)); // Clamp to 0-3
-                i++; // Skip the priority value
+                i++;                                           // Skip the priority value
                 parsing_description = false;
             } catch (const std::exception&) {
                 std::cerr << "Invalid priority value. Must be 0-3." << std::endl;
@@ -665,25 +592,26 @@ int Todo::cmd_add(const StringVector& args) {
             parsing_description = false;
         } else if (parsing_description) {
             // Add to description
-            if (!description.empty()) description += " ";
+            if (!description.empty())
+                description += " ";
             description += arg;
         } else if (arg.substr(0, 2) != "--" && arg.substr(0, 1) != "-") {
             // Continue adding to description even after flags
-            if (!description.empty()) description += " ";
+            if (!description.empty())
+                description += " ";
             description += arg;
         }
     }
-    
+
     if (description.empty()) {
         std::cerr << "Todo description cannot be empty." << std::endl;
         return 1;
     }
-    
+
     auto result = todo_manager_->add_todo(description, category, priority);
     if (result) {
-        std::cout << Colors::SUCCESS << "✓" << Colors::RESET 
-                  << " Added todo #" << result.value << ": " << description;
-        
+        std::cout << Colors::SUCCESS << "✓" << Colors::RESET << " Added todo #" << result.value << ": " << description;
+
         // Show priority and category if set
         if (priority > 0) {
             std::cout << " " << get_priority_string(priority);
@@ -694,20 +622,20 @@ int Todo::cmd_add(const StringVector& args) {
         std::cout << std::endl;
         return 0;
     } else {
-        std::cerr << Colors::ERROR << "✗" << Colors::RESET 
-                  << " Failed to add todo: " << result.error_message << std::endl;
+        std::cerr << Colors::ERROR << "✗" << Colors::RESET << " Failed to add todo: " << result.error_message
+                  << std::endl;
         return 1;
     }
 }
 
 int Todo::cmd_list(const StringVector& /* args */) {
     auto todos = todo_manager_->get_active_todos();
-    
+
     if (todos.empty()) {
         std::cout << "No active todos found." << std::endl;
         return 0;
     }
-    
+
     // Sort by priority (high to low), then by creation time
     std::sort(todos.begin(), todos.end(), [](const TodoItem& a, const TodoItem& b) {
         if (a.priority != b.priority) {
@@ -715,27 +643,27 @@ int Todo::cmd_list(const StringVector& /* args */) {
         }
         return a.created_at < b.created_at;
     });
-    
+
     std::cout << "Active todos:" << std::endl;
     std::cout << std::endl;
-    
+
     for (const auto& todo : todos) {
         std::cout << Colors::INFO << "#" << todo.id << Colors::RESET << " ";
-        
+
         // Priority indicator
         std::string priority_str = get_priority_string(todo.priority);
         if (!priority_str.empty()) {
             std::cout << priority_str << " ";
         }
-        
+
         // Category
         if (!todo.category.empty()) {
             std::cout << Colors::WARNING << "[" << todo.category << "]" << Colors::RESET << " ";
         }
-        
+
         std::cout << todo.description << std::endl;
     }
-    
+
     return 0;
 }
 
@@ -744,24 +672,20 @@ int Todo::cmd_done(const StringVector& args) {
         std::cerr << "Usage: todo done <id>" << std::endl;
         return 1;
     }
-    
+
     try {
         int id = std::stoi(args[1]);
         auto result = todo_manager_->complete_todo(id);
-        
+
         if (result) {
-            std::cout << Colors::SUCCESS << "✓" << Colors::RESET 
-                      << " Completed todo #" << id << std::endl;
+            std::cout << Colors::SUCCESS << "✓" << Colors::RESET << " Completed todo #" << id << std::endl;
             return 0;
         } else {
-            std::cerr << Colors::ERROR << "✗" << Colors::RESET 
-                      << " " << result.error_message << std::endl;
+            std::cerr << Colors::ERROR << "✗" << Colors::RESET << " " << result.error_message << std::endl;
             return 1;
         }
-    }
-    catch (const std::exception& e) {
-        std::cerr << Colors::ERROR << "✗" << Colors::RESET 
-                  << " Invalid todo ID: " << args[1] << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << Colors::ERROR << "✗" << Colors::RESET << " Invalid todo ID: " << args[1] << std::endl;
         return 1;
     }
 }
@@ -771,24 +695,20 @@ int Todo::cmd_remove(const StringVector& args) {
         std::cerr << "Usage: todo remove <id>" << std::endl;
         return 1;
     }
-    
+
     try {
         int id = std::stoi(args[1]);
         auto result = todo_manager_->remove_todo(id);
-        
+
         if (result) {
-            std::cout << Colors::SUCCESS << "✓" << Colors::RESET 
-                      << " Removed todo #" << id << std::endl;
+            std::cout << Colors::SUCCESS << "✓" << Colors::RESET << " Removed todo #" << id << std::endl;
             return 0;
         } else {
-            std::cerr << Colors::ERROR << "✗" << Colors::RESET 
-                      << " " << result.error_message << std::endl;
+            std::cerr << Colors::ERROR << "✗" << Colors::RESET << " " << result.error_message << std::endl;
             return 1;
         }
-    }
-    catch (const std::exception& e) {
-        std::cerr << Colors::ERROR << "✗" << Colors::RESET 
-                  << " Invalid todo ID: " << args[1] << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << Colors::ERROR << "✗" << Colors::RESET << " Invalid todo ID: " << args[1] << std::endl;
         return 1;
     }
 }
@@ -798,32 +718,28 @@ int Todo::cmd_priority(const StringVector& args) {
         std::cerr << "Usage: todo priority <id> <0-3>" << std::endl;
         return 1;
     }
-    
+
     try {
         int id = std::stoi(args[1]);
         int priority = std::stoi(args[2]);
-        
+
         if (priority < 0 || priority > 3) {
-            std::cerr << Colors::ERROR << "✗" << Colors::RESET 
-                      << " Priority must be between 0-3" << std::endl;
+            std::cerr << Colors::ERROR << "✗" << Colors::RESET << " Priority must be between 0-3" << std::endl;
             return 1;
         }
-        
+
         auto result = todo_manager_->set_priority(id, priority);
-        
+
         if (result) {
-            std::cout << Colors::SUCCESS << "✓" << Colors::RESET 
-                      << " Set priority of todo #" << id << " to " << priority << std::endl;
+            std::cout << Colors::SUCCESS << "✓" << Colors::RESET << " Set priority of todo #" << id << " to "
+                      << priority << std::endl;
             return 0;
         } else {
-            std::cerr << Colors::ERROR << "✗" << Colors::RESET 
-                      << " " << result.error_message << std::endl;
+            std::cerr << Colors::ERROR << "✗" << Colors::RESET << " " << result.error_message << std::endl;
             return 1;
         }
-    }
-    catch (const std::exception& e) {
-        std::cerr << Colors::ERROR << "✗" << Colors::RESET 
-                  << " Invalid arguments" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << Colors::ERROR << "✗" << Colors::RESET << " Invalid arguments" << std::endl;
         return 1;
     }
 }
@@ -833,26 +749,23 @@ int Todo::cmd_category(const StringVector& args) {
         std::cerr << "Usage: todo category <id> <category>" << std::endl;
         return 1;
     }
-    
+
     try {
         int id = std::stoi(args[1]);
         std::string category = args[2];
-        
+
         auto result = todo_manager_->set_category(id, category);
-        
+
         if (result) {
-            std::cout << Colors::SUCCESS << "✓" << Colors::RESET 
-                      << " Set category of todo #" << id << " to '" << category << "'" << std::endl;
+            std::cout << Colors::SUCCESS << "✓" << Colors::RESET << " Set category of todo #" << id << " to '"
+                      << category << "'" << std::endl;
             return 0;
         } else {
-            std::cerr << Colors::ERROR << "✗" << Colors::RESET 
-                      << " " << result.error_message << std::endl;
+            std::cerr << Colors::ERROR << "✗" << Colors::RESET << " " << result.error_message << std::endl;
             return 1;
         }
-    }
-    catch (const std::exception& e) {
-        std::cerr << Colors::ERROR << "✗" << Colors::RESET 
-                  << " Invalid arguments" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << Colors::ERROR << "✗" << Colors::RESET << " Invalid arguments" << std::endl;
         return 1;
     }
 }
@@ -862,15 +775,15 @@ int Todo::cmd_search(const StringVector& args) {
         std::cerr << "Usage: todo search <query> [--category|-c <category>] [--id-only]" << std::endl;
         return 1;
     }
-    
+
     std::string query;
     std::string category_filter;
     bool id_only = false;
-    
+
     // Parse arguments
     for (size_t i = 1; i < args.size(); ++i) {
         const std::string& arg = args[i];
-        
+
         if ((arg == "--category" || arg == "-c") && i + 1 < args.size()) {
             category_filter = args[i + 1];
             i++; // Skip the category value
@@ -878,18 +791,19 @@ int Todo::cmd_search(const StringVector& args) {
             id_only = true;
         } else if (arg.substr(0, 2) != "--" && arg.substr(0, 1) != "-") {
             // Add to query
-            if (!query.empty()) query += " ";
+            if (!query.empty())
+                query += " ";
             query += arg;
         }
     }
-    
+
     if (query.empty()) {
         std::cerr << "Search query cannot be empty." << std::endl;
         return 1;
     }
-    
+
     auto matches = todo_manager_->search_todos(query, category_filter);
-    
+
     if (matches.empty()) {
         if (id_only) {
             return 1; // For piping, return error code if no matches
@@ -901,36 +815,36 @@ int Todo::cmd_search(const StringVector& args) {
         std::cout << std::endl;
         return 0;
     }
-    
+
     if (id_only) {
         // For piping - just output the first (highest priority) match ID
         std::cout << matches[0].id << std::endl;
         return 0;
     }
-    
+
     std::cout << "Found " << matches.size() << " todo(s) matching '" << query << "'";
     if (!category_filter.empty()) {
         std::cout << " in category '" << category_filter << "'";
     }
     std::cout << ":" << std::endl << std::endl;
-    
+
     for (const auto& todo : matches) {
         std::cout << Colors::INFO << "#" << todo.id << Colors::RESET << " ";
-        
+
         // Priority indicator
         std::string priority_str = get_priority_string(todo.priority);
         if (!priority_str.empty()) {
             std::cout << priority_str << " ";
         }
-        
+
         // Category
         if (!todo.category.empty()) {
             std::cout << Colors::WARNING << "[" << todo.category << "]" << Colors::RESET << " ";
         }
-        
+
         std::cout << todo.description << std::endl;
     }
-    
+
     return 0;
 }
 
@@ -940,18 +854,19 @@ int Todo::run_interactive_tui() {
     return tui.run();
 }
 
-
 std::string Todo::get_priority_string(int priority) const {
     switch (priority) {
-        case 3: return "🔴"; // High
-        case 2: return "🟡"; // Medium
-        case 1: return "🟢"; // Low
-        default: return "";  // None
+        case 3:
+            return "🔴"; // High
+        case 2:
+            return "🟡"; // Medium
+        case 1:
+            return "🟢"; // Low
+        default:
+            return ""; // None
     }
 }
 
-std::string Todo::get_status_string(bool completed) const {
-    return completed ? "✓" : " ";
-}
+std::string Todo::get_status_string(bool completed) const { return completed ? "✓" : " "; }
 
 } // namespace aliases::commands

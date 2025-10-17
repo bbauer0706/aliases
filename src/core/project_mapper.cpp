@@ -1,7 +1,7 @@
 #include "aliases/project_mapper.h"
+#include "aliases/common.h"
 #include "aliases/config.h"
 #include "aliases/file_utils.h"
-#include "aliases/common.h"
 
 namespace aliases {
 
@@ -51,37 +51,39 @@ public:
 
         return true;
     }
-    
+
     std::optional<std::string> get_full_project_name(const std::string& name_or_short) const {
         // Check if it's already a full name
         if (full_paths_.find(name_or_short) != full_paths_.end()) {
             return name_or_short;
         }
-        
+
         // Check if it's a short name
         for (const auto& [full_name, short_name] : full_to_short_) {
             if (short_name == name_or_short) {
                 return full_name;
             }
         }
-        
+
         return std::nullopt;
     }
-    
+
     std::string get_display_name(const std::string& full_name) const {
         auto it = full_to_short_.find(full_name);
         return (it != full_to_short_.end()) ? it->second : full_name;
     }
-    
+
     std::optional<std::string> get_component_path(const std::string& project_name, ComponentType type) const {
         auto full_name = get_full_project_name(project_name);
-        if (!full_name) return std::nullopt;
-        
+        if (!full_name)
+            return std::nullopt;
+
         auto project_path_it = full_paths_.find(*full_name);
-        if (project_path_it == full_paths_.end()) return std::nullopt;
-        
+        if (project_path_it == full_paths_.end())
+            return std::nullopt;
+
         const std::string& project_path = project_path_it->second;
-        
+
         // Check custom paths first
         if (type == ComponentType::SERVER) {
             auto it = server_paths_.find(*full_name);
@@ -98,7 +100,7 @@ public:
             // Try default web paths
             return FileUtils::find_component_directory(project_path, default_web_paths_);
         }
-        
+
         return std::nullopt;
     }
 };
@@ -107,13 +109,11 @@ ProjectMapper::ProjectMapper() : pimpl_(std::make_unique<Impl>()) {}
 
 ProjectMapper::~ProjectMapper() = default;
 
-bool ProjectMapper::initialize() {
-    return pimpl_->initialize();
-}
+bool ProjectMapper::initialize() { return pimpl_->initialize(); }
 
 std::vector<ProjectInfo> ProjectMapper::get_all_projects() const {
     std::vector<ProjectInfo> projects;
-    
+
     for (const auto& [full_name, path] : pimpl_->full_paths_) {
         ProjectInfo info;
         info.full_name = full_name;
@@ -123,20 +123,22 @@ std::vector<ProjectInfo> ProjectMapper::get_all_projects() const {
         info.web_path = get_component_path(full_name, ComponentType::WEB);
         info.has_server_component = info.server_path.has_value();
         info.has_web_component = info.web_path.has_value();
-        
+
         projects.push_back(std::move(info));
     }
-    
+
     return projects;
 }
 
 std::optional<ProjectInfo> ProjectMapper::get_project_info(const std::string& name_or_short) const {
     auto full_name = pimpl_->get_full_project_name(name_or_short);
-    if (!full_name) return std::nullopt;
-    
+    if (!full_name)
+        return std::nullopt;
+
     auto path_it = pimpl_->full_paths_.find(*full_name);
-    if (path_it == pimpl_->full_paths_.end()) return std::nullopt;
-    
+    if (path_it == pimpl_->full_paths_.end())
+        return std::nullopt;
+
     ProjectInfo info;
     info.full_name = *full_name;
     info.display_name = get_display_name(*full_name);
@@ -145,14 +147,15 @@ std::optional<ProjectInfo> ProjectMapper::get_project_info(const std::string& na
     info.web_path = get_component_path(*full_name, ComponentType::WEB);
     info.has_server_component = info.server_path.has_value();
     info.has_web_component = info.web_path.has_value();
-    
+
     return info;
 }
 
 std::optional<std::string> ProjectMapper::get_project_path(const std::string& name_or_short) const {
     auto full_name = pimpl_->get_full_project_name(name_or_short);
-    if (!full_name) return std::nullopt;
-    
+    if (!full_name)
+        return std::nullopt;
+
     auto it = pimpl_->full_paths_.find(*full_name);
     return (it != pimpl_->full_paths_.end()) ? std::optional<std::string>(it->second) : std::nullopt;
 }
@@ -165,7 +168,8 @@ std::string ProjectMapper::get_display_name(const std::string& full_name) const 
     return pimpl_->get_display_name(full_name);
 }
 
-std::optional<std::string> ProjectMapper::get_component_path(const std::string& project_name, ComponentType type) const {
+std::optional<std::string> ProjectMapper::get_component_path(const std::string& project_name,
+                                                             ComponentType type) const {
     return pimpl_->get_component_path(project_name, type);
 }
 
@@ -173,8 +177,6 @@ bool ProjectMapper::has_component(const std::string& project_name, ComponentType
     return get_component_path(project_name, type).has_value();
 }
 
-bool ProjectMapper::reload() {
-    return pimpl_->initialize();
-}
+bool ProjectMapper::reload() { return pimpl_->initialize(); }
 
 } // namespace aliases

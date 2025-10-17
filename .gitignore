@@ -8,7 +8,6 @@ mappings.json
 # Editor files
 *~
 *.swp
-.vscode/
 .idea/
 
 # Temporary files

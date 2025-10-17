@@ -123,7 +123,7 @@ mkdir -p "$BUILD_DIR"
 # Source files
 CORE_SOURCES=(
     "src/core/project_mapper.cpp"
-    "src/core/git_operations.cpp"  
+    "src/core/git_operations.cpp"
     "src/core/file_utils.cpp"
     "src/core/process_utils.cpp"
     "src/core/common.cpp"
@@ -148,17 +148,17 @@ INCLUDES="-Iinclude"
 print_status "Building core library..."
 CORE_OBJECTS=()
 for src in "${CORE_SOURCES[@]}"; do
-    obj_file="$BUILD_DIR/$(basename ${src%.cpp}).o"
+    obj_file="$BUILD_DIR/$(basename "${src%.cpp}").o"
     print_status "Compiling $src..."
     $CXX $CXXFLAGS $INCLUDES -c "$src" -o "$obj_file"
     CORE_OBJECTS+=("$obj_file")
 done
 
-# Build command library  
+# Build command library
 print_status "Building commands library..."
 COMMAND_OBJECTS=()
 for src in "${COMMAND_SOURCES[@]}"; do
-    obj_file="$BUILD_DIR/$(basename ${src%.cpp}).o"
+    obj_file="$BUILD_DIR/$(basename "${src%.cpp}").o"
     print_status "Compiling $src..."
     $CXX $CXXFLAGS $INCLUDES -c "$src" -o "$obj_file"
     COMMAND_OBJECTS+=("$obj_file")
@@ -196,18 +196,18 @@ print_success "Binary created: $BINARY_PATH (size: $SIZE)"
 # Install if requested
 if [[ "$INSTALL" == "true" ]]; then
     print_status "Installing to /usr/local/bin..."
-    
+
     if [[ ! -w "/usr/local/bin" ]]; then
         print_status "Requesting sudo privileges for installation..."
         sudo cp "$BINARY_PATH" /usr/local/bin/
     else
         cp "$BINARY_PATH" /usr/local/bin/
     fi
-    
+
     if [[ $? -eq 0 ]]; then
         print_success "Installation completed!"
         print_status "aliases-cli is now available system-wide"
-        
+
         # Check if /usr/local/bin is in PATH
         if [[ ":$PATH:" != *":/usr/local/bin:"* ]]; then
             print_error "/usr/local/bin is not in your PATH"

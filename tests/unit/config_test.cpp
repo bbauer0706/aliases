@@ -1,8 +1,8 @@
 #include "aliases/config.h"
 #include "aliases/file_utils.h"
-#include <gtest/gtest.h>
 #include <filesystem>
 #include <fstream>
+#include <gtest/gtest.h>
 
 namespace fs = std::filesystem;
 
@@ -15,24 +15,24 @@ protected:
         // Save original config directory
         auto& config = Config::instance();
         original_config_dir_ = config.get_config_directory();
-        
+
         // Create temporary config directory
         test_config_dir_ = fs::temp_directory_path() / "aliases_config_test";
         if (fs::exists(test_config_dir_)) {
             fs::remove_all(test_config_dir_);
         }
         fs::create_directories(test_config_dir_);
-        
+
         // We'll need to mock the config directory - for now we test what we can
     }
-    
+
     void TearDown() override {
         // Clean up
         if (fs::exists(test_config_dir_)) {
             fs::remove_all(test_config_dir_);
         }
     }
-    
+
     std::string original_config_dir_;
     fs::path test_config_dir_;
 };
@@ -42,7 +42,7 @@ protected:
 TEST_F(ConfigTest, SingletonInstance) {
     auto& config1 = Config::instance();
     auto& config2 = Config::instance();
-    
+
     // Should be the same instance
     EXPECT_EQ(&config1, &config2);
 }
@@ -64,13 +64,13 @@ TEST_F(ConfigTest, InitializeIdempotent) {
 TEST_F(ConfigTest, GetSetEditor) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_editor("vim");
     EXPECT_EQ(config.get_editor(), "vim");
-    
+
     config.set_editor("emacs");
     EXPECT_EQ(config.get_editor(), "emacs");
-    
+
     config.set_editor("code");
     EXPECT_EQ(config.get_editor(), "code");
 }
@@ -78,10 +78,10 @@ TEST_F(ConfigTest, GetSetEditor) {
 TEST_F(ConfigTest, GetSetTerminalColors) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_terminal_colors(true);
     EXPECT_TRUE(config.get_terminal_colors());
-    
+
     config.set_terminal_colors(false);
     EXPECT_FALSE(config.get_terminal_colors());
 }
@@ -89,13 +89,13 @@ TEST_F(ConfigTest, GetSetTerminalColors) {
 TEST_F(ConfigTest, GetSetVerbosity) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_verbosity("quiet");
     EXPECT_EQ(config.get_verbosity(), "quiet");
-    
+
     config.set_verbosity("normal");
     EXPECT_EQ(config.get_verbosity(), "normal");
-    
+
     config.set_verbosity("verbose");
     EXPECT_EQ(config.get_verbosity(), "verbose");
 }
@@ -103,10 +103,10 @@ TEST_F(ConfigTest, GetSetVerbosity) {
 TEST_F(ConfigTest, GetSetConfirmDestructiveActions) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_confirm_destructive_actions(true);
     EXPECT_TRUE(config.get_confirm_destructive_actions());
-    
+
     config.set_confirm_destructive_actions(false);
     EXPECT_FALSE(config.get_confirm_destructive_actions());
 }
@@ -116,10 +116,10 @@ TEST_F(ConfigTest, GetSetConfirmDestructiveActions) {
 TEST_F(ConfigTest, GetSetVSCodeFlags) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     std::vector<std::string> flags = {"--disable-extensions", "--new-window"};
     config.set_vscode_flags(flags);
-    
+
     auto retrieved = config.get_vscode_flags();
     ASSERT_EQ(retrieved.size(), 2u);
     EXPECT_EQ(retrieved[0], "--disable-extensions");
@@ -129,10 +129,10 @@ TEST_F(ConfigTest, GetSetVSCodeFlags) {
 TEST_F(ConfigTest, GetSetVSCodeFlagsEmpty) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     std::vector<std::string> empty_flags;
     config.set_vscode_flags(empty_flags);
-    
+
     auto retrieved = config.get_vscode_flags();
     EXPECT_TRUE(retrieved.empty());
 }
@@ -140,10 +140,10 @@ TEST_F(ConfigTest, GetSetVSCodeFlagsEmpty) {
 TEST_F(ConfigTest, GetSetCodeReuseWindow) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_code_reuse_window(true);
     EXPECT_TRUE(config.get_code_reuse_window());
-    
+
     config.set_code_reuse_window(false);
     EXPECT_FALSE(config.get_code_reuse_window());
 }
@@ -151,13 +151,13 @@ TEST_F(ConfigTest, GetSetCodeReuseWindow) {
 TEST_F(ConfigTest, GetSetCodeFallbackBehavior) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_code_fallback_behavior("always");
     EXPECT_EQ(config.get_code_fallback_behavior(), "always");
-    
+
     config.set_code_fallback_behavior("never");
     EXPECT_EQ(config.get_code_fallback_behavior(), "never");
-    
+
     config.set_code_fallback_behavior("auto");
     EXPECT_EQ(config.get_code_fallback_behavior(), "auto");
 }
@@ -165,13 +165,13 @@ TEST_F(ConfigTest, GetSetCodeFallbackBehavior) {
 TEST_F(ConfigTest, GetSetPreferredComponent) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_preferred_component("server");
     EXPECT_EQ(config.get_preferred_component(), "server");
-    
+
     config.set_preferred_component("web");
     EXPECT_EQ(config.get_preferred_component(), "web");
-    
+
     config.set_preferred_component("ask");
     EXPECT_EQ(config.get_preferred_component(), "ask");
 }
@@ -181,13 +181,13 @@ TEST_F(ConfigTest, GetSetPreferredComponent) {
 TEST_F(ConfigTest, GetSetTodoDefaultPriority) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_todo_default_priority(1);
     EXPECT_EQ(config.get_todo_default_priority(), 1);
-    
+
     config.set_todo_default_priority(5);
     EXPECT_EQ(config.get_todo_default_priority(), 5);
-    
+
     config.set_todo_default_priority(10);
     EXPECT_EQ(config.get_todo_default_priority(), 10);
 }
@@ -195,16 +195,16 @@ TEST_F(ConfigTest, GetSetTodoDefaultPriority) {
 TEST_F(ConfigTest, GetSetTodoDefaultSort) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_todo_default_sort("priority");
     EXPECT_EQ(config.get_todo_default_sort(), "priority");
-    
+
     config.set_todo_default_sort("created");
     EXPECT_EQ(config.get_todo_default_sort(), "created");
-    
+
     config.set_todo_default_sort("category");
     EXPECT_EQ(config.get_todo_default_sort(), "category");
-    
+
     config.set_todo_default_sort("alphabetical");
     EXPECT_EQ(config.get_todo_default_sort(), "alphabetical");
 }
@@ -212,10 +212,10 @@ TEST_F(ConfigTest, GetSetTodoDefaultSort) {
 TEST_F(ConfigTest, GetSetTodoShowCompleted) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_todo_show_completed(true);
     EXPECT_TRUE(config.get_todo_show_completed());
-    
+
     config.set_todo_show_completed(false);
     EXPECT_FALSE(config.get_todo_show_completed());
 }
@@ -223,10 +223,10 @@ TEST_F(ConfigTest, GetSetTodoShowCompleted) {
 TEST_F(ConfigTest, GetSetTodoAutoCategorize) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_todo_auto_categorize(true);
     EXPECT_TRUE(config.get_todo_auto_categorize());
-    
+
     config.set_todo_auto_categorize(false);
     EXPECT_FALSE(config.get_todo_auto_categorize());
 }
@@ -236,10 +236,10 @@ TEST_F(ConfigTest, GetSetTodoAutoCategorize) {
 TEST_F(ConfigTest, GetSetEnvBasePort) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_env_base_port(3000);
     EXPECT_EQ(config.get_env_base_port(), 3000);
-    
+
     config.set_env_base_port(8080);
     EXPECT_EQ(config.get_env_base_port(), 8080);
 }
@@ -247,10 +247,10 @@ TEST_F(ConfigTest, GetSetEnvBasePort) {
 TEST_F(ConfigTest, GetSetEnvPortOffset) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_env_port_offset(10);
     EXPECT_EQ(config.get_env_port_offset(), 10);
-    
+
     config.set_env_port_offset(100);
     EXPECT_EQ(config.get_env_port_offset(), 100);
 }
@@ -258,10 +258,10 @@ TEST_F(ConfigTest, GetSetEnvPortOffset) {
 TEST_F(ConfigTest, GetSetEnvDefaultEnv) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_env_default_env("development");
     EXPECT_EQ(config.get_env_default_env(), "development");
-    
+
     config.set_env_default_env("production");
     EXPECT_EQ(config.get_env_default_env(), "production");
 }
@@ -376,12 +376,7 @@ TEST_F(ConfigTest, GetSetWorkspaceDirectoriesMultiple) {
     auto& config = Config::instance();
     config.initialize();
 
-    std::vector<std::string> dirs = {
-        "/home/user/personal",
-        "/home/user/work",
-        "/opt/projects",
-        "~/git"
-    };
+    std::vector<std::string> dirs = {"/home/user/personal", "/home/user/work", "/opt/projects", "~/git"};
     config.set_workspace_directories(dirs);
 
     auto retrieved = config.get_workspace_directories();
@@ -421,13 +416,7 @@ TEST_F(ConfigTest, GetSetWorkspaceIgnoreWithPatterns) {
     auto& config = Config::instance();
     config.initialize();
 
-    std::vector<std::string> ignore = {
-        "*.tmp",
-        "temp-*",
-        ".cache",
-        "dist",
-        "vendor"
-    };
+    std::vector<std::string> ignore = {"*.tmp", "temp-*", ".cache", "dist", "vendor"};
     config.set_workspace_ignore(ignore);
 
     auto retrieved = config.get_workspace_ignore();
@@ -454,11 +443,11 @@ TEST_F(ConfigTest, GetProjectShortcuts) {
 TEST_F(ConfigTest, GetServerPaths) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     StringMap paths;
     // Test getting server paths (may or may not be empty)
     config.get_server_paths(paths);
-    
+
     // Just verify the method works without crashing
     EXPECT_TRUE(true);
 }
@@ -466,11 +455,11 @@ TEST_F(ConfigTest, GetServerPaths) {
 TEST_F(ConfigTest, GetWebPaths) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     StringMap paths;
     // Test getting web paths (may or may not be empty)
     config.get_web_paths(paths);
-    
+
     // Just verify the method works without crashing
     EXPECT_TRUE(true);
 }
@@ -478,9 +467,9 @@ TEST_F(ConfigTest, GetWebPaths) {
 TEST_F(ConfigTest, GetDefaultServerPaths) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     auto paths = config.get_default_server_paths();
-    
+
     // Should contain some common patterns
     EXPECT_FALSE(paths.empty());
 }
@@ -488,9 +477,9 @@ TEST_F(ConfigTest, GetDefaultServerPaths) {
 TEST_F(ConfigTest, GetDefaultWebPaths) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     auto paths = config.get_default_web_paths();
-    
+
     // Should contain some common patterns
     EXPECT_FALSE(paths.empty());
 }
@@ -500,7 +489,7 @@ TEST_F(ConfigTest, GetDefaultWebPaths) {
 TEST_F(ConfigTest, GetConfigDirectory) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     auto dir = config.get_config_directory();
     EXPECT_FALSE(dir.empty());
     EXPECT_TRUE(dir.find(".config/aliases-cli") != std::string::npos);
@@ -509,7 +498,7 @@ TEST_F(ConfigTest, GetConfigDirectory) {
 TEST_F(ConfigTest, GetConfigFilePath) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     auto path = config.get_config_file_path();
     EXPECT_FALSE(path.empty());
     EXPECT_TRUE(path.find("config.json") != std::string::npos);
@@ -518,7 +507,7 @@ TEST_F(ConfigTest, GetConfigFilePath) {
 TEST_F(ConfigTest, GetTodosFilePath) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     auto path = config.get_todos_file_path();
     EXPECT_FALSE(path.empty());
     EXPECT_TRUE(path.find("todos.json") != std::string::npos);
@@ -527,7 +516,7 @@ TEST_F(ConfigTest, GetTodosFilePath) {
 TEST_F(ConfigTest, GetTodosExternalFilePath) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     auto path = config.get_todos_external_file_path();
     EXPECT_FALSE(path.empty());
     EXPECT_TRUE(path.find("todos-external.json") != std::string::npos);
@@ -536,7 +525,7 @@ TEST_F(ConfigTest, GetTodosExternalFilePath) {
 TEST_F(ConfigTest, GetCacheDirectory) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     auto dir = config.get_cache_directory();
     EXPECT_FALSE(dir.empty());
     EXPECT_TRUE(dir.find("cache") != std::string::npos);
@@ -547,14 +536,14 @@ TEST_F(ConfigTest, GetCacheDirectory) {
 TEST_F(ConfigTest, MultipleSettingsChanges) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     // Change multiple settings
     config.set_editor("vim");
     config.set_terminal_colors(false);
     config.set_verbosity("verbose");
     config.set_todo_default_priority(7);
     config.set_env_base_port(4000);
-    
+
     // Verify all changes
     EXPECT_EQ(config.get_editor(), "vim");
     EXPECT_FALSE(config.get_terminal_colors());
@@ -566,14 +555,14 @@ TEST_F(ConfigTest, MultipleSettingsChanges) {
 TEST_F(ConfigTest, ResetToDefaults) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     // Change some settings
     config.set_editor("custom-editor");
     config.set_env_base_port(9999);
-    
+
     // Reset to defaults
     config.reset_to_defaults();
-    
+
     // Should have default values now
     auto editor = config.get_editor();
     EXPECT_FALSE(editor.empty());
@@ -585,32 +574,43 @@ TEST_F(ConfigTest, ResetToDefaults) {
 TEST_F(ConfigTest, EmptyStringSetting) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_editor("");
     EXPECT_EQ(config.get_editor(), "");
 }
 
-TEST_F(ConfigTest, VeryLongString) {
+// REMOVED: Tests for deprecated set_workspace_directory() API
+// Now using workspace_directories (array) instead - see GetSetWorkspaceDirectories* tests above
+
+TEST_F(ConfigTest, VeryLongWorkspaceDirectory) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     std::string long_path(1000, 'x');
-    config.set_workspace_directory(long_path);
-    EXPECT_EQ(config.get_workspace_directory(), long_path);
+    std::vector<std::string> dirs = {long_path};
+    config.set_workspace_directories(dirs);
+
+    auto retrieved = config.get_workspace_directories();
+    ASSERT_EQ(retrieved.size(), 1u);
+    EXPECT_EQ(retrieved[0], long_path);
 }
 
-TEST_F(ConfigTest, SpecialCharactersInPaths) {
+TEST_F(ConfigTest, SpecialCharactersInWorkspacePaths) {
     auto& config = Config::instance();
     config.initialize();
-    
-    config.set_workspace_directory("/path/with spaces/and-dashes_underscores");
-    EXPECT_EQ(config.get_workspace_directory(), "/path/with spaces/and-dashes_underscores");
+
+    std::vector<std::string> dirs = {"/path/with spaces/and-dashes_underscores"};
+    config.set_workspace_directories(dirs);
+
+    auto retrieved = config.get_workspace_directories();
+    ASSERT_EQ(retrieved.size(), 1u);
+    EXPECT_EQ(retrieved[0], "/path/with spaces/and-dashes_underscores");
 }
 
 TEST_F(ConfigTest, NegativePorts) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_env_base_port(-100);
     EXPECT_EQ(config.get_env_base_port(), -100);
 }
@@ -618,7 +618,7 @@ TEST_F(ConfigTest, NegativePorts) {
 TEST_F(ConfigTest, VeryHighPorts) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     config.set_env_base_port(65535);
     EXPECT_EQ(config.get_env_base_port(), 65535);
 }

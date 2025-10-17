@@ -1,0 +1,209 @@
+{
+  // ========================================
+  // File & Search Exclusions
+  // ========================================
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/node_modules": true,
+    "**/__pycache__": true,
+    "**/build": false,
+    "**/*.o": true,
+    "**/*.a": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/build": true,
+    "**/.git": true,
+    "**/include/third_party/**": true,
+    "**/vcpkg_installed/**": true,
+    "**/*.min.js": true,
+    "**/*.min.css": true
+  },
+  "files.watcherExclude": {
+    "**/build/**": true,
+    "**/include/third_party/**": true,
+    "**/vcpkg_installed/**": true
+  },
+  // ========================================
+  // Editor Appearance & Colors
+  // ========================================
+  "workbench.colorTheme": "Default Dark Modern",
+  "editor.fontSize": 14,
+  "editor.fontFamily": "'Fira Code', 'JetBrains Mono', 'Consolas', 'Courier New', monospace",
+  "editor.renderWhitespace": "boundary",
+  // ========================================
+  // General Editor Settings
+  // ========================================
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": true,
+  "editor.tabSize": 4,
+  "editor.rulers": [
+    80,
+    120
+  ],
+  "editor.wordWrap": "off",
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": false
+  },
+  "editor.suggest.insertMode": "replace",
+  "editor.acceptSuggestionOnCommitCharacter": true,
+  "editor.snippetSuggestions": "top",
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+  // ========================================
+  // C++ Specific Settings
+  // ========================================
+  "[cpp]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.rulers": [
+      80,
+      120
+    ],
+    "editor.semanticHighlighting.enabled": true
+  },
+  "[c]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
+  },
+  // C++ IntelliSense Configuration
+  "C_Cpp.intelliSenseEngine": "default",
+  "C_Cpp.default.cppStandard": "c++17",
+  "C_Cpp.default.cStandard": "c11",
+  "C_Cpp.default.compilerPath": "/usr/bin/g++",
+  "C_Cpp.default.includePath": [
+    "${workspaceFolder}/include",
+    "${workspaceFolder}/src",
+    "/usr/include",
+    "/usr/local/include"
+  ],
+  "C_Cpp.default.defines": [
+    "VERSION=\"1.4.1\"",
+    "HAVE_NCURSES"
+  ],
+  "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+  "C_Cpp.errorSquiggles": "enabled",
+  "C_Cpp.autocomplete": "default",
+  "C_Cpp.formatting": "clangFormat",
+  "C_Cpp.clang_format_style": "file",
+  "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: LLVM, IndentWidth: 4, ColumnLimit: 120, UseTab: Never, BreakBeforeBraces: Attach, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: true, PointerAlignment: Left, AccessModifierOffset: -4, NamespaceIndentation: None }",
+  "C_Cpp.inlayHints.parameterNames.enabled": true,
+  "C_Cpp.inlayHints.referenceOperator.enabled": true,
+  // ========================================
+  // JSON & Markdown Settings
+  // ========================================
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2
+  },
+  "[markdown]": {
+    "editor.formatOnSave": false,
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    }
+  },
+  // ========================================
+  // Git Settings
+  // ========================================
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "git.ignoreLimitWarning": true,
+  // ========================================
+  // File Associations
+  // ========================================
+  "files.associations": {
+    "*.h": "cpp",
+    "*.cpp": "cpp",
+    "*.cc": "cpp",
+    "*.cxx": "cpp",
+    "*.hpp": "cpp",
+    "*.tpp": "cpp",
+    "*.sh": "shellscript",
+    "*.bash": "shellscript",
+    ".bashrc": "shellscript",
+    ".bash_profile": "shellscript",
+    ".bash_aliases": "shellscript",
+    "build.sh": "shellscript",
+    "*.json": "jsonc",
+    "Makefile": "makefile",
+    "iostream": "cpp",
+    "string": "cpp"
+  },
+  // ========================================
+  // Terminal Settings
+  // ========================================
+  "terminal.integrated.scrollback": 10000,
+  "terminal.integrated.defaultProfile.linux": "bash",
+  // ========================================
+  // Problem Matchers & Tasks
+  // ========================================
+  "problems.showCurrentInStatus": true,
+  // ========================================
+  // Extension Recommendations
+  // ========================================
+  "extensions.ignoreRecommendations": true,
+  // ========================================
+  // Custom Color Customizations - Purple Sidebars
+  // ========================================
+  "workbench.colorCustomizations": {
+    // Sidebar (file explorer, search, etc.)
+    "sideBar.background": "#1d1729",
+    "sideBar.foreground": "#c9c0db",
+    "sideBarSectionHeader.background": "#251d33",
+    "sideBarSectionHeader.foreground": "#c792ea",
+    "sideBarSectionHeader.border": "#3d2f52",
+    // Activity Bar (left side icons)
+    "activityBar.background": "#16121f",
+    "activityBar.foreground": "#c792ea",
+    "activityBar.inactiveForeground": "#6b5b87",
+    "activityBarBadge.background": "#7e57c2",
+    "activityBarBadge.foreground": "#ffffff",
+    // Status Bar (bottom)
+    "statusBar.background": "#6a4c93",
+    "statusBar.foreground": "#ffffff",
+    "statusBar.noFolderBackground": "#5d3a82",
+    "statusBar.debuggingBackground": "#8e44ad",
+    // Title Bar
+    "titleBar.activeBackground": "#1d1729",
+    "titleBar.activeForeground": "#c792ea",
+    "titleBar.inactiveBackground": "#16121f",
+    "titleBar.inactiveForeground": "#6b5b87"
+  },
+  // ========================================
+  // CMake Settings
+  // ========================================
+  "cmake.configureOnOpen": false,
+  // ========================================
+  // Performance & Misc
+  // ========================================
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+  "explorer.compactFolders": false,
+  "breadcrumbs.enabled": true
+}

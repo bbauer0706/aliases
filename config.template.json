@@ -33,14 +33,27 @@
     "todo_file_url": ""
   },
   "projects": {
-    "workspace_directories": ["~/workspaces"],
+    "workspace_directories": [
+      "~/workspaces"
+    ],
     "shortcuts": {},
     "server_paths": {},
     "web_paths": {},
     "ignore": [],
     "default_paths": {
-      "server": ["java/serverJava", "serverJava", "backend", "server"],
-      "web": ["webapp", "webApp", "web", "frontend", "client"]
+      "server": [
+        "java/serverJava",
+        "serverJava",
+        "backend",
+        "server"
+      ],
+      "web": [
+        "webapp",
+        "webApp",
+        "web",
+        "frontend",
+        "client"
+      ]
     }
   }
 }

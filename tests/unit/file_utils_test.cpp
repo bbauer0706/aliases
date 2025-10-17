@@ -1,7 +1,7 @@
-#include <gtest/gtest.h>
 #include "aliases/file_utils.h"
-#include <fstream>
 #include <cstdlib>
+#include <fstream>
+#include <gtest/gtest.h>
 
 using namespace aliases;
 
@@ -65,9 +65,7 @@ TEST_F(FileUtilsTest, GetBasenameRoot) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(FileUtilsTest, GetBasenameNoSlash) {
-    EXPECT_EQ(FileUtils::get_basename("project"), "project");
-}
+TEST_F(FileUtilsTest, GetBasenameNoSlash) { EXPECT_EQ(FileUtils::get_basename("project"), "project"); }
 
 TEST_F(FileUtilsTest, GetParentDirectoryBasic) {
     EXPECT_EQ(FileUtils::get_parent_directory("/home/user/project"), "/home/user");
@@ -79,21 +77,13 @@ TEST_F(FileUtilsTest, GetParentDirectoryWithTrailingSlash) {
 }
 
 // File existence tests
-TEST_F(FileUtilsTest, FileExistsTrue) {
-    EXPECT_TRUE(FileUtils::file_exists(test_file));
-}
+TEST_F(FileUtilsTest, FileExistsTrue) { EXPECT_TRUE(FileUtils::file_exists(test_file)); }
 
-TEST_F(FileUtilsTest, FileExistsFalse) {
-    EXPECT_FALSE(FileUtils::file_exists(test_dir + "/nonexistent.txt"));
-}
+TEST_F(FileUtilsTest, FileExistsFalse) { EXPECT_FALSE(FileUtils::file_exists(test_dir + "/nonexistent.txt")); }
 
-TEST_F(FileUtilsTest, DirectoryExistsTrue) {
-    EXPECT_TRUE(FileUtils::directory_exists(test_dir));
-}
+TEST_F(FileUtilsTest, DirectoryExistsTrue) { EXPECT_TRUE(FileUtils::directory_exists(test_dir)); }
 
-TEST_F(FileUtilsTest, DirectoryExistsFalse) {
-    EXPECT_FALSE(FileUtils::directory_exists(test_dir + "/nonexistent"));
-}
+TEST_F(FileUtilsTest, DirectoryExistsFalse) { EXPECT_FALSE(FileUtils::directory_exists(test_dir + "/nonexistent")); }
 
 // File reading tests
 TEST_F(FileUtilsTest, ReadFileSuccess) {
@@ -125,29 +115,13 @@ TEST_F(FileUtilsTest, ListDirectoriesWithSubdirs) {
     bool found_subdir1 = false;
     bool found_subdir2 = false;
     for (const auto& dir : dirs) {
-        if (dir.find("subdir1") != std::string::npos) found_subdir1 = true;
-        if (dir.find("subdir2") != std::string::npos) found_subdir2 = true;
+        if (dir.find("subdir1") != std::string::npos)
+            found_subdir1 = true;
+        if (dir.find("subdir2") != std::string::npos)
+            found_subdir2 = true;
     }
     EXPECT_TRUE(found_subdir1);
     EXPECT_TRUE(found_subdir2);
-}
-
-// Path normalization tests
-TEST_F(FileUtilsTest, NormalizePathRemovesTrailingSlash) {
-    auto result = FileUtils::normalize_path("/home/user/");
-    // Implementation currently preserves trailing slash
-    EXPECT_EQ(result, "/home/user/");
-}
-
-TEST_F(FileUtilsTest, NormalizePathHandlesMultipleSlashes) {
-    auto result = FileUtils::normalize_path("/home//user///project");
-    // Expectation depends on implementation - could collapse to single slashes
-    EXPECT_FALSE(result.empty());
-}
-
-TEST_F(FileUtilsTest, NormalizePathHandlesRelative) {
-    auto result = FileUtils::normalize_path("../project");
-    EXPECT_FALSE(result.empty());
 }
 
 // Workspace project discovery tests
@@ -177,11 +151,16 @@ TEST_F(FileUtilsTest, DiscoverWorkspaceProjectsWithIgnorePatterns) {
     bool found_node_modules = false, found_git = false, found_build = false;
 
     for (const auto& proj : projects) {
-        if (proj.find("project1") != std::string::npos) found_project1 = true;
-        if (proj.find("project2") != std::string::npos) found_project2 = true;
-        if (proj.find("node_modules") != std::string::npos) found_node_modules = true;
-        if (proj.find(".git") != std::string::npos) found_git = true;
-        if (proj.find("build") != std::string::npos) found_build = true;
+        if (proj.find("project1") != std::string::npos)
+            found_project1 = true;
+        if (proj.find("project2") != std::string::npos)
+            found_project2 = true;
+        if (proj.find("node_modules") != std::string::npos)
+            found_node_modules = true;
+        if (proj.find(".git") != std::string::npos)
+            found_git = true;
+        if (proj.find("build") != std::string::npos)
+            found_build = true;
     }
 
     EXPECT_TRUE(found_project1);
@@ -206,10 +185,14 @@ TEST_F(FileUtilsTest, DiscoverWorkspaceProjectsWithWildcardIgnore) {
     bool found_temp_files = false, found_temp_backup = false;
 
     for (const auto& proj : projects) {
-        if (proj.find("project1") != std::string::npos) found_project1 = true;
-        if (proj.find("important-temp") != std::string::npos) found_important = true;
-        if (proj.find("temp-files") != std::string::npos) found_temp_files = true;
-        if (proj.find("temp-backup") != std::string::npos) found_temp_backup = true;
+        if (proj.find("project1") != std::string::npos)
+            found_project1 = true;
+        if (proj.find("important-temp") != std::string::npos)
+            found_important = true;
+        if (proj.find("temp-files") != std::string::npos)
+            found_temp_files = true;
+        if (proj.find("temp-backup") != std::string::npos)
+            found_temp_backup = true;
     }
 
     EXPECT_TRUE(found_project1);

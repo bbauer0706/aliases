@@ -29,6 +29,14 @@ public:
 
     // Auto-sync if enabled and interval passed
     bool auto_sync_if_needed();
+
+    // Helper methods for individual file fetching
+    bool pull_config_file();  // Fetch only the config file
+    bool pull_todo_file();    // Fetch only the todo file to external location
+
+private:
+    // Internal helper to fetch a file from URL to destination
+    bool fetch_file(const std::string& url, const std::string& destination);
 };
 
 } // namespace aliases

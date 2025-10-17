@@ -1,22 +1,22 @@
 #include <iostream>
-#include <vector>
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
 
-#include "aliases/project_mapper.h"
-#include "aliases/config.h"
-#include "aliases/config_sync.h"
 #include "aliases/commands/code_navigator.h"
+#include "aliases/commands/config_cmd.h"
 #include "aliases/commands/project_env.h"
 #include "aliases/commands/todo.h"
-#include "aliases/commands/config_cmd.h"
+#include "aliases/config.h"
+#include "aliases/config_sync.h"
+#include "aliases/project_mapper.h"
 
 namespace {
-    #ifndef VERSION
-    #define VERSION "dev"
-    #endif
-    constexpr const char* PROGRAM_NAME = "aliases-cli";
-}
+#ifndef VERSION
+#define VERSION "dev"
+#endif
+constexpr const char* PROGRAM_NAME = "aliases-cli";
+} // namespace
 
 void show_version() {
     std::cout << PROGRAM_NAME << " version " << VERSION << std::endl;
@@ -54,43 +54,39 @@ int handle_completion(std::shared_ptr<aliases::ProjectMapper> project_mapper, co
         std::cerr << "Subcommands: projects, components, todo" << std::endl;
         return 1;
     }
-    
+
     const std::string& subcommand = args[0];
-    
+
     if (subcommand == "projects") {
         // Output all projects in a simple format: one per line, shortcut|fullname|has_server|has_web
         auto projects = project_mapper->get_all_projects();
         for (const auto& project : projects) {
-            std::cout << project.display_name 
-                      << "|" << project.full_name
-                      << "|" << (project.has_server_component ? "s" : "-")
-                      << "|" << (project.has_web_component ? "w" : "-")
+            std::cout << project.display_name << "|" << project.full_name << "|"
+                      << (project.has_server_component ? "s" : "-") << "|" << (project.has_web_component ? "w" : "-")
                       << std::endl;
         }
         return 0;
-    }
-    else if (subcommand == "components" && args.size() >= 2) {
+    } else if (subcommand == "components" && args.size() >= 2) {
         // Output components for a specific project: project|component_type|path
         const std::string& project_name = args[1];
         auto project_info = project_mapper->get_project_info(project_name);
-        
+
         if (!project_info) {
             return 1; // Project not found, silent fail for completion
         }
-        
+
         // Output server component if available
         if (project_info->has_server_component) {
             std::cout << project_info->display_name << "|s|" << project_info->server_path.value_or("") << std::endl;
         }
-        
+
         // Output web component if available
         if (project_info->has_web_component) {
             std::cout << project_info->display_name << "|w|" << project_info->web_path.value_or("") << std::endl;
         }
-        
+
         return 0;
-    }
-    else if (subcommand == "todo") {
+    } else if (subcommand == "todo") {
         // Output todo command completions
         std::cout << "add" << std::endl;
         std::cout << "list" << std::endl;
@@ -110,8 +106,7 @@ int handle_completion(std::shared_ptr<aliases::ProjectMapper> project_mapper, co
         std::cout << "--help" << std::endl;
         std::cout << "-h" << std::endl;
         return 0;
-    }
-    else {
+    } else {
         std::cerr << "Error: Unknown completion subcommand '" << subcommand << "'" << std::endl;
         return 1;
     }
@@ -160,49 +155,41 @@ int main(int argc, char* argv[]) {
         std::cerr << "Error: Failed to initialize project mapper" << std::endl;
         return 1;
     }
-    
+
     // Remove command from args for passing to subcommands
     std::vector<std::string> subcommand_args(args.begin() + 1, args.end());
-    
+
     // Dispatch to appropriate command
     try {
         if (command == "code" || command == "c") {
             aliases::commands::CodeNavigator navigator(project_mapper);
             return navigator.execute(subcommand_args);
-        }
-        else if (command == "env") {
+        } else if (command == "env") {
             aliases::commands::ProjectEnv env_setup(project_mapper);
             return env_setup.execute(subcommand_args);
-        }
-        else if (command == "todo") {
+        } else if (command == "todo") {
             aliases::commands::Todo todo_cmd(project_mapper);
             return todo_cmd.execute(subcommand_args);
-        }
-        else if (command == "config") {
+        } else if (command == "config") {
             aliases::commands::ConfigCmd config_cmd(project_mapper);
             return config_cmd.execute(subcommand_args);
-        }
-        else if (command == "completion") {
+        } else if (command == "completion") {
             return handle_completion(project_mapper, subcommand_args);
-        }
-        else if (command == "version") {
+        } else if (command == "version") {
             show_version();
             return 0;
-        }
-        else {
+        } else {
             std::cerr << "Error: Unknown command '" << command << "'" << std::endl;
             std::cerr << "Run '" << PROGRAM_NAME << " --help' for usage information." << std::endl;
             return 1;
         }
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
-    }
-    catch (...) {
+    } catch (...) {
         std::cerr << "Error: An unexpected error occurred" << std::endl;
         return 1;
     }
-    
+
     return 0;
 }

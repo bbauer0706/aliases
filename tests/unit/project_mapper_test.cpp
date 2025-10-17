@@ -1,9 +1,9 @@
-#include "aliases/project_mapper.h"
 #include "aliases/config.h"
 #include "aliases/file_utils.h"
-#include <gtest/gtest.h>
+#include "aliases/project_mapper.h"
 #include <filesystem>
 #include <fstream>
+#include <gtest/gtest.h>
 
 namespace fs = std::filesystem;
 
@@ -16,36 +16,36 @@ protected:
         // Create test workspace directory
         test_workspace_ = fs::temp_directory_path() / "aliases_test_workspace";
         fs::create_directories(test_workspace_);
-        
+
         // Create test projects
         test_project1_ = test_workspace_ / "project-one";
         test_project2_ = test_workspace_ / "project-two";
         test_project3_ = test_workspace_ / "another-project";
-        
+
         fs::create_directories(test_project1_);
         fs::create_directories(test_project2_);
         fs::create_directories(test_project3_);
-        
+
         // Create component directories
         fs::create_directories(test_project1_ / "server");
         fs::create_directories(test_project1_ / "web");
         fs::create_directories(test_project2_ / "backend");
         fs::create_directories(test_project2_ / "frontend");
-        
+
         // Setup config
         auto& config = Config::instance();
         config.initialize();
         config.set_workspace_directories({test_workspace_.string()});
         config.save();
     }
-    
+
     void TearDown() override {
         // Clean up test workspace
         if (fs::exists(test_workspace_)) {
             fs::remove_all(test_workspace_);
         }
     }
-    
+
     fs::path test_workspace_;
     fs::path test_project1_;
     fs::path test_project2_;
@@ -70,18 +70,21 @@ TEST_F(ProjectMapperTest, ReloadSuccessfully) {
 TEST_F(ProjectMapperTest, GetAllProjects) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto projects = mapper.get_all_projects();
     EXPECT_GE(projects.size(), 3u);
-    
+
     // Check that our test projects are present
     bool found_p1 = false, found_p2 = false, found_p3 = false;
     for (const auto& proj : projects) {
-        if (proj.full_name == "project-one") found_p1 = true;
-        if (proj.full_name == "project-two") found_p2 = true;
-        if (proj.full_name == "another-project") found_p3 = true;
+        if (proj.full_name == "project-one")
+            found_p1 = true;
+        if (proj.full_name == "project-two")
+            found_p2 = true;
+        if (proj.full_name == "another-project")
+            found_p3 = true;
     }
-    
+
     EXPECT_TRUE(found_p1);
     EXPECT_TRUE(found_p2);
     EXPECT_TRUE(found_p3);
@@ -90,10 +93,10 @@ TEST_F(ProjectMapperTest, GetAllProjects) {
 TEST_F(ProjectMapperTest, ProjectInfoContainsValidData) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto projects = mapper.get_all_projects();
     ASSERT_FALSE(projects.empty());
-    
+
     for (const auto& proj : projects) {
         EXPECT_FALSE(proj.full_name.empty());
         EXPECT_FALSE(proj.display_name.empty());
@@ -107,7 +110,7 @@ TEST_F(ProjectMapperTest, ProjectInfoContainsValidData) {
 TEST_F(ProjectMapperTest, GetProjectInfoByFullName) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto info = mapper.get_project_info("project-one");
     ASSERT_TRUE(info.has_value());
     EXPECT_EQ(info->full_name, "project-one");
@@ -117,7 +120,7 @@ TEST_F(ProjectMapperTest, GetProjectInfoByFullName) {
 TEST_F(ProjectMapperTest, GetProjectInfoNonExistent) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto info = mapper.get_project_info("non-existent-project");
     EXPECT_FALSE(info.has_value());
 }
@@ -125,7 +128,7 @@ TEST_F(ProjectMapperTest, GetProjectInfoNonExistent) {
 TEST_F(ProjectMapperTest, GetProjectPath) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto path = mapper.get_project_path("project-one");
     ASSERT_TRUE(path.has_value());
     EXPECT_EQ(*path, test_project1_.string());
@@ -134,7 +137,7 @@ TEST_F(ProjectMapperTest, GetProjectPath) {
 TEST_F(ProjectMapperTest, GetProjectPathNonExistent) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto path = mapper.get_project_path("non-existent");
     EXPECT_FALSE(path.has_value());
 }
@@ -144,7 +147,7 @@ TEST_F(ProjectMapperTest, GetProjectPathNonExistent) {
 TEST_F(ProjectMapperTest, GetFullProjectNameFromFullName) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto full_name = mapper.get_full_project_name("project-one");
     ASSERT_TRUE(full_name.has_value());
     EXPECT_EQ(*full_name, "project-one");
@@ -153,7 +156,7 @@ TEST_F(ProjectMapperTest, GetFullProjectNameFromFullName) {
 TEST_F(ProjectMapperTest, GetFullProjectNameNonExistent) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto full_name = mapper.get_full_project_name("xyz-non-existent");
     EXPECT_FALSE(full_name.has_value());
 }
@@ -161,7 +164,7 @@ TEST_F(ProjectMapperTest, GetFullProjectNameNonExistent) {
 TEST_F(ProjectMapperTest, GetDisplayNameReturnsFullNameWhenNoShortcut) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto display = mapper.get_display_name("project-one");
     // Without shortcuts configured, display name equals full name
     EXPECT_FALSE(display.empty());
@@ -177,7 +180,7 @@ TEST_F(ProjectMapperTest, GetDisplayNameReturnsFullNameWhenNoShortcut) {
 TEST_F(ProjectMapperTest, GetComponentPathServer) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto path = mapper.get_component_path("project-one", ComponentType::SERVER);
     ASSERT_TRUE(path.has_value());
     EXPECT_TRUE(path->find("server") != std::string::npos);
@@ -186,7 +189,7 @@ TEST_F(ProjectMapperTest, GetComponentPathServer) {
 TEST_F(ProjectMapperTest, GetComponentPathWeb) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto path = mapper.get_component_path("project-one", ComponentType::WEB);
     ASSERT_TRUE(path.has_value());
     EXPECT_TRUE(path->find("web") != std::string::npos);
@@ -195,7 +198,7 @@ TEST_F(ProjectMapperTest, GetComponentPathWeb) {
 TEST_F(ProjectMapperTest, GetComponentPathNonExistent) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     // project-three has no server/web components
     auto path = mapper.get_component_path("another-project", ComponentType::SERVER);
     EXPECT_FALSE(path.has_value());
@@ -204,7 +207,7 @@ TEST_F(ProjectMapperTest, GetComponentPathNonExistent) {
 TEST_F(ProjectMapperTest, HasComponentServer) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     EXPECT_TRUE(mapper.has_component("project-one", ComponentType::SERVER));
     EXPECT_FALSE(mapper.has_component("another-project", ComponentType::SERVER));
 }
@@ -212,7 +215,7 @@ TEST_F(ProjectMapperTest, HasComponentServer) {
 TEST_F(ProjectMapperTest, HasComponentWeb) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     EXPECT_TRUE(mapper.has_component("project-one", ComponentType::WEB));
     EXPECT_FALSE(mapper.has_component("another-project", ComponentType::WEB));
 }
@@ -223,7 +226,7 @@ TEST_F(ProjectMapperTest, GetComponentPathWithCustomMapping) {
     // This test verifies the method doesn't crash
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto path = mapper.get_component_path("project-two", ComponentType::SERVER);
     // May or may not have a path, just verify no crash
     (void)path;
@@ -235,10 +238,10 @@ TEST_F(ProjectMapperTest, GetComponentPathWithCustomMapping) {
 TEST_F(ProjectMapperTest, ProjectInfoDetectsComponents) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto info = mapper.get_project_info("project-one");
     ASSERT_TRUE(info.has_value());
-    
+
     EXPECT_TRUE(info->has_server_component);
     EXPECT_TRUE(info->has_web_component);
     EXPECT_TRUE(info->server_path.has_value());
@@ -248,10 +251,10 @@ TEST_F(ProjectMapperTest, ProjectInfoDetectsComponents) {
 TEST_F(ProjectMapperTest, ProjectInfoNoComponents) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto info = mapper.get_project_info("another-project");
     ASSERT_TRUE(info.has_value());
-    
+
     EXPECT_FALSE(info->has_server_component);
     EXPECT_FALSE(info->has_web_component);
     EXPECT_FALSE(info->server_path.has_value());
@@ -263,7 +266,7 @@ TEST_F(ProjectMapperTest, ProjectInfoNoComponents) {
 TEST_F(ProjectMapperTest, EmptyProjectName) {
     ProjectMapper mapper;
     ASSERT_TRUE(mapper.initialize());
-    
+
     auto info = mapper.get_project_info("");
     EXPECT_FALSE(info.has_value());
 }
@@ -326,11 +329,16 @@ TEST_F(ProjectMapperTest, MultipleWorkspaceDirectories) {
     bool found_ws2_p1 = false, found_ws2_p2 = false;
 
     for (const auto& proj : projects) {
-        if (proj.full_name == "project-one") found_ws1_p1 = true;
-        if (proj.full_name == "project-two") found_ws1_p2 = true;
-        if (proj.full_name == "another-project") found_ws1_p3 = true;
-        if (proj.full_name == "workspace2-project1") found_ws2_p1 = true;
-        if (proj.full_name == "workspace2-project2") found_ws2_p2 = true;
+        if (proj.full_name == "project-one")
+            found_ws1_p1 = true;
+        if (proj.full_name == "project-two")
+            found_ws1_p2 = true;
+        if (proj.full_name == "another-project")
+            found_ws1_p3 = true;
+        if (proj.full_name == "workspace2-project1")
+            found_ws2_p1 = true;
+        if (proj.full_name == "workspace2-project2")
+            found_ws2_p2 = true;
     }
 
     EXPECT_TRUE(found_ws1_p1);
@@ -397,10 +405,7 @@ TEST_F(ProjectMapperTest, EmptyWorkspaceDirectories) {
 TEST_F(ProjectMapperTest, NonExistentWorkspaceDirectory) {
     // Configure with non-existent directory
     auto& config = Config::instance();
-    config.set_workspace_directories({
-        test_workspace_.string(),
-        "/tmp/non-existent-workspace-12345"
-    });
+    config.set_workspace_directories({test_workspace_.string(), "/tmp/non-existent-workspace-12345"});
     config.save();
 
     // Initialize mapper - should handle gracefully
@@ -447,8 +452,10 @@ TEST_F(ProjectMapperTest, WorkspaceIgnorePatterns) {
     bool found_ignored = false;
 
     for (const auto& proj : projects) {
-        if (proj.full_name == "project-one") found_project1 = true;
-        if (proj.full_name == "project-two") found_project2 = true;
+        if (proj.full_name == "project-one")
+            found_project1 = true;
+        if (proj.full_name == "project-two")
+            found_project2 = true;
         if (proj.full_name == "node_modules" || proj.full_name == ".git" || proj.full_name == "build") {
             found_ignored = true;
         }
@@ -484,9 +491,12 @@ TEST_F(ProjectMapperTest, WorkspaceIgnoreWildcardPatterns) {
     bool found_important_temp = false;
 
     for (const auto& proj : projects) {
-        if (proj.full_name == "temp-files") found_temp_files = true;
-        if (proj.full_name == "temp-backup") found_temp_backup = true;
-        if (proj.full_name == "important-temp") found_important_temp = true;
+        if (proj.full_name == "temp-files")
+            found_temp_files = true;
+        if (proj.full_name == "temp-backup")
+            found_temp_backup = true;
+        if (proj.full_name == "important-temp")
+            found_important_temp = true;
     }
 
     EXPECT_FALSE(found_temp_files);
@@ -558,9 +568,12 @@ TEST_F(ProjectMapperTest, MultipleWorkspacesWithIgnorePatterns) {
     bool found_node_modules = false;
 
     for (const auto& proj : projects) {
-        if (proj.full_name == "valid-project-1") found_valid1 = true;
-        if (proj.full_name == "valid-project-2") found_valid2 = true;
-        if (proj.full_name == "node_modules") found_node_modules = true;
+        if (proj.full_name == "valid-project-1")
+            found_valid1 = true;
+        if (proj.full_name == "valid-project-2")
+            found_valid2 = true;
+        if (proj.full_name == "node_modules")
+            found_node_modules = true;
     }
 
     EXPECT_TRUE(found_valid1);

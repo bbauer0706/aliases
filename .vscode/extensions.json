@@ -1,0 +1,25 @@
+{
+  "recommendations": [
+    // C++ Development
+    "ms-vscode.cpptools",
+    "ms-vscode.cpptools-extension-pack",
+    // Shell/Bash Development
+    "timonwong.shellcheck",
+    // Git & GitHub
+    "eamodio.gitlens",
+    "GitHub.vscode-pull-request-github",
+    // Utilities
+    "gruntfuggly.todo-tree",
+    "yzhang.markdown-all-in-one",
+    "bierner.markdown-mermaid",
+    "usernamehw.errorlens",
+    // Themes & Icons
+    "vscode-icons-team.vscode-icons"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.cmake-tools",
+    "twxs.cmake",
+    "foxundermoon.shell-format",
+    "mads-hartmann.bash-ide-vscode"
+  ]
+}

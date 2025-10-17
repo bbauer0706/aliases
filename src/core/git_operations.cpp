@@ -1,28 +1,28 @@
 #include "aliases/git_operations.h"
-#include "aliases/process_utils.h"
-#include "aliases/file_utils.h"
 #include "aliases/common.h"
+#include "aliases/file_utils.h"
+#include "aliases/process_utils.h"
 
 namespace aliases {
 
 GitStatus GitOperations::get_git_status(const std::string& directory) {
     GitStatus status;
-    
+
     // Check if it's a git repository
     auto git_dir = FileUtils::join_path(directory, ".git");
     status.is_git_repo = FileUtils::directory_exists(git_dir);
-    
+
     if (!status.is_git_repo) {
         return status;
     }
-    
+
     // Get current branch
     status.current_branch = get_current_branch(directory);
     status.is_main_branch = is_main_branch(status.current_branch);
-    
+
     // Check for uncommitted changes
     status.has_uncommitted_changes = has_uncommitted_changes(directory);
-    
+
     return status;
 }
 
@@ -76,7 +76,7 @@ std::string GitOperations::get_main_branch_name(const std::string& directory) {
             return output.substr(pos + 1);
         }
     }
-    
+
     // Default fallback
     return "main";
 }

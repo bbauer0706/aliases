@@ -40,7 +40,7 @@ aliases-cli config setup git@github.com:user/aliases-config.git
 ```bash
 # Navigate to projects
 c dispatch              # Go to project
-c dip                  # Use shortcuts  
+c dip                  # Use shortcuts
 c dispatch server      # Open specific component
 
 # Interactive todo management
@@ -86,7 +86,7 @@ aliases-cli todo       # Launch TUI interface
 ### CLI Mode
 ```bash
 aliases-cli todo add "Implement feature"     # Add todo
-aliases-cli todo list                        # List active todos  
+aliases-cli todo list                        # List active todos
 aliases-cli todo done 1                      # Complete todo
 aliases-cli todo priority 1 3               # Set priority (0-3)
 ```

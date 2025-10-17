@@ -1,13 +1,12 @@
 #include "aliases/commands/code_navigator.h"
-#include "aliases/process_utils.h"
 #include "aliases/file_utils.h"
-#include <iostream>
+#include "aliases/process_utils.h"
 #include <algorithm>
+#include <iostream>
 
 namespace aliases::commands {
 
-CodeNavigator::CodeNavigator(std::shared_ptr<ProjectMapper> mapper)
-    : project_mapper_(std::move(mapper)) {}
+CodeNavigator::CodeNavigator(std::shared_ptr<ProjectMapper> mapper) : project_mapper_(std::move(mapper)) {}
 
 int CodeNavigator::execute(const StringVector& args) {
     // Handle help
@@ -67,9 +66,7 @@ void CodeNavigator::show_help() const {
     std::cout << "  c <file>         - Open file in VS Code" << std::endl;
 }
 
-void CodeNavigator::open_home_directory() const {
-    launch_vscode(get_home_directory());
-}
+void CodeNavigator::open_home_directory() const { launch_vscode(get_home_directory()); }
 
 bool CodeNavigator::open_project(const std::string& project_spec) const {
     // Check for bracket notation first
@@ -129,11 +126,11 @@ void CodeNavigator::open_main_project(const std::string& project_name) const {
 void CodeNavigator::open_server_component(const std::string& project_name) const {
     auto server_path = project_mapper_->get_component_path(project_name, ComponentType::SERVER);
     auto project_path = project_mapper_->get_project_path(project_name);
-    
+
     if (server_path && project_path) {
         auto full_path = FileUtils::join_path(*project_path, *server_path);
-        std::cout << "Opening server component: " << project_name 
-                  << " (" << Colors::SERVER << full_path << Colors::RESET << ")" << std::endl;
+        std::cout << "Opening server component: " << project_name << " (" << Colors::SERVER << full_path
+                  << Colors::RESET << ")" << std::endl;
         launch_vscode(full_path);
     } else {
         std::cout << "No server component found for project " << project_name << std::endl;
@@ -143,11 +140,11 @@ void CodeNavigator::open_server_component(const std::string& project_name) const
 void CodeNavigator::open_web_component(const std::string& project_name) const {
     auto web_path = project_mapper_->get_component_path(project_name, ComponentType::WEB);
     auto project_path = project_mapper_->get_project_path(project_name);
-    
+
     if (web_path && project_path) {
         auto full_path = FileUtils::join_path(*project_path, *web_path);
-        std::cout << "Opening web component: " << project_name 
-                  << " (" << Colors::WEB << full_path << Colors::RESET << ")" << std::endl;
+        std::cout << "Opening web component: " << project_name << " (" << Colors::WEB << full_path << Colors::RESET
+                  << ")" << std::endl;
         launch_vscode(full_path);
     } else {
         std::cout << "No web component found for project " << project_name << std::endl;
@@ -158,14 +155,14 @@ void CodeNavigator::open_bracket_notation(const std::string& project_spec) const
     // Parse project[sw] notation
     auto bracket_start = project_spec.find('[');
     auto bracket_end = project_spec.find(']');
-    
+
     if (bracket_start == std::string::npos || bracket_end == std::string::npos) {
         return;
     }
-    
+
     auto project_name = project_spec.substr(0, bracket_start);
     auto variants = project_spec.substr(bracket_start + 1, bracket_end - bracket_start - 1);
-    
+
     // Open each variant
     for (char variant : variants) {
         if (variant == 's') {
@@ -178,40 +175,40 @@ void CodeNavigator::open_bracket_notation(const std::string& project_spec) const
 
 void CodeNavigator::show_available_projects() const {
     std::cout << "Available projects:" << std::endl;
-    
+
     auto projects = project_mapper_->get_all_projects();
-    
+
     // Sort projects by display name
-    std::sort(projects.begin(), projects.end(), [](const auto& a, const auto& b) {
-        return a.display_name < b.display_name;
-    });
-    
+    std::sort(projects.begin(), projects.end(),
+              [](const auto& a, const auto& b) { return a.display_name < b.display_name; });
+
     for (const auto& project : projects) {
         std::cout << "  ";
-        
+
         // Show display name and full name if different
         if (project.display_name != project.full_name) {
             std::cout << project.display_name << " (" << project.full_name << ") ";
         } else {
             std::cout << project.display_name << " ";
         }
-        
+
         // Show available components
         if (project.has_server_component) {
             std::cout << "| " << Colors::SERVER << project.display_name << "s" << Colors::RESET << " ";
         }
-        
+
         if (project.has_web_component) {
             std::cout << "| " << Colors::WEB << project.display_name << "w" << Colors::RESET << " ";
         }
-        
+
         std::cout << std::endl;
     }
 }
 
 std::pair<std::string, std::string> CodeNavigator::parse_project_spec(const std::string& spec) const {
-    if (spec.empty()) return {"", ""};
-    
+    if (spec.empty())
+        return {"", ""};
+
     char last_char = spec.back();
     if (last_char == 's' || last_char == 'w') {
         auto base = spec.substr(0, spec.length() - 1);
@@ -220,34 +217,34 @@ std::pair<std::string, std::string> CodeNavigator::parse_project_spec(const std:
             return {base, std::string(1, last_char)};
         }
     }
-    
+
     return {spec, ""};
 }
 
 StringVector CodeNavigator::parse_composite_projects(const std::string& composite_spec) const {
     auto all_projects = project_mapper_->get_all_projects();
-    
+
     // Strategy: Try to parse as <project><suffixes> where suffixes can be combinations of 'w' and 's'
     // For example: "dipws" -> "dip" + "ws" -> ["dipw", "dips"]
     //              "dipsw" -> "dip" + "sw" -> ["dips", "dipw"]
-    
+
     // Try each project as a potential base
     for (const auto& project : all_projects) {
         StringVector base_names = {project.display_name};
         if (project.display_name != project.full_name) {
             base_names.push_back(project.full_name);
         }
-        
+
         for (const auto& base_name : base_names) {
-            if (composite_spec.length() > base_name.length() && 
+            if (composite_spec.length() > base_name.length() &&
                 composite_spec.substr(0, base_name.length()) == base_name) {
-                
+
                 std::string suffixes = composite_spec.substr(base_name.length());
-                
+
                 // Check if suffixes are valid combinations of 'w' and 's'
                 bool valid_suffixes = true;
                 StringVector components;
-                
+
                 for (char suffix : suffixes) {
                     if (suffix == 'w') {
                         if (project.has_web_component) {
@@ -268,14 +265,14 @@ StringVector CodeNavigator::parse_composite_projects(const std::string& composit
                         break;
                     }
                 }
-                
+
                 if (valid_suffixes && components.size() >= 2) {
                     return components;
                 }
             }
         }
     }
-    
+
     return {};
 }
 

@@ -93,15 +93,15 @@ fi
 # 1. Try to build the C++ version if build.sh exists
 if [[ -f "$ALIASES_DIR/build.sh" ]]; then
     status "Found build.sh, attempting to build C++ version..."
-    
+
     # Check if we have a C++ compiler
     if command -v g++ >/dev/null 2>&1; then
         cd "$ALIASES_DIR"
-        
+
         # Try to build
         if ./build.sh >/dev/null 2>&1; then
             success "Successfully built new C++ version"
-            
+
             # Update the distributed binary if build succeeded
             if [[ -f "$ALIASES_DIR/build/aliases-cli" ]]; then
                 if ! cp "$ALIASES_DIR/build/aliases-cli" "$ALIASES_DIR/aliases-cli" 2>/dev/null; then
@@ -233,7 +233,7 @@ EOF
 # Check if .bash_aliases exists
 if [ ! -f "$HOME/.bash_aliases" ]; then
   status "Creating .bash_aliases file"
-  
+
   # Create the .bash_aliases file with the template
   if ! echo "$BASH_ALIASES_TEMPLATE" > "$HOME/.bash_aliases"; then
     error "Failed to create .bash_aliases file - check permissions for $HOME"
@@ -242,10 +242,10 @@ if [ ! -f "$HOME/.bash_aliases" ]; then
   success "Created .bash_aliases file with C++ aliases-cli integration"
 else
   status ".bash_aliases already exists, checking if update is needed"
-  
+
   # Define the expected variable definition to check for
   EXPECTED_DIR_VAR="ALIASES_DIR=\"$ALIASES_DIR\""
-  
+
   # Check if the correct variable definition is in .bash_aliases
   if grep -q "$EXPECTED_DIR_VAR" "$HOME/.bash_aliases"; then
     # Check if C++ integration exists
@@ -253,7 +253,7 @@ else
       success ".bash_aliases already contains C++ aliases-cli integration"
     else
       warning ".bash_aliases needs C++ integration added"
-      
+
       # Ask user if they want to update the file (auto-accept in force mode)
       if [[ "$FORCE_MODE" == "true" ]]; then
         status "Force mode: Auto-accepting .bash_aliases update with C++ integration"
@@ -267,12 +267,12 @@ else
         if ! cp "$HOME/.bash_aliases" "$HOME/.bash_aliases.bak"; then
           error "Failed to create backup of .bash_aliases - check permissions"
         fi
-        
+
         # Replace the file
         if ! echo "$BASH_ALIASES_TEMPLATE" > "$HOME/.bash_aliases"; then
           error "Failed to update .bash_aliases - check permissions. Backup is at .bash_aliases.bak"
         fi
-        
+
         success "Updated .bash_aliases with C++ integration and created backup at .bash_aliases.bak"
       else
         warning "User chose not to update .bash_aliases - C++ features may not be available"
@@ -280,7 +280,7 @@ else
     fi
   else
     warning ".bash_aliases needs to be updated with the correct repository path"
-    
+
     # Ask user if they want to update the file (auto-accept in force mode)
     if [[ "$FORCE_MODE" == "true" ]]; then
       status "Force mode: Auto-accepting .bash_aliases update with correct repository path"
@@ -294,12 +294,12 @@ else
       if ! cp "$HOME/.bash_aliases" "$HOME/.bash_aliases.bak"; then
         error "Failed to create backup of .bash_aliases - check permissions"
       fi
-      
+
       # Replace the file
       if ! echo "$BASH_ALIASES_TEMPLATE" > "$HOME/.bash_aliases"; then
         error "Failed to update .bash_aliases - check permissions. Backup is at .bash_aliases.bak"
       fi
-      
+
       success "Updated .bash_aliases with correct path and C++ integration, created backup at .bash_aliases.bak"
     else
       warning "User chose not to update .bash_aliases - aliases may not work correctly"
@@ -325,7 +325,7 @@ fi
 # Check for and remove duplicate C++ integration from .bashrc
 if grep -q "# C++ ALIASES-CLI INTEGRATION" "$HOME/.bashrc"; then
   status "Found duplicate C++ integration in .bashrc, removing..."
-  
+
   # Create a temporary file without the C++ integration section
   awk '
     /^##############################################################################$/ && getline line && line ~ /^#.*C\+\+ ALIASES-CLI INTEGRATION.*#$/ {
@@ -339,7 +339,7 @@ if grep -q "# C++ ALIASES-CLI INTEGRATION" "$HOME/.bashrc"; then
     }
     { print }
   ' "$HOME/.bashrc" > "$HOME/.bashrc.tmp" && mv "$HOME/.bashrc.tmp" "$HOME/.bashrc"
-  
+
   success "Removed duplicate C++ integration from .bashrc"
 fi
 
@@ -547,12 +547,11 @@ echo -e "${YELLOW}Configuration:${NC}"
 echo -e "  • Config directory: ${GREEN}~/.config/aliases-cli/${NC}"
 echo -e "  • Manage settings: ${GREEN}aliases-cli config list${NC}"
 echo -e "  • Edit config: ${GREEN}aliases-cli config edit${NC}"
-echo -e "  • Sync config across machines: ${GREEN}aliases-cli config sync setup <url>${NC}"
+echo -e "  • Sync config across machines: ${GREEN}aliases-cli config sync setup <config-url> [todo-url]${NC}"
 
 echo ""
 echo -e "${YELLOW}File Structure:${NC}"
 echo -e "  • ${GREEN}*.ali.sh${NC} files in bash_aliases/ are automatically sourced"
-echo -e "  • ${RED}*.ali-deprecated.sh${NC} files are ignored (replaced by C++)"
 echo -e "  • Add new bash utilities with ${GREEN}.ali.sh${NC} extension for auto-sourcing"
 
 echo ""
@@ -560,5 +559,4 @@ echo -e "${BLUE}Available Commands:${NC}"
 echo -e "  • ${GREEN}c <project>${NC}    - Navigate to project (50x faster than bash)"
 echo -e "  • ${GREEN}todo${NC}           - Todo list manager (TUI + CLI)"
 echo -e "  • ${GREEN}config${NC}         - Manage configuration"
-echo -e "  • ${GREEN}project_env${NC}    - Setup project environment"
 echo -e "  • Plus bash utilities: basic, maven, npm shortcuts"

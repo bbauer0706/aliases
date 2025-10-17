@@ -1,3 +1,4 @@
+#!/bin/bash
 ##############################################################################
 #                            TODO ALIASES                                   #
 ##############################################################################
@@ -6,7 +7,7 @@
 # Usage:
 #   td                    - Launch interactive TUI
 #   td "task"             - Add todo with description
-#   td category "task"    - Add todo with category and description  
+#   td category "task"    - Add todo with category and description
 #   td command args...    - Pass through to main command
 td() {
     case $# in
@@ -94,10 +95,10 @@ td-done() {
         echo "Example: td-done \"auth bug\""
         return 1
     fi
-    
+
     local search_query="$*"
     local todo_id=$(aliases-cli todo search "$search_query" --id-only)
-    
+
     if [ $? -eq 0 ] && [ -n "$todo_id" ]; then
         aliases-cli todo done "$todo_id"
     else
@@ -113,10 +114,10 @@ td-rm() {
         echo "Example: td-rm \"old feature\""
         return 1
     fi
-    
+
     local search_query="$*"
     local todo_id=$(aliases-cli todo search "$search_query" --id-only)
-    
+
     if [ $? -eq 0 ] && [ -n "$todo_id" ]; then
         aliases-cli todo remove "$todo_id"
     else
@@ -132,10 +133,10 @@ td-urgent() {
         echo "Example: td-urgent \"production bug\""
         return 1
     fi
-    
+
     local search_query="$*"
     local todo_id=$(aliases-cli todo search "$search_query" --id-only)
-    
+
     if [ $? -eq 0 ] && [ -n "$todo_id" ]; then
         aliases-cli todo priority "$todo_id" 3
     else
@@ -151,10 +152,10 @@ td-find() {
         echo "Example: td-find \"auth\" bug"
         return 1
     fi
-    
+
     local search_query="$1"
     shift
-    
+
     if [ $# -gt 0 ]; then
         local category="$1"
         aliases-cli todo search "$search_query" -c "$category"
@@ -179,7 +180,7 @@ td-reviews() {
 # Smart completion - finds and completes first high-priority match
 td-next() {
     local todo_id=$(aliases-cli todo list | grep "🔴" | head -1 | sed 's/.*#\([0-9]*\).*/\1/')
-    
+
     if [ -n "$todo_id" ]; then
         echo "Completing high-priority todo #$todo_id"
         aliases-cli todo done "$todo_id"
@@ -203,38 +204,38 @@ td-branch() {
         echo "Example: td-branch \"Fix login validation\""
         return 1
     fi
-    
+
     # Check if we're in a git repository
     if ! git rev-parse --git-dir > /dev/null 2>&1; then
         echo "Error: Not in a git repository"
         return 1
     fi
-    
+
     # Get current branch name
     local branch_name=$(git branch --show-current 2>/dev/null)
-    
+
     if [ -z "$branch_name" ]; then
         echo "Error: Could not determine current branch"
         return 1
     fi
-    
+
     # Get git project name from remote URL or directory name
     local project_name=$(git remote get-url origin 2>/dev/null | sed 's/.*\/\([^/]*\)\.git$/\1/' | sed 's/.*\/\([^/]*\)$/\1/')
-    
+
     # If no remote origin, use the directory name of the git root
     if [ -z "$project_name" ]; then
         project_name=$(basename "$(git rev-parse --show-toplevel)" 2>/dev/null)
     fi
-    
+
     # If still no project name, fallback to "git-project"
     if [ -z "$project_name" ]; then
         project_name="git-project"
     fi
-    
+
     # Create todo with project name as category and branch name prepended to description
     local description="$*"
     local full_description="$branch_name: $description"
-    
+
     echo "Creating todo for project: $project_name (branch: $branch_name)"
     aliases-cli todo add "$full_description" -c "$project_name" -p 2
 }
@@ -249,28 +250,28 @@ td-branch-list() {
         echo "Error: Not in a git repository"
         return 1
     fi
-    
+
     # Get current branch name
     local branch_name=$(git branch --show-current 2>/dev/null)
-    
+
     if [ -z "$branch_name" ]; then
         echo "Error: Could not determine current branch"
         return 1
     fi
-    
+
     # Get git project name (same logic as td-branch)
     local project_name=$(git remote get-url origin 2>/dev/null | sed 's/.*\/\([^/]*\)\.git$/\1/' | sed 's/.*\/\([^/]*\)$/\1/')
-    
+
     if [ -z "$project_name" ]; then
         project_name=$(basename "$(git rev-parse --show-toplevel)" 2>/dev/null)
     fi
-    
+
     if [ -z "$project_name" ]; then
         project_name="git-project"
     fi
-    
+
     echo "Todos for project: $project_name, branch: $branch_name"
-    
+
     # Search for todos in the project category that contain the branch name
     aliases-cli todo search "$branch_name:" -c "$project_name" 2>/dev/null || {
         echo "No todos found for project '$project_name' and branch '$branch_name'"
@@ -288,18 +289,18 @@ td-project() {
         echo "Error: Not in a git repository"
         return 1
     fi
-    
+
     # Get git project name (same logic as td-branch)
     local project_name=$(git remote get-url origin 2>/dev/null | sed 's/.*\/\([^/]*\)\.git$/\1/' | sed 's/.*\/\([^/]*\)$/\1/')
-    
+
     if [ -z "$project_name" ]; then
         project_name=$(basename "$(git rev-parse --show-toplevel)" 2>/dev/null)
     fi
-    
+
     if [ -z "$project_name" ]; then
         project_name="git-project"
     fi
-    
+
     echo "All todos for project: $project_name"
     aliases-cli todo search "" -c "$project_name" 2>/dev/null || {
         echo "No todos found for project: $project_name"

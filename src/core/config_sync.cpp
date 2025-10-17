@@ -2,12 +2,63 @@
 #include "aliases/config.h"
 #include "aliases/file_utils.h"
 #include "aliases/process_utils.h"
-#include <iostream>
 #include <ctime>
-#include <sys/stat.h>
 #include <fstream>
+#include <iostream>
+#include <sys/stat.h>
 
 namespace aliases {
+
+bool ConfigSync::fetch_file(const std::string& url, const std::string& destination) {
+    std::string command = "curl -f -s -o " + ProcessUtils::escape_shell_argument(destination) + " " +
+                          ProcessUtils::escape_shell_argument(url);
+
+    return ProcessUtils::execute(command).success();
+}
+
+bool ConfigSync::pull_config_file() {
+    auto& config = Config::instance();
+
+    if (!config.get_sync_enabled()) {
+        std::cerr << "Sync is not enabled. Run 'aliases-cli config sync setup <url>' first." << std::endl;
+        return false;
+    }
+
+    std::string config_url = config.get_sync_config_file_url();
+    if (config_url.empty()) {
+        std::cerr << "Config file URL not configured." << std::endl;
+        return false;
+    }
+
+    std::string config_path = config.get_config_file_path();
+    if (!fetch_file(config_url, config_path)) {
+        std::cerr << "Failed to download config.json" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool ConfigSync::pull_todo_file() {
+    auto& config = Config::instance();
+
+    if (!config.get_sync_enabled()) {
+        return false;
+    }
+
+    std::string todo_url = config.get_sync_todo_file_url();
+    if (todo_url.empty()) {
+        return false;
+    }
+
+    // Fetch to todos-external.json location
+    std::string external_todos_path = config.get_todos_external_file_path();
+    if (!fetch_file(todo_url, external_todos_path)) {
+        return false;
+    }
+
+    return true;
+}
 
 bool ConfigSync::pull() {
     auto& config = Config::instance();
@@ -32,12 +83,8 @@ bool ConfigSync::pull() {
     // Fetch config.json if URL is provided
     if (!config_url.empty()) {
         std::cout << "  Downloading config from " << config_url << "..." << std::endl;
-        std::string config_path = config.get_config_file_path();
-        std::string command = "curl -f -s -o " +
-                             ProcessUtils::escape_shell_argument(config_path) + " " +
-                             ProcessUtils::escape_shell_argument(config_url);
 
-        if (!ProcessUtils::execute(command).success()) {
+        if (!pull_config_file()) {
             std::cerr << "  Failed to download config.json" << std::endl;
             success = false;
         } else {
@@ -48,12 +95,8 @@ bool ConfigSync::pull() {
     // Fetch todos.json if URL is provided
     if (!todo_url.empty()) {
         std::cout << "  Downloading todos from " << todo_url << "..." << std::endl;
-        std::string todos_path = config.get_todos_file_path();
-        std::string command = "curl -f -s -o " +
-                             ProcessUtils::escape_shell_argument(todos_path) + " " +
-                             ProcessUtils::escape_shell_argument(todo_url);
 
-        if (!ProcessUtils::execute(command).success()) {
+        if (!pull_todo_file()) {
             std::cerr << "  Failed to download todos.json" << std::endl;
             // Don't fail entirely if todos download fails, it's optional
         } else {
@@ -85,8 +128,11 @@ bool ConfigSync::status() {
 
     std::cout << "Sync Configuration:" << std::endl;
     std::cout << "  Enabled: " << (config.get_sync_enabled() ? "yes" : "no") << std::endl;
-    std::cout << "  Config file URL: " << (config.get_sync_config_file_url().empty() ? "(not set)" : config.get_sync_config_file_url()) << std::endl;
-    std::cout << "  Todo file URL: " << (config.get_sync_todo_file_url().empty() ? "(not set)" : config.get_sync_todo_file_url()) << std::endl;
+    std::cout << "  Config file URL: "
+              << (config.get_sync_config_file_url().empty() ? "(not set)" : config.get_sync_config_file_url())
+              << std::endl;
+    std::cout << "  Todo file URL: "
+              << (config.get_sync_todo_file_url().empty() ? "(not set)" : config.get_sync_todo_file_url()) << std::endl;
     std::cout << "  Auto-sync enabled: " << (config.get_sync_auto_sync_enabled() ? "yes" : "no") << std::endl;
     std::cout << "  Auto-sync interval: " << config.get_sync_auto_sync_interval() << " seconds" << std::endl;
 

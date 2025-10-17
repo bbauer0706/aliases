@@ -2,14 +2,13 @@
 #include "aliases/config.h"
 #include "aliases/config_sync.h"
 #include "aliases/process_utils.h"
-#include <iostream>
-#include <iomanip>
 #include <algorithm>
+#include <iomanip>
+#include <iostream>
 
 namespace aliases::commands {
 
-ConfigCmd::ConfigCmd(std::shared_ptr<ProjectMapper> mapper)
-    : project_mapper_(std::move(mapper)) {}
+ConfigCmd::ConfigCmd(std::shared_ptr<ProjectMapper> mapper) : project_mapper_(std::move(mapper)) {}
 
 int ConfigCmd::execute(const StringVector& args) {
     // Handle help
@@ -35,7 +34,7 @@ int ConfigCmd::execute(const StringVector& args) {
     } else if (subcommand == "sync") {
         // Handle sync subcommands
         if (args.size() < 2) {
-            std::cerr << "Usage: aliases-cli config sync <pull|push|status|setup>" << std::endl;
+            std::cerr << "Usage: aliases-cli config sync <setup|pull|status|push>" << std::endl;
             return 1;
         }
 
@@ -50,13 +49,14 @@ int ConfigCmd::execute(const StringVector& args) {
             return sync_manager.status() ? 0 : 1;
         } else if (sync_cmd == "setup") {
             if (args.size() < 3) {
-                std::cerr << "Usage: aliases-cli config sync setup <url> [method]" << std::endl;
-                std::cerr << "Methods: git (default), rsync, file, http" << std::endl;
+                std::cerr << "Usage: aliases-cli config sync setup <config-url> [todo-url]" << std::endl;
+                std::cerr << "  config-url: URL to config.json file (or '-' to skip)" << std::endl;
+                std::cerr << "  todo-url:   URL to todos.json file (optional, or '-' to skip)" << std::endl;
                 return 1;
             }
-            std::string url = args[2];
-            std::string method = args.size() > 3 ? args[3] : "git";
-            return sync_manager.setup(url, method) ? 0 : 1;
+            std::string config_url = args[2];
+            std::string todo_url = args.size() > 3 ? args[3] : "";
+            return sync_manager.setup(config_url, todo_url) ? 0 : 1;
         } else {
             std::cerr << "Unknown sync subcommand: " << sync_cmd << std::endl;
             std::cerr << "Available: pull, push, status, setup" << std::endl;
@@ -83,10 +83,10 @@ void ConfigCmd::show_help() const {
     std::cout << "  path                Show config file path" << std::endl;
     std::cout << std::endl;
     std::cout << "Sync subcommands:" << std::endl;
-    std::cout << "  sync setup <url> [method]  Setup config sync (methods: git, rsync, file, http)" << std::endl;
-    std::cout << "  sync pull           Pull config from remote" << std::endl;
-    std::cout << "  sync push           Push config to remote" << std::endl;
-    std::cout << "  sync status         Show sync status" << std::endl;
+    std::cout << "  sync setup <config-url> [todo-url]  Setup config sync with file-specific URLs" << std::endl;
+    std::cout << "  sync pull                            Pull config from remote URLs" << std::endl;
+    std::cout << "  sync push                            Push config to remote (not supported)" << std::endl;
+    std::cout << "  sync status                          Show sync status" << std::endl;
     std::cout << std::endl;
     std::cout << "Examples:" << std::endl;
     std::cout << "  aliases-cli config get general.editor" << std::endl;
@@ -95,10 +95,10 @@ void ConfigCmd::show_help() const {
     std::cout << "  aliases-cli config list" << std::endl;
     std::cout << "  aliases-cli config edit" << std::endl;
     std::cout << std::endl;
-    std::cout << "  # Setup sync with git repo" << std::endl;
-    std::cout << "  aliases-cli config sync setup git@github.com:user/aliases-config.git" << std::endl;
+    std::cout << "  # Setup sync with direct file URLs" << std::endl;
+    std::cout << "  aliases-cli config sync setup https://example.com/config.json https://example.com/todos.json" << std::endl;
+    std::cout << "  aliases-cli config sync setup https://example.com/config.json  # Config only" << std::endl;
     std::cout << "  aliases-cli config sync pull" << std::endl;
-    std::cout << "  aliases-cli config sync push" << std::endl;
     std::cout << std::endl;
     std::cout << "Configuration categories:" << std::endl;
     std::cout << "  general.*      - General settings (editor, colors, verbosity)" << std::endl;
@@ -122,8 +122,7 @@ int ConfigCmd::cmd_get(const StringVector& args) {
         std::cout << *value << std::endl;
         return 0;
     } else {
-        std::cerr << Colors::ERROR << "✗" << Colors::RESET
-                  << " Config key '" << key << "' not found" << std::endl;
+        std::cerr << Colors::ERROR << "✗" << Colors::RESET << " Config key '" << key << "' not found" << std::endl;
         return 1;
     }
 }
@@ -140,17 +139,14 @@ int ConfigCmd::cmd_set(const StringVector& args) {
 
     if (config.set(key, value)) {
         if (config.save()) {
-            std::cout << Colors::SUCCESS << "✓" << Colors::RESET
-                      << " Set " << key << " = " << value << std::endl;
+            std::cout << Colors::SUCCESS << "✓" << Colors::RESET << " Set " << key << " = " << value << std::endl;
             return 0;
         } else {
-            std::cerr << Colors::ERROR << "✗" << Colors::RESET
-                      << " Failed to save configuration" << std::endl;
+            std::cerr << Colors::ERROR << "✗" << Colors::RESET << " Failed to save configuration" << std::endl;
             return 1;
         }
     } else {
-        std::cerr << Colors::ERROR << "✗" << Colors::RESET
-                  << " Failed to set config key '" << key << "'" << std::endl;
+        std::cerr << Colors::ERROR << "✗" << Colors::RESET << " Failed to set config key '" << key << "'" << std::endl;
         return 1;
     }
 }
@@ -208,12 +204,10 @@ int ConfigCmd::cmd_reset(const StringVector& /* args */) {
 
     config.reset_to_defaults();
     if (config.save()) {
-        std::cout << Colors::SUCCESS << "✓" << Colors::RESET
-                  << " Configuration reset to defaults" << std::endl;
+        std::cout << Colors::SUCCESS << "✓" << Colors::RESET << " Configuration reset to defaults" << std::endl;
         return 0;
     } else {
-        std::cerr << Colors::ERROR << "✗" << Colors::RESET
-                  << " Failed to save configuration" << std::endl;
+        std::cerr << Colors::ERROR << "✗" << Colors::RESET << " Failed to save configuration" << std::endl;
         return 1;
     }
 }
@@ -230,12 +224,10 @@ int ConfigCmd::cmd_edit(const StringVector& /* args */) {
 
     // Reload config after editing
     if (config.reload()) {
-        std::cout << Colors::SUCCESS << "✓" << Colors::RESET
-                  << " Configuration reloaded" << std::endl;
+        std::cout << Colors::SUCCESS << "✓" << Colors::RESET << " Configuration reloaded" << std::endl;
         return 0;
     } else {
-        std::cerr << Colors::WARNING << "⚠" << Colors::RESET
-                  << " Warning: Failed to reload configuration" << std::endl;
+        std::cerr << Colors::WARNING << "⚠" << Colors::RESET << " Warning: Failed to reload configuration" << std::endl;
         return 1;
     }
 }

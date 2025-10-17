@@ -56,7 +56,7 @@ done
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+cd "$SCRIPT_DIR" || exit
 
 # Check if build directory exists
 if [ ! -d "$BUILD_DIR" ]; then

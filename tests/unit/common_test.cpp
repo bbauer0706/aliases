@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "aliases/common.h"
+#include <gtest/gtest.h>
 
 using namespace aliases;
 
@@ -36,9 +36,7 @@ TEST_F(CommonTest, TrimHandlesEmptyString) {
     EXPECT_EQ(trim("   "), "");
 }
 
-TEST_F(CommonTest, TrimHandlesNoWhitespace) {
-    EXPECT_EQ(trim("hello"), "hello");
-}
+TEST_F(CommonTest, TrimHandlesNoWhitespace) { EXPECT_EQ(trim("hello"), "hello"); }
 
 TEST_F(CommonTest, SplitBasicDelimiter) {
     auto result = split("a,b,c", ',');
@@ -74,13 +72,9 @@ TEST_F(CommonTest, StartsWithFalse) {
     EXPECT_FALSE(starts_with("test", "testing"));
 }
 
-TEST_F(CommonTest, StartsWithEmptyPrefix) {
-    EXPECT_TRUE(starts_with("hello", ""));
-}
+TEST_F(CommonTest, StartsWithEmptyPrefix) { EXPECT_TRUE(starts_with("hello", "")); }
 
-TEST_F(CommonTest, StartsWithEmptyString) {
-    EXPECT_FALSE(starts_with("", "hello"));
-}
+TEST_F(CommonTest, StartsWithEmptyString) { EXPECT_FALSE(starts_with("", "hello")); }
 
 TEST_F(CommonTest, EndsWithTrue) {
     EXPECT_TRUE(ends_with("hello world", "world"));
@@ -92,13 +86,9 @@ TEST_F(CommonTest, EndsWithFalse) {
     EXPECT_FALSE(ends_with("test", "testing"));
 }
 
-TEST_F(CommonTest, EndsWithEmptySuffix) {
-    EXPECT_TRUE(ends_with("hello", ""));
-}
+TEST_F(CommonTest, EndsWithEmptySuffix) { EXPECT_TRUE(ends_with("hello", "")); }
 
-TEST_F(CommonTest, EndsWithEmptyString) {
-    EXPECT_FALSE(ends_with("", "hello"));
-}
+TEST_F(CommonTest, EndsWithEmptyString) { EXPECT_FALSE(ends_with("", "hello")); }
 
 // Result type tests
 TEST_F(CommonTest, ResultSuccessCreation) {
