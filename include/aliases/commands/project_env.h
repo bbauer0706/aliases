@@ -12,6 +12,7 @@ struct EnvironmentConfig {
     bool introspection = true;
     std::string transfer_mode = "plain";
     bool no_port_offset = false;
+    std::string host = "";
 };
 
 struct ProjectEnvironment {

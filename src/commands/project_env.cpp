@@ -30,7 +30,7 @@ int ProjectEnv::execute(const StringVector& args) {
 
 EnvironmentConfig ProjectEnv::parse_arguments(const StringVector& args) {
     EnvironmentConfig config;
-    
+
     for (size_t i = 0; i < args.size(); ++i) {
         if ((args[i] == "-e") && i + 1 < args.size()) {
             config.profile = args[++i];
@@ -42,11 +42,13 @@ EnvironmentConfig ProjectEnv::parse_arguments(const StringVector& args) {
             config.introspection = (args[++i] == "true");
         } else if ((args[i] == "-t") && i + 1 < args.size()) {
             config.transfer_mode = args[++i];
+        } else if ((args[i] == "--host") && i + 1 < args.size()) {
+            config.host = args[++i];
         } else if (args[i] == "-n") {
             config.no_port_offset = true;
         }
     }
-    
+
     return config;
 }
 
@@ -61,6 +63,7 @@ void ProjectEnv::show_help() const {
     std::cout << "  -i FLAG     Enable/disable GraphQL introspection (true/false). Default: true" << std::endl;
     std::cout << "  -t MODE     Set transfer mode (plain, compressed, etc). Default: plain" << std::endl;
     std::cout << "  -n          No port offset - use same port for WEB and GQL services" << std::endl;
+    std::cout << "  --host HOST Set hostname override (useful for WSL). Default: auto-detect" << std::endl;
     std::cout << "  --show      Display current environment variables and exit" << std::endl;
     std::cout << "  -h, --help  Display this help message and exit" << std::endl;
 }
@@ -85,17 +88,17 @@ void ProjectEnv::show_environment_variables() const {
 
 ProjectEnvironment ProjectEnv::setup_project_environment(const EnvironmentConfig& config) {
     ProjectEnvironment env;
-    
+
     // Get project name from current directory
     env.project_name = get_project_name_from_directory();
     env.profile = config.profile;
     env.gql_https = config.use_https;
     env.gql_introspection = config.introspection;
     env.gql_transfer_mode = config.transfer_mode;
-    
+
     // Get hostname
-    env.gql_host = get_current_hostname();
-    
+    env.gql_host = config.host.empty() ? get_current_hostname() : config.host;
+
     // Calculate ports
     int project_offset = get_project_port_offset(env.project_name);
     int base_port = config.starting_port + project_offset;

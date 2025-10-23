@@ -82,7 +82,7 @@ alias project_fix='refresh_project_env'
 auto_setup_new_terminal() {
     if [[ "$(pwd)" == "$HOME/workspaces"/* ]]; then
         if [[ -z "$PROJECT_NAME" ]]; then
-            project_env -p ${WEBPORT:-8000} -t plain 2>/dev/null || true
+            project_env -p ${WEBPORT:-8000} -t plain "$@" 2>/dev/null || true
         fi
     fi
 }
