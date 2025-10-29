@@ -331,12 +331,16 @@ TEST_F(ConfigTest, GetSetSyncInterval) {
 TEST_F(ConfigTest, GetSetWorkspaceDirectory) {
     auto& config = Config::instance();
     config.initialize();
-    
-    config.set_workspace_directory("/home/user/projects");
-    EXPECT_EQ(config.get_workspace_directory(), "/home/user/projects");
-    
-    config.set_workspace_directory("~/workspaces");
-    EXPECT_EQ(config.get_workspace_directory(), "~/workspaces");
+
+    config.set_workspace_directories({"/home/user/projects"});
+    auto dirs1 = config.get_workspace_directories();
+    EXPECT_EQ(dirs1.size(), 1u);
+    EXPECT_EQ(dirs1[0], "/home/user/projects");
+
+    config.set_workspace_directories({"~/workspaces"});
+    auto dirs2 = config.get_workspace_directories();
+    EXPECT_EQ(dirs2.size(), 1u);
+    EXPECT_EQ(dirs2[0], "~/workspaces");
 }
 
 TEST_F(ConfigTest, GetProjectShortcuts) {
@@ -493,18 +497,22 @@ TEST_F(ConfigTest, EmptyStringSetting) {
 TEST_F(ConfigTest, VeryLongString) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     std::string long_path(1000, 'x');
-    config.set_workspace_directory(long_path);
-    EXPECT_EQ(config.get_workspace_directory(), long_path);
+    config.set_workspace_directories({long_path});
+    auto dirs = config.get_workspace_directories();
+    EXPECT_EQ(dirs.size(), 1u);
+    EXPECT_EQ(dirs[0], long_path);
 }
 
 TEST_F(ConfigTest, SpecialCharactersInPaths) {
     auto& config = Config::instance();
     config.initialize();
-    
-    config.set_workspace_directory("/path/with spaces/and-dashes_underscores");
-    EXPECT_EQ(config.get_workspace_directory(), "/path/with spaces/and-dashes_underscores");
+
+    config.set_workspace_directories({"/path/with spaces/and-dashes_underscores"});
+    auto dirs = config.get_workspace_directories();
+    EXPECT_EQ(dirs.size(), 1u);
+    EXPECT_EQ(dirs[0], "/path/with spaces/and-dashes_underscores");
 }
 
 TEST_F(ConfigTest, NegativePorts) {

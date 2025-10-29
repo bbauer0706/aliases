@@ -16,17 +16,20 @@ protected:
         // Get config instance and initialize
         auto& config = Config::instance();
         config.initialize();
-        
+
         // Save original sync settings
         original_sync_enabled_ = config.get_sync_enabled();
         original_sync_url_ = config.get_sync_remote_url();
         original_sync_method_ = config.get_sync_method();
-        
-        // Disable sync for tests by default
+
+        // Disable sync for tests by default and initialize all sync fields
         config.set_sync_enabled(false);
         config.set_sync_remote_url("");
+        config.set_sync_auto_sync(true);  // Set default auto-sync value
+        config.set_sync_interval(3600);   // Set default interval
+        config.set_sync_last_sync(0);     // Set default last sync time
         config.save();
-        
+
         sync_manager_ = std::make_unique<ConfigSync>();
     }
     

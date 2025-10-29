@@ -35,7 +35,7 @@ protected:
         // Setup config
         auto& config = Config::instance();
         config.initialize();
-        config.set_workspace_directory(test_workspace_.string());
+        config.set_workspace_directories({test_workspace_.string()});
         config.save();
     }
     
