@@ -13,39 +13,42 @@ namespace {
 class ConfigSyncTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Get config instance and initialize
+        // Create temporary test config directory
+        test_config_dir_ = fs::temp_directory_path() / "aliases_sync_test";
+        if (fs::exists(test_config_dir_)) {
+            fs::remove_all(test_config_dir_);
+        }
+        fs::create_directories(test_config_dir_);
+
+        // Set test config directory to isolate tests from real config
         auto& config = Config::instance();
+        config.set_test_config_directory(test_config_dir_.string());
         config.initialize();
 
-        // Save original sync settings
-        original_sync_enabled_ = config.get_sync_enabled();
-        original_sync_url_ = config.get_sync_remote_url();
-        original_sync_method_ = config.get_sync_method();
-
-        // Disable sync for tests by default and initialize all sync fields
+        // Initialize all sync fields with default values
         config.set_sync_enabled(false);
         config.set_sync_remote_url("");
-        config.set_sync_auto_sync(true);  // Set default auto-sync value
-        config.set_sync_interval(3600);   // Set default interval
-        config.set_sync_last_sync(0);     // Set default last sync time
+        config.set_sync_auto_sync(true);
+        config.set_sync_interval(3600);
+        config.set_sync_last_sync(0);
         config.save();
 
         sync_manager_ = std::make_unique<ConfigSync>();
     }
-    
+
     void TearDown() override {
-        // Restore original settings
+        // Clear test config directory
         auto& config = Config::instance();
-        config.set_sync_enabled(original_sync_enabled_);
-        config.set_sync_remote_url(original_sync_url_);
-        config.set_sync_method(original_sync_method_);
-        config.save();
+        config.clear_test_config_directory();
+
+        // Clean up test directory
+        if (fs::exists(test_config_dir_)) {
+            fs::remove_all(test_config_dir_);
+        }
     }
-    
+
     std::unique_ptr<ConfigSync> sync_manager_;
-    bool original_sync_enabled_;
-    std::string original_sync_url_;
-    std::string original_sync_method_;
+    fs::path test_config_dir_;
 };
 
 // ========== Setup Tests ==========

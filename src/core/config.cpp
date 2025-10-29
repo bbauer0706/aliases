@@ -72,6 +72,10 @@ void Config::reset_to_defaults() {
 // ========== Path Management ==========
 
 std::string Config::get_config_directory() const {
+    // Use test directory if set (for isolated testing)
+    if (!test_config_directory_.empty()) {
+        return test_config_directory_;
+    }
     return get_home_directory() + "/.config/aliases-cli";
 }
 
@@ -89,6 +93,14 @@ std::string Config::get_todos_external_file_path() const {
 
 std::string Config::get_cache_directory() const {
     return get_config_directory() + "/cache";
+}
+
+void Config::set_test_config_directory(const std::string& dir) {
+    test_config_directory_ = dir;
+}
+
+void Config::clear_test_config_directory() {
+    test_config_directory_.clear();
 }
 
 // ========== General Settings ==========

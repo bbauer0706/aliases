@@ -134,6 +134,10 @@ public:
     std::string get_todos_external_file_path() const;
     std::string get_cache_directory() const;
 
+    // Test mode - allows overriding config directory for isolated testing
+    void set_test_config_directory(const std::string& dir);
+    void clear_test_config_directory();
+
     // ========== Generic Getters/Setters ==========
 
     // Get any config value as string (for CLI access)
@@ -156,6 +160,7 @@ private:
     // Internal data
     std::unique_ptr<nlohmann::json> config_data_;
     bool initialized_ = false;
+    std::string test_config_directory_; // When set, overrides real config directory for testing
 
     // Helper methods
     bool load_from_disk();

@@ -13,39 +13,60 @@ namespace {
 class ProjectMapperTest : public ::testing::Test {
 protected:
     void SetUp() override {
+        // Create test config directory
+        test_config_dir_ = fs::temp_directory_path() / "aliases_mapper_config_test";
+        if (fs::exists(test_config_dir_)) {
+            fs::remove_all(test_config_dir_);
+        }
+        fs::create_directories(test_config_dir_);
+
         // Create test workspace directory
         test_workspace_ = fs::temp_directory_path() / "aliases_test_workspace";
+        if (fs::exists(test_workspace_)) {
+            fs::remove_all(test_workspace_);
+        }
         fs::create_directories(test_workspace_);
-        
+
         // Create test projects
         test_project1_ = test_workspace_ / "project-one";
         test_project2_ = test_workspace_ / "project-two";
         test_project3_ = test_workspace_ / "another-project";
-        
+
         fs::create_directories(test_project1_);
         fs::create_directories(test_project2_);
         fs::create_directories(test_project3_);
-        
+
         // Create component directories
         fs::create_directories(test_project1_ / "server");
         fs::create_directories(test_project1_ / "web");
         fs::create_directories(test_project2_ / "backend");
         fs::create_directories(test_project2_ / "frontend");
-        
-        // Setup config
+
+        // Setup config with test directory
         auto& config = Config::instance();
+        config.set_test_config_directory(test_config_dir_.string());
         config.initialize();
         config.set_workspace_directories({test_workspace_.string()});
         config.save();
     }
-    
+
     void TearDown() override {
+        // Clear test config directory
+        auto& config = Config::instance();
+        config.clear_test_config_directory();
+
         // Clean up test workspace
         if (fs::exists(test_workspace_)) {
             fs::remove_all(test_workspace_);
         }
+
+        // Clean up test config directory
+        if (fs::exists(test_config_dir_)) {
+            fs::remove_all(test_config_dir_);
+        }
     }
     
+    fs::path test_config_dir_;
     fs::path test_workspace_;
     fs::path test_project1_;
     fs::path test_project2_;

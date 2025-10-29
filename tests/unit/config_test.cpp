@@ -12,28 +12,29 @@ namespace {
 class ConfigTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Save original config directory
-        auto& config = Config::instance();
-        original_config_dir_ = config.get_config_directory();
-        
-        // Create temporary config directory
+        // Create temporary test config directory
         test_config_dir_ = fs::temp_directory_path() / "aliases_config_test";
         if (fs::exists(test_config_dir_)) {
             fs::remove_all(test_config_dir_);
         }
         fs::create_directories(test_config_dir_);
-        
-        // We'll need to mock the config directory - for now we test what we can
+
+        // Set test config directory to isolate tests from real config
+        auto& config = Config::instance();
+        config.set_test_config_directory(test_config_dir_.string());
     }
-    
+
     void TearDown() override {
-        // Clean up
+        // Clear test config directory
+        auto& config = Config::instance();
+        config.clear_test_config_directory();
+
+        // Clean up test directory
         if (fs::exists(test_config_dir_)) {
             fs::remove_all(test_config_dir_);
         }
     }
     
-    std::string original_config_dir_;
     fs::path test_config_dir_;
 };
 
@@ -404,10 +405,11 @@ TEST_F(ConfigTest, GetDefaultWebPaths) {
 TEST_F(ConfigTest, GetConfigDirectory) {
     auto& config = Config::instance();
     config.initialize();
-    
+
     auto dir = config.get_config_directory();
     EXPECT_FALSE(dir.empty());
-    EXPECT_TRUE(dir.find(".config/aliases-cli") != std::string::npos);
+    // In test mode, should return test directory
+    EXPECT_EQ(dir, test_config_dir_.string());
 }
 
 TEST_F(ConfigTest, GetConfigFilePath) {

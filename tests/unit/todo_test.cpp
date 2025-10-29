@@ -12,35 +12,35 @@ namespace {
 class TodoManagerTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Setup config
-        auto& config = Config::instance();
-        config.initialize();
-        
-        // Save original todos file path
-        original_todos_path_ = config.get_todos_file_path();
-        
-        // Create temporary todos file location
-        test_todos_file_ = fs::temp_directory_path() / "aliases_test_todos.json";
-        
-        // Remove test file if it exists
-        if (fs::exists(test_todos_file_)) {
-            fs::remove(test_todos_file_);
+        // Create temporary test config directory
+        test_config_dir_ = fs::temp_directory_path() / "aliases_todo_test";
+        if (fs::exists(test_config_dir_)) {
+            fs::remove_all(test_config_dir_);
         }
-        
-        // Create TodoManager
+        fs::create_directories(test_config_dir_);
+
+        // Set test config directory to isolate tests from real todos
+        auto& config = Config::instance();
+        config.set_test_config_directory(test_config_dir_.string());
+        config.initialize();
+
+        // Create TodoManager (it will use the test config directory)
         todo_manager_ = std::make_unique<TodoManager>();
     }
-    
+
     void TearDown() override {
-        // Cleanup test file
-        if (fs::exists(test_todos_file_)) {
-            fs::remove(test_todos_file_);
+        // Clear test config directory
+        auto& config = Config::instance();
+        config.clear_test_config_directory();
+
+        // Cleanup test directory
+        if (fs::exists(test_config_dir_)) {
+            fs::remove_all(test_config_dir_);
         }
     }
-    
+
     std::unique_ptr<TodoManager> todo_manager_;
-    fs::path test_todos_file_;
-    std::string original_todos_path_;
+    fs::path test_config_dir_;
 };
 
 // ========== Add Todo Tests ==========
