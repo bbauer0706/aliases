@@ -20,13 +20,11 @@ protected:
         // Save original sync settings
         original_sync_enabled_ = config.get_sync_enabled();
         original_config_url_ = config.get_sync_config_file_url();
-        original_todo_url_ = config.get_sync_todo_file_url();
         original_auto_sync_enabled_ = config.get_sync_auto_sync_enabled();
 
         // Disable sync for tests by default
         config.set_sync_enabled(false);
         config.set_sync_config_file_url("");
-        config.set_sync_todo_file_url("");
         config.save();
 
         sync_manager_ = std::make_unique<ConfigSync>();
@@ -37,7 +35,6 @@ protected:
         auto& config = Config::instance();
         config.set_sync_enabled(original_sync_enabled_);
         config.set_sync_config_file_url(original_config_url_);
-        config.set_sync_todo_file_url(original_todo_url_);
         config.set_sync_auto_sync_enabled(original_auto_sync_enabled_);
         config.save();
     }
@@ -45,56 +42,33 @@ protected:
     std::unique_ptr<ConfigSync> sync_manager_;
     bool original_sync_enabled_;
     std::string original_config_url_;
-    std::string original_todo_url_;
     bool original_auto_sync_enabled_;
 };
 
 // ========== Setup Tests ==========
 
-TEST_F(ConfigSyncTest, SetupWithConfigUrlOnly) {
-    bool result = sync_manager_->setup("https://example.com/config.json", "");
+TEST_F(ConfigSyncTest, SetupWithConfigUrl) {
+    bool result = sync_manager_->setup("https://example.com/config.json");
 
     auto& config = Config::instance();
     if (result) {
         EXPECT_TRUE(config.get_sync_enabled());
         EXPECT_EQ(config.get_sync_config_file_url(), "https://example.com/config.json");
-        EXPECT_EQ(config.get_sync_todo_file_url(), "");
-    }
-}
-
-TEST_F(ConfigSyncTest, SetupWithBothUrls) {
-    bool result = sync_manager_->setup("https://example.com/config.json", "https://example.com/todos.json");
-
-    auto& config = Config::instance();
-    if (result) {
-        EXPECT_TRUE(config.get_sync_enabled());
-        EXPECT_EQ(config.get_sync_config_file_url(), "https://example.com/config.json");
-        EXPECT_EQ(config.get_sync_todo_file_url(), "https://example.com/todos.json");
     }
 }
 
 TEST_F(ConfigSyncTest, SetupWithGitHubRawUrl) {
-    bool result = sync_manager_->setup("https://raw.githubusercontent.com/user/repo/main/config.json", "");
+    bool result = sync_manager_->setup("https://raw.githubusercontent.com/user/repo/main/config.json");
 
     (void)result;
     EXPECT_TRUE(true); // Verify no crash
 }
 
-TEST_F(ConfigSyncTest, SetupWithEmptyUrls) {
-    bool result = sync_manager_->setup("", "");
+TEST_F(ConfigSyncTest, SetupWithEmptyUrl) {
+    bool result = sync_manager_->setup("");
 
-    // Should fail with no URLs
+    // Should fail with no URL
     EXPECT_FALSE(result);
-}
-
-TEST_F(ConfigSyncTest, SetupWithDashToSkipUrl) {
-    bool result = sync_manager_->setup("https://example.com/config.json", "-");
-
-    auto& config = Config::instance();
-    if (result) {
-        EXPECT_EQ(config.get_sync_config_file_url(), "https://example.com/config.json");
-        EXPECT_EQ(config.get_sync_todo_file_url(), "");
-    }
 }
 
 // ========== Status Tests ==========
@@ -162,16 +136,15 @@ TEST_F(ConfigSyncTest, PullWhenSyncDisabled) {
     EXPECT_FALSE(result);
 }
 
-TEST_F(ConfigSyncTest, PullWithNoUrls) {
+TEST_F(ConfigSyncTest, PullWithNoUrl) {
     auto& config = Config::instance();
     config.set_sync_enabled(true);
     config.set_sync_config_file_url("");
-    config.set_sync_todo_file_url("");
     config.save();
 
     bool result = sync_manager_->pull();
 
-    // Should fail with no URLs
+    // Should fail with no URL
     EXPECT_FALSE(result);
 }
 
@@ -307,10 +280,9 @@ TEST_F(ConfigSyncTest, AutoSyncIfNeededWhenNotNeeded) {
 
 TEST_F(ConfigSyncTest, SetupPersistsConfiguration) {
     std::string test_config_url = "https://test.com/config.json";
-    std::string test_todo_url = "https://test.com/todos.json";
 
     // Setup configuration
-    sync_manager_->setup(test_config_url, test_todo_url);
+    sync_manager_->setup(test_config_url);
 
     // Reload config and verify
     auto& config = Config::instance();
@@ -319,16 +291,15 @@ TEST_F(ConfigSyncTest, SetupPersistsConfiguration) {
     // Verify settings persisted (if setup succeeded)
     if (config.get_sync_enabled()) {
         EXPECT_EQ(config.get_sync_config_file_url(), test_config_url);
-        EXPECT_EQ(config.get_sync_todo_file_url(), test_todo_url);
     }
 }
 
 TEST_F(ConfigSyncTest, MultipleSetupCalls) {
     // First setup
-    sync_manager_->setup("https://url1.com/config.json", "");
+    sync_manager_->setup("https://url1.com/config.json");
 
     // Second setup (override)
-    bool result = sync_manager_->setup("https://url2.com/config.json", "");
+    bool result = sync_manager_->setup("https://url2.com/config.json");
 
     auto& config = Config::instance();
     if (result) {
@@ -340,21 +311,21 @@ TEST_F(ConfigSyncTest, MultipleSetupCalls) {
 // ========== URL Format Tests ==========
 
 TEST_F(ConfigSyncTest, SetupWithGitLabRawUrl) {
-    bool result = sync_manager_->setup("https://gitlab.com/user/repo/-/raw/main/config.json", "");
+    bool result = sync_manager_->setup("https://gitlab.com/user/repo/-/raw/main/config.json");
 
     (void)result;
     EXPECT_TRUE(true);
 }
 
 TEST_F(ConfigSyncTest, SetupWithCustomDomain) {
-    bool result = sync_manager_->setup("https://config.company.com/aliases/config.json", "");
+    bool result = sync_manager_->setup("https://config.company.com/aliases/config.json");
 
     (void)result;
     EXPECT_TRUE(true);
 }
 
 TEST_F(ConfigSyncTest, SetupWithLocalhostUrl) {
-    bool result = sync_manager_->setup("http://localhost:8080/config.json", "");
+    bool result = sync_manager_->setup("http://localhost:8080/config.json");
 
     (void)result;
     EXPECT_TRUE(true);
@@ -400,7 +371,7 @@ TEST_F(ConfigSyncTest, StatusWithLongElapsedTime) {
 
 TEST_F(ConfigSyncTest, SetupWithVeryLongUrl) {
     std::string long_url = "https://example.com/" + std::string(1000, 'x') + ".json";
-    bool result = sync_manager_->setup(long_url, "");
+    bool result = sync_manager_->setup(long_url);
 
     // May succeed or fail, just verify no crash
     (void)result;
@@ -409,7 +380,7 @@ TEST_F(ConfigSyncTest, SetupWithVeryLongUrl) {
 
 TEST_F(ConfigSyncTest, SetupWithSpecialCharactersInUrl) {
     std::string special_url = "https://host.com/path/to/config-file_v2.0.json";
-    bool result = sync_manager_->setup(special_url, "");
+    bool result = sync_manager_->setup(special_url);
 
     (void)result;
     EXPECT_TRUE(true);
@@ -432,7 +403,7 @@ TEST_F(ConfigSyncTest, CompleteWorkflow) {
     EXPECT_TRUE(sync_manager_->status());
 
     // 2. Setup sync
-    sync_manager_->setup("https://example.com/config.json", "https://example.com/todos.json");
+    sync_manager_->setup("https://example.com/config.json");
 
     // 3. Check status after setup
     EXPECT_TRUE(sync_manager_->status());
@@ -452,18 +423,9 @@ TEST_F(ConfigSyncTest, CompleteWorkflow) {
 
 TEST_F(ConfigSyncTest, SetupWithHttpUrl) {
     // Test that HTTP URLs are accepted (not just HTTPS)
-    bool result = sync_manager_->setup("http://example.com/config.json", "");
+    bool result = sync_manager_->setup("http://example.com/config.json");
 
     (void)result;
-    EXPECT_TRUE(true);
-}
-
-TEST_F(ConfigSyncTest, BothUrlsOptional) {
-    // Either config or todo URL should work
-    bool result1 = sync_manager_->setup("https://example.com/config.json", "");
-    (void)result1;
-
-    // Config URL is more common, so test that primarily
     EXPECT_TRUE(true);
 }
 
@@ -505,73 +467,6 @@ TEST_F(ConfigSyncTest, PullConfigFileWithNoUrl) {
 //     EXPECT_FALSE(result);
 // }
 
-TEST_F(ConfigSyncTest, PullTodoFileWhenSyncDisabled) {
-    auto& config = Config::instance();
-    config.set_sync_enabled(false);
-    config.save();
-
-    bool result = sync_manager_->pull_todo_file();
-
-    // Should fail when sync is disabled
-    EXPECT_FALSE(result);
-}
-
-TEST_F(ConfigSyncTest, PullTodoFileWithNoUrl) {
-    auto& config = Config::instance();
-    config.set_sync_enabled(true);
-    config.set_sync_todo_file_url("");
-    config.save();
-
-    bool result = sync_manager_->pull_todo_file();
-
-    // Should fail with no URL
-    EXPECT_FALSE(result);
-}
-
-// REMOVED: This test makes actual network calls and times out
-// TEST_F(ConfigSyncTest, PullTodoFileWithInvalidUrl) {
-//     auto& config = Config::instance();
-//     config.set_sync_enabled(true);
-//     config.set_sync_todo_file_url("https://invalid-nonexistent-domain.test/todos.json");
-//     config.save();
-//
-//     bool result = sync_manager_->pull_todo_file();
-//
-//     // Should fail with invalid URL
-//     EXPECT_FALSE(result);
-// }
-
-// REMOVED: This test makes actual network calls and times out
-// TEST_F(ConfigSyncTest, PullConfigFileIndependently) {
-//     auto& config = Config::instance();
-//     config.set_sync_enabled(true);
-//     config.set_sync_config_file_url("https://example.com/config.json");
-//     config.set_sync_todo_file_url("https://example.com/todos.json");
-//     config.save();
-//
-//     // pull_config_file should only fetch config, not todo
-//     bool result = sync_manager_->pull_config_file();
-//
-//     // Will fail due to invalid URL, but test the separation of concerns
-//     (void)result;
-//     EXPECT_TRUE(true);
-// }
-
-// REMOVED: This test makes actual network calls and times out
-// TEST_F(ConfigSyncTest, PullTodoFileIndependently) {
-//     auto& config = Config::instance();
-//     config.set_sync_enabled(true);
-//     config.set_sync_config_file_url("https://example.com/config.json");
-//     config.set_sync_todo_file_url("https://example.com/todos.json");
-//     config.save();
-//
-//     // pull_todo_file should only fetch todo, not config
-//     bool result = sync_manager_->pull_todo_file();
-//
-//     // Will fail due to invalid URL, but test the separation of concerns
-//     (void)result;
-//     EXPECT_TRUE(true);
-// }
 
 } // namespace
 } // namespace aliases

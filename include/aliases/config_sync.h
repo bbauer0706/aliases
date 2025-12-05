@@ -22,7 +22,7 @@ public:
     bool status(); // Show sync status
 
     // Setup sync URLs
-    bool setup(const std::string& config_url, const std::string& todo_url = "");
+    bool setup(const std::string& config_url);
 
     // Check if sync is needed (based on interval)
     bool should_auto_sync() const;
@@ -32,7 +32,6 @@ public:
 
     // Helper methods for individual file fetching
     bool pull_config_file();  // Fetch only the config file
-    bool pull_todo_file();    // Fetch only the todo file to external location
 
 private:
     // Internal helper to fetch a file from URL to destination

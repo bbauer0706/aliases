@@ -49,14 +49,12 @@ int ConfigCmd::execute(const StringVector& args) {
             return sync_manager.status() ? 0 : 1;
         } else if (sync_cmd == "setup") {
             if (args.size() < 3) {
-                std::cerr << "Usage: aliases-cli config sync setup <config-url> [todo-url]" << std::endl;
-                std::cerr << "  config-url: URL to config.json file (or '-' to skip)" << std::endl;
-                std::cerr << "  todo-url:   URL to todos.json file (optional, or '-' to skip)" << std::endl;
+                std::cerr << "Usage: aliases-cli config sync setup <config-url>" << std::endl;
+                std::cerr << "  config-url: URL to config.json file" << std::endl;
                 return 1;
             }
             std::string config_url = args[2];
-            std::string todo_url = args.size() > 3 ? args[3] : "";
-            return sync_manager.setup(config_url, todo_url) ? 0 : 1;
+            return sync_manager.setup(config_url) ? 0 : 1;
         } else {
             std::cerr << "Unknown sync subcommand: " << sync_cmd << std::endl;
             std::cerr << "Available: pull, push, status, setup" << std::endl;
@@ -83,10 +81,10 @@ void ConfigCmd::show_help() const {
     std::cout << "  path                Show config file path" << std::endl;
     std::cout << std::endl;
     std::cout << "Sync subcommands:" << std::endl;
-    std::cout << "  sync setup <config-url> [todo-url]  Setup config sync with file-specific URLs" << std::endl;
-    std::cout << "  sync pull                            Pull config from remote URLs" << std::endl;
-    std::cout << "  sync push                            Push config to remote (not supported)" << std::endl;
-    std::cout << "  sync status                          Show sync status" << std::endl;
+    std::cout << "  sync setup <config-url>  Setup config sync with URL" << std::endl;
+    std::cout << "  sync pull                Pull config from remote URL" << std::endl;
+    std::cout << "  sync push                Push config to remote (not supported)" << std::endl;
+    std::cout << "  sync status              Show sync status" << std::endl;
     std::cout << std::endl;
     std::cout << "Examples:" << std::endl;
     std::cout << "  aliases-cli config get general.editor" << std::endl;
@@ -95,9 +93,8 @@ void ConfigCmd::show_help() const {
     std::cout << "  aliases-cli config list" << std::endl;
     std::cout << "  aliases-cli config edit" << std::endl;
     std::cout << std::endl;
-    std::cout << "  # Setup sync with direct file URLs" << std::endl;
-    std::cout << "  aliases-cli config sync setup https://example.com/config.json https://example.com/todos.json" << std::endl;
-    std::cout << "  aliases-cli config sync setup https://example.com/config.json  # Config only" << std::endl;
+    std::cout << "  # Setup sync with config URL" << std::endl;
+    std::cout << "  aliases-cli config sync setup https://example.com/config.json" << std::endl;
     std::cout << "  aliases-cli config sync pull" << std::endl;
     std::cout << std::endl;
     std::cout << "Configuration categories:" << std::endl;

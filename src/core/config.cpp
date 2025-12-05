@@ -236,15 +236,6 @@ std::string Config::get_sync_config_file_url() const {
 
 void Config::set_sync_config_file_url(const std::string& url) { (*config_data_)["sync"]["config_file_url"] = url; }
 
-std::string Config::get_sync_todo_file_url() const {
-    if (config_data_->contains("sync") && (*config_data_)["sync"].contains("todo_file_url")) {
-        return (*config_data_)["sync"]["todo_file_url"].get<std::string>();
-    }
-    return DEFAULT_SYNC_TODO_FILE_URL;
-}
-
-void Config::set_sync_todo_file_url(const std::string& url) { (*config_data_)["sync"]["todo_file_url"] = url; }
-
 // ========== Projects Settings ==========
 
 std::vector<std::string> Config::get_workspace_directories() const {
@@ -579,8 +570,6 @@ void Config::apply_defaults() {
         cfg["sync"]["last_sync"] = DEFAULT_SYNC_LAST_SYNC;
     if (!cfg["sync"].contains("config_file_url"))
         cfg["sync"]["config_file_url"] = DEFAULT_SYNC_CONFIG_FILE_URL;
-    if (!cfg["sync"].contains("todo_file_url"))
-        cfg["sync"]["todo_file_url"] = DEFAULT_SYNC_TODO_FILE_URL;
 
     // Handle auto_sync: migrate old boolean format to new object format
     if (!cfg["sync"].contains("auto_sync")) {
@@ -614,6 +603,8 @@ void Config::apply_defaults() {
         cfg["sync"].erase("last_todo_sync");
     if (cfg["sync"].contains("sync_interval"))
         cfg["sync"].erase("sync_interval");
+    if (cfg["sync"].contains("todo_file_url"))
+        cfg["sync"].erase("todo_file_url");
 
     // Projects
     if (!cfg.contains("projects"))

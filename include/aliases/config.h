@@ -102,9 +102,6 @@ public:
     std::string get_sync_config_file_url() const;
     void set_sync_config_file_url(const std::string& url);
 
-    std::string get_sync_todo_file_url() const;
-    void set_sync_todo_file_url(const std::string& url);
-
     // ========== Projects Settings ==========
 
     std::vector<std::string> get_workspace_directories() const;
@@ -181,7 +178,6 @@ private:
     static constexpr int DEFAULT_SYNC_AUTO_SYNC_INTERVAL = 86400; // 24 hours
     static constexpr int64_t DEFAULT_SYNC_LAST_SYNC = 0;
     static constexpr const char* DEFAULT_SYNC_CONFIG_FILE_URL = "";
-    static constexpr const char* DEFAULT_SYNC_TODO_FILE_URL = "";
 };
 
 } // namespace aliases

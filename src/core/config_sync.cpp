@@ -39,27 +39,6 @@ bool ConfigSync::pull_config_file() {
     return true;
 }
 
-bool ConfigSync::pull_todo_file() {
-    auto& config = Config::instance();
-
-    if (!config.get_sync_enabled()) {
-        return false;
-    }
-
-    std::string todo_url = config.get_sync_todo_file_url();
-    if (todo_url.empty()) {
-        return false;
-    }
-
-    // Fetch to todos-external.json location
-    std::string external_todos_path = config.get_todos_external_file_path();
-    if (!fetch_file(todo_url, external_todos_path)) {
-        return false;
-    }
-
-    return true;
-}
-
 bool ConfigSync::pull() {
     auto& config = Config::instance();
 
@@ -69,39 +48,24 @@ bool ConfigSync::pull() {
     }
 
     std::string config_url = config.get_sync_config_file_url();
-    std::string todo_url = config.get_sync_todo_file_url();
 
-    if (config_url.empty() && todo_url.empty()) {
-        std::cerr << "No file URLs configured for sync." << std::endl;
+    if (config_url.empty()) {
+        std::cerr << "No config file URL configured for sync." << std::endl;
         return false;
     }
 
-    std::cout << "Fetching config files..." << std::endl;
+    std::cout << "Fetching config file..." << std::endl;
 
     bool success = true;
 
-    // Fetch config.json if URL is provided
-    if (!config_url.empty()) {
-        std::cout << "  Downloading config from " << config_url << "..." << std::endl;
+    // Fetch config.json
+    std::cout << "  Downloading config from " << config_url << "..." << std::endl;
 
-        if (!pull_config_file()) {
-            std::cerr << "  Failed to download config.json" << std::endl;
-            success = false;
-        } else {
-            std::cout << "  " << Colors::SUCCESS << "✓" << Colors::RESET << " Config downloaded" << std::endl;
-        }
-    }
-
-    // Fetch todos.json if URL is provided
-    if (!todo_url.empty()) {
-        std::cout << "  Downloading todos from " << todo_url << "..." << std::endl;
-
-        if (!pull_todo_file()) {
-            std::cerr << "  Failed to download todos.json" << std::endl;
-            // Don't fail entirely if todos download fails, it's optional
-        } else {
-            std::cout << "  " << Colors::SUCCESS << "✓" << Colors::RESET << " Todos downloaded" << std::endl;
-        }
+    if (!pull_config_file()) {
+        std::cerr << "  Failed to download config.json" << std::endl;
+        success = false;
+    } else {
+        std::cout << "  " << Colors::SUCCESS << "✓" << Colors::RESET << " Config downloaded" << std::endl;
     }
 
     if (success) {
@@ -131,8 +95,6 @@ bool ConfigSync::status() {
     std::cout << "  Config file URL: "
               << (config.get_sync_config_file_url().empty() ? "(not set)" : config.get_sync_config_file_url())
               << std::endl;
-    std::cout << "  Todo file URL: "
-              << (config.get_sync_todo_file_url().empty() ? "(not set)" : config.get_sync_todo_file_url()) << std::endl;
     std::cout << "  Auto-sync enabled: " << (config.get_sync_auto_sync_enabled() ? "yes" : "no") << std::endl;
     std::cout << "  Auto-sync interval: " << config.get_sync_auto_sync_interval() << " seconds" << std::endl;
 
@@ -151,25 +113,17 @@ bool ConfigSync::status() {
     return true;
 }
 
-bool ConfigSync::setup(const std::string& config_url, const std::string& todo_url) {
+bool ConfigSync::setup(const std::string& config_url) {
     auto& config = Config::instance();
 
-    // Validate URLs
-    bool has_config_url = !config_url.empty() && config_url != "-";
-    bool has_todo_url = !todo_url.empty() && todo_url != "-";
-
-    if (!has_config_url && !has_todo_url) {
-        std::cerr << "At least one URL (config or todo) must be provided" << std::endl;
+    // Validate URL
+    if (config_url.empty() || config_url == "-") {
+        std::cerr << "Config URL must be provided" << std::endl;
         return false;
     }
 
-    // Set URLs
-    if (has_config_url) {
-        config.set_sync_config_file_url(config_url);
-    }
-    if (has_todo_url) {
-        config.set_sync_todo_file_url(todo_url);
-    }
+    // Set URL
+    config.set_sync_config_file_url(config_url);
     config.set_sync_enabled(true);
 
     if (!config.save()) {
@@ -178,13 +132,8 @@ bool ConfigSync::setup(const std::string& config_url, const std::string& todo_ur
     }
 
     std::cout << Colors::SUCCESS << "✓" << Colors::RESET << " Sync configured" << std::endl;
-    if (has_config_url) {
-        std::cout << "  Config URL: " << config_url << std::endl;
-    }
-    if (has_todo_url) {
-        std::cout << "  Todo URL: " << todo_url << std::endl;
-    }
-    std::cout << "Run 'aliases-cli config sync pull' to fetch remote files" << std::endl;
+    std::cout << "  Config URL: " << config_url << std::endl;
+    std::cout << "Run 'aliases-cli config sync pull' to fetch remote config" << std::endl;
 
     return true;
 }

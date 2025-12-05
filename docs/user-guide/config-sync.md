@@ -11,9 +11,9 @@ Sync your aliases-cli configuration across multiple machines using simple HTTP f
 
 ## Quick Start
 
-### 1. Host Your Config Files
+### 1. Host Your Config File
 
-Upload your `config.json` (and optionally `todos.json`) to a web server or Git repository:
+Upload your `config.json` to a web server or Git repository:
 
 **Option A: GitHub (Recommended)**
 ```bash
@@ -31,13 +31,8 @@ Upload your `config.json` (and optionally `todos.json`) to a web server or Git r
 ### 2. Setup Sync on Each Machine
 
 ```bash
-# Setup with just config file
+# Setup with config file URL
 aliases-cli config sync setup https://raw.githubusercontent.com/you/aliases-config/main/config.json
-
-# Or include todos file
-aliases-cli config sync setup \
-  https://raw.githubusercontent.com/you/aliases-config/main/config.json \
-  https://raw.githubusercontent.com/you/aliases-config/main/todos.json
 ```
 
 ### 3. Pull Config
@@ -78,7 +73,6 @@ Then modify the sync section:
 |---------|------|---------|-------------|
 | `enabled` | boolean | `false` | Enable/disable config sync |
 | `config_file_url` | string | `""` | HTTP URL to remote config.json |
-| `todo_file_url` | string | `""` | HTTP URL to remote todos.json (optional) |
 | `auto_sync.enabled` | boolean | `false` | Auto-sync on startup |
 | `auto_sync.interval` | integer | `86400` | Seconds between syncs (default: 24 hours) |
 | `last_sync` | integer | `0` | Unix timestamp of last sync (auto-managed) |
@@ -93,8 +87,7 @@ Example configuration:
       "interval": 3600
     },
     "last_sync": 0,
-    "config_file_url": "https://raw.githubusercontent.com/user/config/main/config.json",
-    "todo_file_url": "https://raw.githubusercontent.com/user/config/main/todos.json"
+    "config_file_url": "https://raw.githubusercontent.com/user/config/main/config.json"
   }
 }
 ```
@@ -133,7 +126,6 @@ Output:
 Sync Configuration:
   Enabled: yes
   Config file URL: https://raw.githubusercontent.com/user/repo/main/config.json
-  Todo file URL: https://raw.githubusercontent.com/user/repo/main/todos.json
   Auto-sync enabled: yes
   Auto-sync interval: 3600 seconds
   Last sync: Tue Oct  7 09:15:32 2025
@@ -228,8 +220,7 @@ If you were using the old sync system with git/rsync/file methods, your config w
       "enabled": true,
       "interval": 86400
     },
-    "config_file_url": "",
-    "todo_file_url": ""
+    "config_file_url": ""
   }
 }
 ```
@@ -301,6 +292,7 @@ If using GitHub raw URLs, you might hit rate limits:
 - API keys or tokens (use environment variables instead)
 - Machine-specific paths
 - Sensitive project information
+- Todo lists (todos are always stored locally)
 
 ### Repository Security
 

@@ -337,8 +337,8 @@ aliases-cli config <subcommand> [args...]
 | `reset` | Reset configuration to defaults |
 | `edit` | Open config file in editor |
 | `path` | Show config file path |
-| `sync setup <config-url> [todo-url]` | Setup config sync with file-specific URLs |
-| `sync pull` | Pull config from remote URLs |
+| `sync setup <config-url>` | Setup config sync with URL |
+| `sync pull` | Pull config from remote URL |
 | `sync push` | Push config to remote (not supported) |
 | `sync status` | Show sync status |
 
@@ -365,9 +365,8 @@ aliases-cli config path
 # Reset to defaults
 aliases-cli config reset
 
-# Setup config sync with direct file URLs
-aliases-cli config sync setup https://example.com/config.json https://example.com/todos.json
-aliases-cli config sync setup https://example.com/config.json  # Config only
+# Setup config sync with URL
+aliases-cli config sync setup https://example.com/config.json
 aliases-cli config sync pull
 aliases-cli config sync status
 ```

@@ -150,17 +150,13 @@ Project 3: base_port + (port_offset * 2) (3200)
 |---------|------|---------|-------------|
 | `enabled` | boolean | `false` | Enable/disable config sync |
 | `config_file_url` | string | `""` | HTTP URL to remote config.json file |
-| `todo_file_url` | string | `""` | HTTP URL to remote todos.json file (optional) |
 | `auto_sync.enabled` | boolean | `false` | Automatically sync on startup |
 | `auto_sync.interval` | integer | `86400` | Seconds between automatic syncs (default: 24 hours) |
 | `last_sync` | integer | `0` | Unix timestamp of last sync (auto-managed) |
 
 **Examples:**
 ```bash
-# Setup sync with HTTP URLs
-aliases-cli config sync setup https://example.com/config.json https://example.com/todos.json
-
-# Or just config file (todos optional)
+# Setup sync with HTTP URL
 aliases-cli config sync setup https://raw.githubusercontent.com/user/repo/main/config.json
 
 # Pull latest config
@@ -312,8 +308,7 @@ Here's a complete example `config.json`:
       "interval": 86400
     },
     "last_sync": 0,
-    "config_file_url": "",
-    "todo_file_url": ""
+    "config_file_url": ""
   },
   "projects": {
     "workspace_directories": ["~/workspaces"],
