@@ -27,3 +27,33 @@ npm-clean() {
 if command -v pnpm >/dev/null 2>&1; then
     alias npm='pnpm'
 fi
+
+# npm wrapper that automatically adds --ignore-scripts
+npm() {
+  # Commands where --ignore-scripts is valid
+  declare -A IGNORE_CMDS=(
+    [install]=1
+    [i]=1
+    [update]=1
+    [up]=1
+    [ci]=1
+    [rebuild]=1
+    [add]=1
+    [remove]=1
+    [rm]=1
+    [link]=1
+    [dedupe]=1
+    [pack]=1
+  )
+
+  local cmd="$1"
+  shift
+
+  if [[ -n "${IGNORE_CMDS[$cmd]}" ]]; then
+    # Command supports --ignore-scripts
+    command npm "$cmd" --ignore-scripts "$@"
+  else
+    # Normal fallback
+    command npm "$cmd" "$@"
+  fi
+}
