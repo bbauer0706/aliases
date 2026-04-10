@@ -72,3 +72,4 @@ rebase() {
 }
 
 alias git-rm='git rm --cached'
+alias trigger-ci='git commit --allow-empty -m "ci: trigger ci pipeline" && git push'
