@@ -83,7 +83,6 @@ private:
     // Command implementations
     void show_help() const;
     int handle_cli_command(const StringVector& args);
-    int run_interactive_tui();
     
     // CLI subcommands
     int cmd_add(const StringVector& args);

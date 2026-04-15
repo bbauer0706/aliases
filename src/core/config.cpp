@@ -590,6 +590,54 @@ bool Config::create_default_config() {
     return save();
 }
 
+// ========== Prompt Settings ==========
+
+bool Config::get_prompt_enabled() const {
+    return (*config_data_)["prompt"]["enabled"].get<bool>();
+}
+
+void Config::set_prompt_enabled(bool enabled) {
+    (*config_data_)["prompt"]["enabled"] = enabled;
+}
+
+std::vector<PromptPathReplacement> Config::get_prompt_path_replacements() const {
+    std::vector<PromptPathReplacement> replacements;
+    if (!config_data_->contains("prompt") ||
+        !(*config_data_)["prompt"].contains("path_replacements")) {
+        return replacements;
+    }
+    for (const auto& item : (*config_data_)["prompt"]["path_replacements"]) {
+        PromptPathReplacement r;
+        r.env_var = item.value("env_var", "");
+        r.path    = item.value("path",    "");
+        r.label   = item.value("label",   "");
+        r.color   = item.value("color",   "bold_cyan");
+
+        // XOR: exactly one of env_var / path must be set.
+        bool has_env  = !r.env_var.empty();
+        bool has_path = !r.path.empty();
+        if (has_env == has_path) {
+            // Both set or neither set — skip invalid rule.
+            continue;
+        }
+
+        replacements.push_back(std::move(r));
+    }
+    return replacements;
+}
+
+void Config::set_prompt_path_replacements(const std::vector<PromptPathReplacement>& replacements) {
+    (*config_data_)["prompt"]["path_replacements"] = json::array();
+    for (const auto& r : replacements) {
+        json item;
+        item["env_var"] = r.env_var;
+        item["path"]    = r.path;
+        item["label"]   = r.label;
+        item["color"]   = r.color;
+        (*config_data_)["prompt"]["path_replacements"].push_back(item);
+    }
+}
+
 void Config::apply_defaults() {
     json& cfg = *config_data_;
 
@@ -655,6 +703,11 @@ void Config::apply_defaults() {
         cfg["projects"]["default_paths"]["server"] = json::array({"java/serverJava", "serverJava", "backend", "server"});
         cfg["projects"]["default_paths"]["web"] = json::array({"webapp", "webApp", "web", "frontend", "client"});
     }
+
+    // Prompt
+    if (!cfg.contains("prompt")) cfg["prompt"] = json::object();
+    if (!cfg["prompt"].contains("enabled")) cfg["prompt"]["enabled"] = DEFAULT_PROMPT_ENABLED;
+    if (!cfg["prompt"].contains("path_replacements")) cfg["prompt"]["path_replacements"] = json::array();
 }
 
 } // namespace aliases

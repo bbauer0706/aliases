@@ -66,28 +66,9 @@ Options:
 
 The build system performs these steps:
 
-1. **Detect ncurses**: Checks for local build, then system installation
-2. **Configure flags**: Sets up compiler flags based on available libraries
-3. **Compile core**: Builds core functionality (`src/core/*.cpp`)
-4. **Compile commands**: Builds command implementations (`src/commands/*.cpp`)
-5. **Link executable**: Creates final binary with all dependencies
-
-### ncurses Integration
-
-The build system automatically handles ncurses:
-
-```bash
-# Detects local ncurses (preferred)
-if [ -d "include/third_party/ncurses" ]; then
-    NCURSES_AVAILABLE=true
-    CXXFLAGS="$CXXFLAGS -DHAVE_NCURSES -Iinclude/third_party/ncurses/include/ncursesw"
-    NCURSES_LIBS="-Linclude/third_party/ncurses/lib -lncursesw"
-```
-
-**Build modes:**
-- **With local ncurses**: Full TUI support (default)
-- **With system ncurses**: Falls back to system installation
-- **Without ncurses**: CLI-only mode (graceful degradation)
+1. **Compile core**: Builds core functionality (`src/core/*.cpp`)
+2. **Compile commands**: Builds command implementations (`src/commands/*.cpp`)
+3. **Link executable**: Creates final binary with all dependencies
 
 ## Build Configurations
 
@@ -131,11 +112,10 @@ if [ -d "include/third_party/ncurses" ]; then
 ### Success Output
 
 ```
-[INFO] Local ncurses found - TUI mode will be available
 [INFO] Starting build process...
 [INFO] Build type: Release
 [INFO] Compiler: g++
-[INFO] Flags: -std=c++17 -Wall -Wextra -DHAVE_NCURSES -O3 -DNDEBUG
+[INFO] Flags: -std=c++17 -Wall -Wextra -O3 -DNDEBUG
 [INFO] Building core library...
 [INFO] Building commands library...
 [INFO] Building main executable...
@@ -172,15 +152,6 @@ build/
 
 ```
 -Iinclude                                              # Main headers
--Iinclude/third_party/ncurses/include/ncursesw        # ncurses headers
-```
-
-### Library Paths
-
-```
--Linclude/third_party/ncurses/lib                     # ncurses libraries
--lncursesw                                             # Wide character ncurses
--pthread                                               # Threading support
 ```
 
 ### Source Organization
@@ -198,7 +169,6 @@ build/
 - `code_navigator.cpp` - Project navigation command
 - `project_env.cpp` - Environment setup command
 - `todo.cpp` - Todo management CLI interface
-- `todo_tui.cpp` - Todo TUI implementation with ncurses
 - `config_cmd.cpp` - Configuration management command
 
 **Main Entry Point:**

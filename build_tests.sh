@@ -118,7 +118,6 @@ CORE_SOURCES=(
     "src/core/config.cpp"
     "src/core/config_sync.cpp"
     "src/commands/todo.cpp"
-    "src/commands/todo_tui.cpp"
 )
 
 # Build core library for tests
@@ -157,8 +156,7 @@ for test_src in $TEST_FILES; do
 
     print_status "Linking $test_name..."
     $CXX $CXXFLAGS -o "$test_bin" "$test_obj" "${CORE_OBJECTS[@]}" \
-        "$GTEST_ALL_OBJ" "$GTEST_MAIN_OBJ" -pthread \
-        -Linclude/third_party/ncurses/lib -lncursesw
+        "$GTEST_ALL_OBJ" "$GTEST_MAIN_OBJ" -pthread
 
     TEST_EXECUTABLES+=("$test_bin")
 done

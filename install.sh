@@ -223,6 +223,12 @@ if [ -f "\$ALIASES_DIR/bash_integration/project-env.sh" ]; then
   source "\$ALIASES_DIR/bash_integration/project-env.sh"
 fi
 
+# Load bash integration for prompt formatting (custom PWD display)
+if [ -f "\$ALIASES_DIR/bash_integration/prompt.sh" ]; then
+  source "\$ALIASES_DIR/bash_integration/prompt.sh"
+  aliases_setup_prompt
+fi
+
 # Run auto-setup for new terminals
 if type auto_setup_new_terminal >/dev/null 2>&1; then
   auto_setup_new_terminal

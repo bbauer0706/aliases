@@ -42,5 +42,20 @@
       "server": ["java/serverJava", "serverJava", "backend", "server"],
       "web": ["webapp", "webApp", "web", "frontend", "client"]
     }
+  },
+  "prompt": {
+    "enabled": true,
+    "path_replacements": [
+      {
+        "env_var": "INSTROOT",
+        "label": "INSTROOT",
+        "color": "bold_cyan"
+      },
+      {
+        "path": "/opt/company/platform",
+        "label": "PLATFORM",
+        "color": "bold_yellow"
+      }
+    ]
   }
 }

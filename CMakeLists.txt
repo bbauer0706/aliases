@@ -22,7 +22,6 @@ include_directories(include)
 
 # Find required packages
 find_package(Threads REQUIRED)
-find_package(Curses REQUIRED)
 
 # Core library
 set(CORE_SOURCES
@@ -32,6 +31,7 @@ set(CORE_SOURCES
     src/core/config.cpp
     src/core/config_sync.cpp
     src/core/process_utils.cpp
+    src/core/pwd_formatter.cpp
 )
 
 set(CORE_HEADERS
@@ -41,6 +41,7 @@ set(CORE_HEADERS
     include/aliases/config.h
     include/aliases/config_sync.h
     include/aliases/process_utils.h
+    include/aliases/pwd_formatter.h
     include/aliases/common.h
 )
 
@@ -53,7 +54,6 @@ set(COMMAND_SOURCES
     src/commands/code_navigator.cpp
     src/commands/project_env.cpp
     src/commands/todo.cpp
-    src/commands/todo_tui.cpp
     src/commands/config_cmd.cpp
 )
 
@@ -61,14 +61,12 @@ set(COMMAND_HEADERS
     include/aliases/commands/code_navigator.h
     include/aliases/commands/project_env.h
     include/aliases/commands/todo.h
-    include/aliases/commands/todo_tui.h
     include/aliases/commands/config_cmd.h
 )
 
 # Create commands library
 add_library(aliases_commands STATIC ${COMMAND_SOURCES} ${COMMAND_HEADERS})
-target_link_libraries(aliases_commands aliases_core ${CURSES_LIBRARIES})
-target_include_directories(aliases_commands PRIVATE ${CURSES_INCLUDE_DIR})
+target_link_libraries(aliases_commands aliases_core)
 
 # Main executable
 add_executable(aliases-cli src/main.cpp)

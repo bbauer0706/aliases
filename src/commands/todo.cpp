@@ -1,5 +1,4 @@
 #include "aliases/commands/todo.h"
-#include "aliases/commands/todo_tui.h"
 #include "aliases/config.h"
 #include "aliases/config_sync.h"
 #include "aliases/common.h"
@@ -540,7 +539,8 @@ Todo::Todo(std::shared_ptr<ProjectMapper> mapper)
 
 int Todo::execute(const StringVector& args) {
     if (args.empty()) {
-        return run_interactive_tui();
+        show_help();
+        return 0;
     }
     
     const std::string& subcommand = args[0];
@@ -548,10 +548,6 @@ int Todo::execute(const StringVector& args) {
     if (subcommand == "--help" || subcommand == "-h" || subcommand == "help") {
         show_help();
         return 0;
-    }
-    
-    if (subcommand == "--interactive" || subcommand == "-i" || subcommand == "tui") {
-        return run_interactive_tui();
     }
     
     return handle_cli_command(args);
@@ -570,7 +566,6 @@ void Todo::show_help() const {
     std::cout << "  remove <id>                 Remove a todo" << std::endl;
     std::cout << "  priority <id> <0-3>         Set todo priority (0=none, 1=low, 2=med, 3=high)" << std::endl;
     std::cout << "  category <id> <cat>         Set todo category" << std::endl;
-    std::cout << "  tui, -i                     Launch interactive TUI mode" << std::endl;
     std::cout << std::endl;
     std::cout << "Add command options:" << std::endl;
     std::cout << "  -p, --priority <0-3>        Set priority (0=none, 1=low, 2=med, 3=high)" << std::endl;
@@ -592,10 +587,6 @@ void Todo::show_help() const {
     std::cout << "  aliases-cli todo search \"review\" -c \"code-review\"" << std::endl;
     std::cout << "  aliases-cli todo done $(aliases-cli todo search \"auth\" --id-only)" << std::endl;
     std::cout << "  aliases-cli todo done 1" << std::endl;
-    std::cout << "  aliases-cli todo -i                 # Launch TUI mode" << std::endl;
-    std::cout << std::endl;
-    std::cout << "Interactive Mode:" << std::endl;
-    std::cout << "  Run without arguments or with -i to launch the interactive TUI" << std::endl;
 }
 
 int Todo::handle_cli_command(const StringVector& args) {
@@ -927,12 +918,6 @@ int Todo::cmd_search(const StringVector& args) {
     }
     
     return 0;
-}
-
-// TUI Implementation - now delegated to TodoTUI class
-int Todo::run_interactive_tui() {
-    TodoTUI tui(todo_manager_.get());
-    return tui.run();
 }
 
 

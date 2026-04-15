@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "pwd_formatter.h"
 #include "third_party/json.hpp"
 #include <memory>
 #include <optional>
@@ -126,6 +127,14 @@ public:
     std::vector<std::string> get_workspace_ignore() const;
     void set_workspace_ignore(const std::vector<std::string>& ignore_patterns);
 
+    // ========== Prompt Settings ==========
+
+    bool get_prompt_enabled() const;
+    void set_prompt_enabled(bool enabled);
+
+    std::vector<PromptPathReplacement> get_prompt_path_replacements() const;
+    void set_prompt_path_replacements(const std::vector<PromptPathReplacement>& replacements);
+
     // ========== Path Management ==========
 
     std::string get_config_directory() const;
@@ -195,6 +204,8 @@ private:
     static constexpr const char* DEFAULT_SYNC_METHOD = "git";
     static constexpr bool DEFAULT_SYNC_TODOS = false;
     static constexpr int64_t DEFAULT_SYNC_LAST_TODO_SYNC = 0;
+
+    static constexpr bool DEFAULT_PROMPT_ENABLED = true;
 };
 
 } // namespace aliases

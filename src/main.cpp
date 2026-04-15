@@ -6,6 +6,8 @@
 #include "aliases/project_mapper.h"
 #include "aliases/config.h"
 #include "aliases/config_sync.h"
+#include "aliases/common.h"
+#include "aliases/pwd_formatter.h"
 #include "aliases/commands/code_navigator.h"
 #include "aliases/commands/project_env.h"
 #include "aliases/commands/todo.h"
@@ -33,6 +35,7 @@ void show_help() {
     std::cout << "  env              Setup project environment variables" << std::endl;
     std::cout << "  todo             Todo list manager with CLI and TUI modes" << std::endl;
     std::cout << "  config           Manage aliases-cli configuration" << std::endl;
+    std::cout << "  pwd              Print formatted working directory (for PS1)" << std::endl;
     std::cout << "  completion       Generate completion data (for bash completion)" << std::endl;
     std::cout << "  version          Show version information" << std::endl;
     std::cout << "  help             Show this help message" << std::endl;
@@ -184,6 +187,23 @@ int main(int argc, char* argv[]) {
         }
         else if (command == "completion") {
             return handle_completion(project_mapper, subcommand_args);
+        }
+        else if (command == "pwd") {
+            bool no_color = false;
+            bool ps1_mode = false;
+            for (const auto& arg : subcommand_args) {
+                if (arg == "--no-color") no_color = true;
+                if (arg == "--ps1")      ps1_mode = true;
+            }
+            if (config.get_prompt_enabled()) {
+                bool colors = !no_color && config.get_terminal_colors();
+                auto replacements = config.get_prompt_path_replacements();
+                std::string cwd = aliases::get_current_directory();
+                std::cout << aliases::PwdFormatter::format(cwd, replacements, colors, ps1_mode) << std::endl;
+            } else {
+                std::cout << aliases::get_current_directory() << std::endl;
+            }
+            return 0;
         }
         else if (command == "version") {
             show_version();

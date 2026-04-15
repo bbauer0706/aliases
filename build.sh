@@ -70,27 +70,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Check for ncurses availability
-NCURSES_AVAILABLE=false
-NCURSES_LOCAL_PATH="include/third_party/ncurses"
-
-if [ -d "$NCURSES_LOCAL_PATH" ]; then
-    # Use our locally built ncurses
-    NCURSES_AVAILABLE=true
-    CXXFLAGS="$CXXFLAGS -DHAVE_NCURSES -I${NCURSES_LOCAL_PATH}/include/ncursesw"
-    NCURSES_LIBS="-L${NCURSES_LOCAL_PATH}/lib -lncursesw"
-    print_status "Local ncurses found at $NCURSES_LOCAL_PATH - TUI mode will be available"
-elif pkg-config --exists ncurses 2>/dev/null || [ -f /usr/include/ncurses.h ] || [ -f /usr/local/include/ncurses.h ]; then
-    # Use system ncurses
-    NCURSES_AVAILABLE=true
-    CXXFLAGS="$CXXFLAGS -DHAVE_NCURSES"
-    NCURSES_LIBS="-lncurses"
-    print_status "System ncurses found - TUI mode will be available"
-else
-    NCURSES_LIBS=""
-    print_status "ncurses not found - TUI mode will be disabled, CLI mode still available"
-fi
-
 # Get version from git tag
 GIT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "dev")
 CXXFLAGS="$CXXFLAGS -DVERSION=\"$GIT_VERSION\""
@@ -129,13 +108,13 @@ CORE_SOURCES=(
     "src/core/common.cpp"
     "src/core/config.cpp"
     "src/core/config_sync.cpp"
+    "src/core/pwd_formatter.cpp"
 )
 
 COMMAND_SOURCES=(
     "src/commands/code_navigator.cpp"
     "src/commands/project_env.cpp"
     "src/commands/todo.cpp"
-    "src/commands/todo_tui.cpp"
     "src/commands/config_cmd.cpp"
 )
 
@@ -172,7 +151,7 @@ $CXX $CXXFLAGS $INCLUDES -c "$MAIN_SOURCE" -o "$MAIN_OBJECT"
 # Link everything together
 print_status "Linking executable..."
 BINARY_PATH="$BUILD_DIR/aliases-cli"
-$CXX $CXXFLAGS -o "$BINARY_PATH" "$MAIN_OBJECT" "${COMMAND_OBJECTS[@]}" "${CORE_OBJECTS[@]}" -pthread $NCURSES_LIBS
+$CXX $CXXFLAGS -o "$BINARY_PATH" "$MAIN_OBJECT" "${COMMAND_OBJECTS[@]}" "${CORE_OBJECTS[@]}" -pthread
 
 if [[ $? -ne 0 ]]; then
     print_error "Linking failed"
