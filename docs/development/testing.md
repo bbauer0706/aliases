@@ -9,26 +9,29 @@ The project uses **Google Test (gtest)** v1.15.2 for unit and integration testin
 ## Quick Start
 
 ```bash
-# Build all tests
-./build_tests.sh
-
-# Run all tests
+# Build and run all tests
 ./run_tests.sh
 
-# Run with verbose output
-./run_tests.sh -v
+# Run a specific test binary directly
+./build/tests/todo_test
 
-# Run specific test pattern
-./run_tests.sh -f "FileUtils*"
+# Run with test filter
+./build/tests/todo_test --gtest_filter="*CRUD*"
 ```
 
 ## Test Structure
 
 ```
 tests/
-├── unit/                      # Unit tests for individual components
-│   ├── common_test.cpp        # String utilities, Result types
-│   └── file_utils_test.cpp    # File operations, path utilities
+├── unit/
+│   ├── common_test.cpp        # String utilities (trim, split, starts_with, ends_with)
+│   ├── config_test.cpp        # Config singleton, get/set, persistence, defaults, reset
+│   ├── config_sync_test.cpp   # Pull/push/status across sync methods
+│   ├── file_utils_test.cpp    # Path utilities, file I/O, directory listing
+│   ├── git_operations_test.cpp # get_git_status(), branch detection
+│   ├── process_utils_test.cpp # Sync/async execution, exit codes, output capture
+│   ├── project_mapper_test.cpp # Project discovery, shorthand resolution, component paths
+│   └── todo_test.cpp          # CRUD, persistence, priority/category sorting
 └── integration/               # Integration tests (future)
 ```
 
@@ -104,38 +107,34 @@ TEST(FileUtilsTest, ReadFileReturnsOptional) {
 }
 ```
 
-### Testing with Temporary Files
+### Testing with Temporary Files and Config Isolation
+
+**All tests that touch `Config` must call `Config::set_test_config_directory()`.** Never let tests read from or write to `~/.config/aliases-cli/`.
 
 ```cpp
-class FileOperationsTest : public ::testing::Test {
+class MyCommandTest : public ::testing::Test {
 protected:
-    std::string test_dir;
-    std::string test_file;
+    std::string test_dir_;
 
     void SetUp() override {
-        // Create temp directory
-        test_dir = "/tmp/test_" + std::to_string(getpid());
-        system(("mkdir -p " + test_dir).c_str());
-
-        // Create test file
-        test_file = test_dir + "/file.txt";
-        std::ofstream ofs(test_file);
-        ofs << "test content\n";
-        ofs.close();
+        test_dir_ = "/tmp/aliases_test_" + std::to_string(getpid()) + "_mycmd";
+        std::filesystem::create_directories(test_dir_);
+        aliases::Config::set_test_config_directory(test_dir_);
+        aliases::Config::instance().initialize();
     }
 
     void TearDown() override {
-        // Cleanup
-        system(("rm -rf " + test_dir).c_str());
+        std::filesystem::remove_all(test_dir_);
     }
 };
 
-TEST_F(FileOperationsTest, CanReadFile) {
-    auto content = FileUtils::read_file(test_file);
-    ASSERT_TRUE(content.has_value());
-    EXPECT_EQ(content.value(), "test content\n");
+TEST_F(MyCommandTest, CanReadFile) {
+    auto content = aliases::FileUtils::read_file(test_dir_ + "/file.txt");
+    EXPECT_FALSE(content.has_value()); // file doesn't exist yet
 }
 ```
+
+**Temp dir naming**: use `/tmp/aliases_test_<PID>_<module>` to avoid collisions when tests run in parallel.
 
 ## Build System
 
@@ -173,6 +172,8 @@ Options:
 ## Adding New Tests
 
 1. **Create test file**: `tests/unit/my_feature_test.cpp`
+2. **Add it to `build.sh`** — find the block listing all `*_test` source files and add your new entry.
+3. **Run tests**: `./run_tests.sh`
 
 ```cpp
 #include <gtest/gtest.h>
@@ -180,21 +181,11 @@ Options:
 
 TEST(MyFeatureTest, BasicFunctionality) {
     auto result = my_function();
-    EXPECT_TRUE(result.success);
+    EXPECT_TRUE(result.success());
 }
 ```
 
-2. **Build tests**:
-```bash
-./build_tests.sh
-```
-
-3. **Run tests**:
-```bash
-./run_tests.sh
-```
-
-The build system automatically discovers new test files matching `*_test.cpp`.
+New test binaries land in `build/tests/` automatically once wired into `build.sh`.
 
 ## Best Practices
 

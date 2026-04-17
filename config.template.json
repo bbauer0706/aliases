@@ -57,5 +57,10 @@
         "color": "bold_yellow"
       }
     ]
+  },
+  "secrets": {
+    "store_path": "",
+    "kdf_iterations": 100000,
+    "password_env_var": "ALIASES_MASTER_PASSWORD"
   }
 }

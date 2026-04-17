@@ -195,7 +195,6 @@ ALIASES_DIR="$ALIASES_DIR"
 # Fast C++ workspace management aliases
 alias aliases-cli='\$ALIASES_DIR/aliases-cli'
 alias c='\$ALIASES_DIR/aliases-cli code'
-alias uw='\$ALIASES_DIR/aliases-cli update'
 
 ##############################################################################
 
@@ -221,6 +220,11 @@ fi
 # Load bash integration for project environment
 if [ -f "\$ALIASES_DIR/bash_integration/project-env.sh" ]; then
   source "\$ALIASES_DIR/bash_integration/project-env.sh"
+fi
+
+# Load bash integration for secrets manager
+if [ -f "\$ALIASES_DIR/bash_integration/secrets.sh" ]; then
+  source "\$ALIASES_DIR/bash_integration/secrets.sh"
 fi
 
 # Load bash integration for prompt formatting (custom PWD display)
@@ -564,7 +568,10 @@ echo -e "  • Add new bash utilities with ${GREEN}.ali.sh${NC} extension for au
 echo ""
 echo -e "${BLUE}Available Commands:${NC}"
 echo -e "  • ${GREEN}c <project>${NC}    - Navigate to project (50x faster than bash)"
-echo -e "  • ${GREEN}todo${NC}           - Todo list manager (TUI + CLI)"
+echo -e "  • ${GREEN}env${NC}            - Setup project environment variables"
+echo -e "  • ${GREEN}secrets${NC}        - Encrypted secrets / env-var manager"
+echo -e "  • ${GREEN}todo${NC}           - Todo list manager"
 echo -e "  • ${GREEN}config${NC}         - Manage configuration"
-echo -e "  • ${GREEN}project_env${NC}    - Setup project environment"
-echo -e "  • Plus bash utilities: basic, maven, npm shortcuts"
+echo -e "  • ${GREEN}pwd${NC}            - Print formatted working directory (for PS1)"
+echo -e "  • ${GREEN}completion${NC}     - Generate bash completion data"
+echo -e "  • Plus bash utilities: basic, git, maven, npm shortcuts"

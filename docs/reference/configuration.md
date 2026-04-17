@@ -154,6 +154,8 @@ Project 3: base_port + (port_offset * 2) (3200)
 | `sync_interval` | integer | `86400` | Seconds between automatic syncs (default: 24 hours) |
 | `last_sync` | integer | `0` | Unix timestamp of last sync (auto-managed) |
 | `method` | string | `git` | Sync method: `git`, `rsync`, `file`, `http` |
+| `sync_todos` | boolean | `false` | Also sync todos to the remote |
+| `last_todo_sync` | integer | `0` | Unix timestamp of last todo sync (auto-managed) |
 
 **Examples:**
 ```bash
@@ -166,6 +168,33 @@ aliases-cli config set sync.auto_sync true
 # Set sync interval to 1 hour
 aliases-cli config set sync.sync_interval 3600
 ```
+
+---
+
+### Secrets Settings (`secrets.*`)
+
+Controls the encrypted secrets store. See the [secrets command reference](commands.md#secrets-command) for usage.
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `store_path` | string | `""` | Absolute path to the encrypted store file. Empty = `~/.config/aliases-cli/secrets.enc` |
+| `kdf_iterations` | integer | `100000` | PBKDF2-SHA256 iterations for key derivation. Higher = slower brute-force |
+| `password_env_var` | string | `ALIASES_MASTER_PASSWORD` | Name of the env var consulted for the master password |
+
+> **Note:** The secrets store file (`secrets.enc`) is **not** included in config sync — it is intentionally kept local only.
+
+**Examples:**
+```bash
+# Use a custom store location
+aliases-cli config set secrets.store_path /secure/vault/aliases.enc
+
+# Increase KDF iterations for higher security (slower unlock)
+aliases-cli config set secrets.kdf_iterations 200000
+
+# Use a different env var for the master password
+aliases-cli config set secrets.password_env_var MY_VAULT_PASSWORD
+```
+
 
 **Sync Methods:**
 - `git`: Version-controlled sync with commit history (recommended)
@@ -260,7 +289,46 @@ Example:
 
 ---
 
-## Example Configuration File
+### Prompt Settings (`prompt.*`)
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `enabled` | boolean | `false` | Enable the custom PS1 path formatter |
+| `path_replacements` | array | `[]` | Ordered list of path-prefix replacement rules |
+
+Each entry in `path_replacements` supports:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `env_var` | XOR with `path` | Environment variable whose runtime value is used as the path prefix |
+| `path` | XOR with `env_var` | Literal path prefix (supports leading `~` for `$HOME`) |
+| `label` | yes | Short text shown in prompt instead of the matched prefix |
+| `color` | no (default `bold_cyan`) | ANSI color name for the label |
+
+Available colors: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white` — and all with `bold_` prefix (e.g. `bold_cyan`).
+
+Rules are evaluated in order; **first match wins**. Rules with both or neither of `env_var`/`path` set are silently skipped.
+
+**Example configuration:**
+```json
+"prompt": {
+  "enabled": true,
+  "path_replacements": [
+    {
+      "env_var": "INSTROOT",
+      "label": "INSTROOT",
+      "color": "bold_cyan"
+    },
+    {
+      "path": "~/workspaces",
+      "label": "ws",
+      "color": "bold_green"
+    }
+  ]
+}
+```
+
+**See Also:** [Bash Integration — Prompt path replacement](../integrations/bash-integration.md#prompt-path-replacement)
 
 Here's a complete example `config.json`:
 

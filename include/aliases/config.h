@@ -86,6 +86,21 @@ public:
     std::string get_env_default_env() const; // "dev", "staging", "prod"
     void set_env_default_env(const std::string& env);
 
+    // ========== Secrets Settings ==========
+
+    // Full path to the encrypted secrets file.
+    // Default: <config_dir>/secrets.enc
+    std::string get_secrets_store_path() const;
+    void set_secrets_store_path(const std::string& path);
+
+    // PBKDF2 iteration count for master-password key derivation.
+    int get_secrets_kdf_iterations() const;
+    void set_secrets_kdf_iterations(int iterations);
+
+    // Name of the env var consulted for the master password.
+    std::string get_secrets_password_env_var() const;
+    void set_secrets_password_env_var(const std::string& var_name);
+
     // ========== Sync Settings ==========
 
     bool get_sync_enabled() const;
@@ -206,6 +221,10 @@ private:
     static constexpr int64_t DEFAULT_SYNC_LAST_TODO_SYNC = 0;
 
     static constexpr bool DEFAULT_PROMPT_ENABLED = true;
+
+    static constexpr const char* DEFAULT_SECRETS_STORE_PATH   = ""; // empty = use config dir
+    static constexpr int         DEFAULT_SECRETS_KDF_ITER      = 100000;
+    static constexpr const char* DEFAULT_SECRETS_PASSWORD_VAR = "ALIASES_MASTER_PASSWORD";
 };
 
 } // namespace aliases

@@ -10,6 +10,7 @@
 #include "aliases/pwd_formatter.h"
 #include "aliases/commands/code_navigator.h"
 #include "aliases/commands/project_env.h"
+#include "aliases/commands/secrets_cmd.h"
 #include "aliases/commands/todo.h"
 #include "aliases/commands/config_cmd.h"
 
@@ -33,6 +34,7 @@ void show_help() {
     std::cout << "Commands:" << std::endl;
     std::cout << "  code, c          VS Code project navigation" << std::endl;
     std::cout << "  env              Setup project environment variables" << std::endl;
+    std::cout << "  secrets          Encrypted secrets / env-var manager" << std::endl;
     std::cout << "  todo             Todo list manager with CLI and TUI modes" << std::endl;
     std::cout << "  config           Manage aliases-cli configuration" << std::endl;
     std::cout << "  pwd              Print formatted working directory (for PS1)" << std::endl;
@@ -176,6 +178,10 @@ int main(int argc, char* argv[]) {
         else if (command == "env") {
             aliases::commands::ProjectEnv env_setup(project_mapper);
             return env_setup.execute(subcommand_args);
+        }
+        else if (command == "secrets") {
+            aliases::commands::SecretsCmd secrets_cmd(project_mapper);
+            return secrets_cmd.execute(subcommand_args);
         }
         else if (command == "todo") {
             aliases::commands::Todo todo_cmd(project_mapper);

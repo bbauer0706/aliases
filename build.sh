@@ -109,11 +109,13 @@ CORE_SOURCES=(
     "src/core/config.cpp"
     "src/core/config_sync.cpp"
     "src/core/pwd_formatter.cpp"
+    "src/core/secrets_store.cpp"
 )
 
 COMMAND_SOURCES=(
     "src/commands/code_navigator.cpp"
     "src/commands/project_env.cpp"
+    "src/commands/secrets_cmd.cpp"
     "src/commands/todo.cpp"
     "src/commands/config_cmd.cpp"
 )
@@ -151,7 +153,7 @@ $CXX $CXXFLAGS $INCLUDES -c "$MAIN_SOURCE" -o "$MAIN_OBJECT"
 # Link everything together
 print_status "Linking executable..."
 BINARY_PATH="$BUILD_DIR/aliases-cli"
-$CXX $CXXFLAGS -o "$BINARY_PATH" "$MAIN_OBJECT" "${COMMAND_OBJECTS[@]}" "${CORE_OBJECTS[@]}" -pthread
+$CXX $CXXFLAGS -o "$BINARY_PATH" "$MAIN_OBJECT" "${COMMAND_OBJECTS[@]}" "${CORE_OBJECTS[@]}" -pthread -lssl -lcrypto
 
 if [[ $? -ne 0 ]]; then
     print_error "Linking failed"

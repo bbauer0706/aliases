@@ -21,6 +21,7 @@ aliases-cli [GLOBAL_OPTIONS] <command> [COMMAND_OPTIONS] [ARGUMENTS]
 | [`todo`](#todo-command) | - | Manage todos (TUI + CLI) |
 | [`config`](#config-command) | - | Manage aliases-cli configuration |
 | [`env`](#env-command) | `project_env` | Setup environment variables |
+| [`secrets`](#secrets-command) | - | Encrypted env-var secrets manager |
 
 ---
 
@@ -469,5 +470,85 @@ $ uw project-with-conflicts
 Commands read configuration from:
 - `~/.config/aliases-cli/config.json` - Main configuration including project mappings
 - `~/.config/aliases-cli/todos.json` - Todo data storage
+- `~/.config/aliases-cli/secrets.enc` - Encrypted secrets store (created by `secrets set`)
+
+---
+
+## `secrets` Command
+
+Manage encrypted environment-variable secrets. Secrets are stored with **AES-256-GCM** encryption, with the key derived from a master password via **PBKDF2-SHA256** (100 000 iterations). The store file is `chmod 0600`.
+
+### Syntax
+
+```bash
+aliases-cli secrets <subcommand> [args]
+```
+
+### Subcommands
+
+| Subcommand | Description |
+|------------|-------------|
+| `set <name> [value]` | Store a secret. If `value` is omitted, prompts securely (no echo) |
+| `get <name>` | Print the decrypted value to stdout |
+| `list` | List all secret names (sorted) |
+| `delete <name>` | Remove a secret permanently (`remove`/`rm` also accepted) |
+| `load [name...]` | Output `export NAME=VALUE` lines — pipe to `eval` |
+
+### Master Password
+
+The master password is resolved in this order:
+1. The env var specified by `secrets.password_env_var` (default `$ALIASES_MASTER_PASSWORD`)
+2. Interactive prompt on `/dev/tty` with echo disabled
+
+For scripted or CI use, set `ALIASES_MASTER_PASSWORD` before calling the command.
+
+### Examples
+
+```bash
+# Store secrets
+aliases-cli secrets set MY_API_KEY              # prompts securely for value
+aliases-cli secrets set DB_PASS mysecret        # inline value (avoid in scripts)
+aliases-cli secrets set GITHUB_TOKEN            # prompts securely
+
+# Retrieve
+aliases-cli secrets get MY_API_KEY
+
+# List all names
+aliases-cli secrets list
+
+# Remove
+aliases-cli secrets delete MY_API_KEY
+
+# Load all into current shell
+eval "$(aliases-cli secrets load)"
+
+# Load specific secrets
+eval "$(aliases-cli secrets load MY_API_KEY DB_PASS)"
+
+# Using the bash wrapper (after sourcing bash_integration/secrets.sh)
+secrets_load
+secrets_load MY_API_KEY DB_PASS
+```
+
+### Bash Integration
+
+Source `bash_integration/secrets.sh` to get the `secrets_load` helper:
+
+```bash
+# In ~/.bashrc
+source /path/to/aliases-cli/bash_integration/secrets.sh
+
+# Then use:
+secrets_load               # export all secrets
+secrets_load MY_API_KEY    # export one secret
+```
+
+### Security Notes
+
+- Secret **names** and **values** are both encrypted — the file reveals nothing without the password
+- GCM authentication tag prevents silent tampering
+- Wrong password → decryption fails immediately with an error (no partial data leakage)
+- Store file is created `0600`; never synced by `aliases-cli config sync`
+- Avoid embedding values as CLI arguments (`secrets set KEY value`) in shell history; prefer the interactive prompt
 
 See [Configuration Guide](../user-guide/configuration.md) for details.

@@ -17,20 +17,46 @@ aliases-cli
 ## Core Components
 
 ### Project Mapper (`project_mapper.cpp`)
-- **Purpose**: Discovers and maps project structures
-- **Responsibilities**: 
-  - Detect project root directories
-  - Identify project types (git repos, package.json, etc.)
-  - Cache project metadata
-- **Pattern**: Singleton-like service class
+- **Purpose**: Discovers and resolves project structures from configured workspace directories
+- **Responsibilities**:
+  - Scan workspace directories for project subdirectories
+  - Resolve shorthand names (e.g. `dip` → `dispatch`) via config shortcuts
+  - Detect server/web component paths per project
+  - Return `ProjectInfo` structs with full path and component details
+- **Pattern**: PIMPL — internal state hidden behind `std::unique_ptr<Impl>`
+
+### String & ANSI Utilities (`common.cpp`)
+- **Purpose**: Low-level string helpers and shared terminal output constants
+- **Responsibilities**:
+  - `trim()`, `split()`, `starts_with()`, `ends_with()`
+  - `get_home_directory()`, `get_current_directory()`
+  - ANSI color constants: `SUCCESS`, `ERROR`, `WARNING`, `INFO`, `RESET`, `SERVER`, `WEB`
+- **Pattern**: Free functions in the `aliases` namespace
 
 ### File Utilities (`file_utils.cpp`)
-- **Purpose**: Cross-platform file system operations
+- **Purpose**: Filesystem operations — path manipulation, directory traversal, file I/O
 - **Responsibilities**:
-  - Directory creation and traversal
-  - File reading/writing with error handling
-  - Path manipulation and validation
-- **Pattern**: Static utility functions
+  - `discover_workspace_projects()` — recursive directory listing
+  - `find_component_directory()` — searches candidate paths for server/web components
+  - `join_path()`, `get_basename()`, `resolve_path()`, `normalize_path()`
+  - `read_file()` returns `std::optional<std::string>`; `file_exists()`, `directory_exists()`
+- **Pattern**: Static utility class (no state)
+
+### Process Utilities (`process_utils.cpp`)
+- **Purpose**: subprocess execution — wraps `popen()` / `std::async`
+- **Responsibilities**:
+  - `execute(StringVector)` / `execute(string)` → `ProcessResult`
+  - `execute_async()` → `std::future<ProcessResult>`
+  - `command_exists()`, `escape_shell_argument()`, `is_port_available()`
+- **Pattern**: Static utility class
+
+### Prompt Formatter (`pwd_formatter.cpp`)
+- **Purpose**: Format the current working directory for shell prompts using path-replacement rules
+- **Responsibilities**:
+  - Apply `PromptPathReplacement` rules from config in order (first match wins)
+  - Resolve `env_var`-based or literal-`path`-based prefixes
+  - Emit ANSI color codes; wrap in `\001...\002` for PS1 readline safety
+- **Pattern**: Static methods (`PwdFormatter::format()`, `ansi_code()`, `ps1_wrap()`)
 
 ### Git Operations (`git_operations.cpp`)
 - **Purpose**: Git repository interaction
@@ -57,11 +83,11 @@ Each command follows a consistent pattern:
 class CommandName {
 public:
     explicit CommandName(std::shared_ptr<ProjectMapper> mapper);
-    int execute(const StringVector& args);
+    int execute(const StringVector& args); // returns 0=ok, 1=error, 2=usage
 
 private:
-    std::shared_ptr<ProjectMapper> project_mapper_;
-    // Command-specific implementation
+    std::shared_ptr<ProjectMapper> mapper_;
+    // command-specific state
 };
 ```
 
@@ -76,14 +102,21 @@ Todo Command
 
 ### Command Registration
 
-Commands are registered in `main.cpp` using a simple dispatch pattern:
+Commands are registered in `main.cpp` using a simple if/else dispatch:
 
 ```cpp
-// Command registration
-commands["todo"] = [&](const StringVector& args) {
-    Todo cmd(project_mapper);
+// Initialization
+Config::instance().initialize();
+auto mapper = std::make_shared<ProjectMapper>();
+
+// Dispatch
+if (command == "code" || command == "c") {
+    CodeNavigator cmd(mapper);
     return cmd.execute(args);
-};
+} else if (command == "todo") {
+    Todo cmd(mapper);
+    return cmd.execute(args);
+} // ...
 ```
 
 ## Data Layer

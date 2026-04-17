@@ -118,6 +118,8 @@ CORE_SOURCES=(
     "src/core/config.cpp"
     "src/core/config_sync.cpp"
     "src/commands/todo.cpp"
+    "src/core/secrets_store.cpp"
+    "src/commands/secrets_cmd.cpp"
 )
 
 # Build core library for tests
@@ -156,7 +158,7 @@ for test_src in $TEST_FILES; do
 
     print_status "Linking $test_name..."
     $CXX $CXXFLAGS -o "$test_bin" "$test_obj" "${CORE_OBJECTS[@]}" \
-        "$GTEST_ALL_OBJ" "$GTEST_MAIN_OBJ" -pthread
+        "$GTEST_ALL_OBJ" "$GTEST_MAIN_OBJ" -pthread -lssl -lcrypto
 
     TEST_EXECUTABLES+=("$test_bin")
 done

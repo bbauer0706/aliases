@@ -14,9 +14,9 @@ Complete guides for end users:
 ### 🔧 [Development](development/)  
 Documentation for developers and contributors:
 - **[Building](development/building.md)** - Build system and compilation
-- **Architecture** - Code organization and design *(coming soon)*
+- **[Architecture](development/architecture.md)** - Code organization and design patterns
+- **[Testing](development/testing.md)** - Test framework and coverage
 - **Contributing** - Development guidelines *(coming soon)*
-- **Testing** - Test framework and coverage *(coming soon)*
 
 ### 🔗 [Integrations](integrations/)
 Shell integration and compatibility:
@@ -27,7 +27,7 @@ Shell integration and compatibility:
 ### 📚 [Reference](reference/)
 Complete API and command references:
 - **[Commands](reference/commands.md)** - All commands with options and examples
-- **Configuration Schema** - JSON configuration reference *(coming soon)*
+- **[Configuration](reference/configuration.md)** - JSON configuration reference
 - **Exit Codes** - Complete exit code reference *(coming soon)*
 
 ## 🚀 Quick Navigation
@@ -39,8 +39,9 @@ Complete API and command references:
 
 ### Developers  
 1. Check **[Building Guide](development/building.md)** for compilation
-2. Review **[Bash Integration](integrations/bash-integration.md)** for shell features
-3. Browse **[Command Reference](reference/commands.md)** for implementation details
+2. Review **[Architecture](development/architecture.md)** for code structure and patterns
+3. Browse **[Testing Guide](development/testing.md)** for test setup and conventions
+4. Review **[Bash Integration](integrations/bash-integration.md)** for shell features
 
 ### Power Users
 1. Explore **[Todo Management](user-guide/todo-management.md)** for advanced features

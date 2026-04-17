@@ -237,6 +237,39 @@ void Config::set_env_default_env(const std::string& env) {
     (*config_data_)["env"]["default_env"] = env;
 }
 
+// ========== Secrets Settings ==========
+
+std::string Config::get_secrets_store_path() const {
+    std::string path = config_data_->value("/secrets/store_path"_json_pointer,
+                                            std::string(""));
+    if (path.empty()) {
+        return get_config_directory() + "/secrets.enc";
+    }
+    return path;
+}
+
+void Config::set_secrets_store_path(const std::string& path) {
+    (*config_data_)["secrets"]["store_path"] = path;
+}
+
+int Config::get_secrets_kdf_iterations() const {
+    return config_data_->value("/secrets/kdf_iterations"_json_pointer,
+                               DEFAULT_SECRETS_KDF_ITER);
+}
+
+void Config::set_secrets_kdf_iterations(int iterations) {
+    (*config_data_)["secrets"]["kdf_iterations"] = iterations;
+}
+
+std::string Config::get_secrets_password_env_var() const {
+    return config_data_->value("/secrets/password_env_var"_json_pointer,
+                               std::string(DEFAULT_SECRETS_PASSWORD_VAR));
+}
+
+void Config::set_secrets_password_env_var(const std::string& var_name) {
+    (*config_data_)["secrets"]["password_env_var"] = var_name;
+}
+
 // ========== Sync Settings ==========
 
 bool Config::get_sync_enabled() const {
@@ -703,6 +736,15 @@ void Config::apply_defaults() {
         cfg["projects"]["default_paths"]["server"] = json::array({"java/serverJava", "serverJava", "backend", "server"});
         cfg["projects"]["default_paths"]["web"] = json::array({"webapp", "webApp", "web", "frontend", "client"});
     }
+
+    // Secrets
+    if (!cfg.contains("secrets")) cfg["secrets"] = json::object();
+    if (!cfg["secrets"].contains("store_path"))
+        cfg["secrets"]["store_path"]      = DEFAULT_SECRETS_STORE_PATH;
+    if (!cfg["secrets"].contains("kdf_iterations"))
+        cfg["secrets"]["kdf_iterations"]  = DEFAULT_SECRETS_KDF_ITER;
+    if (!cfg["secrets"].contains("password_env_var"))
+        cfg["secrets"]["password_env_var"] = DEFAULT_SECRETS_PASSWORD_VAR;
 
     // Prompt
     if (!cfg.contains("prompt")) cfg["prompt"] = json::object();

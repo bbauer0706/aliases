@@ -134,7 +134,6 @@ Test your installation:
 # Test basic functionality
 aliases-cli --help
 c --help
-uw --help
 
 # Test project navigation (if projects exist)
 c <your-project>
