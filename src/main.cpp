@@ -116,6 +116,35 @@ int handle_completion(std::shared_ptr<aliases::ProjectMapper> project_mapper, co
         std::cout << "-h" << std::endl;
         return 0;
     }
+    else if (subcommand == "config-keys") {
+        // Output all known configuration keys (one per line)
+        std::cout << "general.editor" << std::endl;
+        std::cout << "general.terminal_colors" << std::endl;
+        std::cout << "general.verbosity" << std::endl;
+        std::cout << "general.confirm_destructive_actions" << std::endl;
+        std::cout << "code.reuse_window" << std::endl;
+        std::cout << "code.fallback_behavior" << std::endl;
+        std::cout << "code.preferred_component" << std::endl;
+        std::cout << "code.vscode_flags" << std::endl;
+        std::cout << "todo.default_priority" << std::endl;
+        std::cout << "todo.default_sort" << std::endl;
+        std::cout << "todo.show_completed" << std::endl;
+        std::cout << "todo.auto_categorize" << std::endl;
+        std::cout << "env.base_port" << std::endl;
+        std::cout << "env.port_offset" << std::endl;
+        std::cout << "env.default_env" << std::endl;
+        std::cout << "secrets.store_path" << std::endl;
+        std::cout << "secrets.kdf_iterations" << std::endl;
+        std::cout << "secrets.password_env_var" << std::endl;
+        std::cout << "sync.enabled" << std::endl;
+        std::cout << "sync.remote_url" << std::endl;
+        std::cout << "sync.auto_sync" << std::endl;
+        std::cout << "sync.interval" << std::endl;
+        std::cout << "sync.method" << std::endl;
+        std::cout << "sync.todos" << std::endl;
+        std::cout << "prompt.enabled" << std::endl;
+        return 0;
+    }
     else {
         std::cerr << "Error: Unknown completion subcommand '" << subcommand << "'" << std::endl;
         return 1;

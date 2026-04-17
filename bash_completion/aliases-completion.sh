@@ -5,7 +5,156 @@
 #                                                                            #
 ##############################################################################
 
-# Tab completion for the 'c' command (aliases-cli code)
+# ---------------------------------------------------------------------------
+# Full tab-completion for the 'aliases-cli' binary
+# ---------------------------------------------------------------------------
+_aliases_cli_completion() {
+  local cur prev cword
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+  cword=$COMP_CWORD
+
+  # Top-level subcommands
+  local -r _SUBCMDS="code c env secrets todo config pwd completion version help --help --version -h -v"
+
+  # ---- word 1: complete the subcommand itself ----------------------------
+  if [[ $cword -eq 1 ]]; then
+    COMPREPLY=($(compgen -W "$_SUBCMDS" -- "$cur"))
+    return 0
+  fi
+
+  local command="${COMP_WORDS[1]}"
+
+  case "$command" in
+
+    # ---- code / c : project names with optional [sw] bracket notation ---
+    code|c)
+      if [[ -z "$_ALIASES_PROJECTS_CACHE" ]]; then
+        _ALIASES_PROJECTS_CACHE=$(aliases-cli completion projects 2>/dev/null)
+      fi
+      _complete_project_specs "$cur"
+      ;;
+
+    # ---- env : option flags ---------------------------------------------
+    env)
+      case "$prev" in
+        -e)     COMPREPLY=($(compgen -W "dev staging prod" -- "$cur")) ;;
+        -s|-i)  COMPREPLY=($(compgen -W "true false" -- "$cur")) ;;
+        -t)     COMPREPLY=($(compgen -W "http https" -- "$cur")) ;;
+        *)      COMPREPLY=($(compgen -W "-e -s -p -i -t --host -n --show --help -h" -- "$cur")) ;;
+      esac
+      ;;
+
+    # ---- secrets : subcommands + flags ----------------------------------
+    secrets)
+      if [[ $cword -eq 2 ]]; then
+        COMPREPLY=($(compgen -W "set get list delete remove rm load export rotate-master --help -h" -- "$cur"))
+      fi
+      ;;
+
+    # ---- todo : subcommands + value hints --------------------------------
+    todo)
+      if [[ $cword -eq 2 ]]; then
+        COMPREPLY=($(compgen -W "add list ls done complete remove rm delete priority prio category cat tui -i --interactive --help -h" -- "$cur"))
+      elif [[ $cword -ge 3 ]]; then
+        case "${COMP_WORDS[2]}" in
+          priority|prio) COMPREPLY=($(compgen -W "1 2 3 4 5" -- "$cur")) ;;
+        esac
+      fi
+      ;;
+
+    # ---- config : subcommands, keys, and value hints --------------------
+    config)
+      if [[ $cword -eq 2 ]]; then
+        COMPREPLY=($(compgen -W "get set list ls reset edit path sync --help -h" -- "$cur"))
+
+      elif [[ $cword -ge 3 ]]; then
+        local config_sub="${COMP_WORDS[2]}"
+
+        case "$config_sub" in
+          get|set|reset)
+            if [[ $cword -eq 3 ]]; then
+              # Fetch config keys from the binary (cached per session)
+              if [[ -z "$_ALIASES_CONFIG_KEYS_CACHE" ]]; then
+                _ALIASES_CONFIG_KEYS_CACHE=$(aliases-cli completion config-keys 2>/dev/null)
+              fi
+              COMPREPLY=($(compgen -W "$_ALIASES_CONFIG_KEYS_CACHE" -- "$cur"))
+
+            elif [[ $cword -eq 4 && "$config_sub" == "set" ]]; then
+              # Value hints keyed on the config key
+              local key="${COMP_WORDS[3]}"
+              case "$key" in
+                general.terminal_colors|general.confirm_destructive_actions|\
+                code.reuse_window|todo.show_completed|todo.auto_categorize|\
+                sync.enabled|sync.auto_sync|sync.todos|prompt.enabled)
+                  COMPREPLY=($(compgen -W "true false" -- "$cur")) ;;
+                general.verbosity)
+                  COMPREPLY=($(compgen -W "quiet normal verbose" -- "$cur")) ;;
+                code.fallback_behavior)
+                  COMPREPLY=($(compgen -W "always never auto" -- "$cur")) ;;
+                code.preferred_component)
+                  COMPREPLY=($(compgen -W "server web ask" -- "$cur")) ;;
+                todo.default_sort)
+                  COMPREPLY=($(compgen -W "priority created category alphabetical" -- "$cur")) ;;
+                env.default_env)
+                  COMPREPLY=($(compgen -W "dev staging prod" -- "$cur")) ;;
+                sync.method)
+                  COMPREPLY=($(compgen -W "git rsync file http" -- "$cur")) ;;
+                general.editor)
+                  COMPREPLY=($(compgen -W "code vim nvim nano emacs" -- "$cur")) ;;
+              esac
+            fi
+            ;;
+
+          sync)
+            if [[ $cword -eq 3 ]]; then
+              COMPREPLY=($(compgen -W "pull push status setup" -- "$cur"))
+            elif [[ $cword -eq 5 && "${COMP_WORDS[3]}" == "setup" ]]; then
+              # Optional method argument for: config sync setup <url> [method]
+              COMPREPLY=($(compgen -W "git rsync file http" -- "$cur"))
+            fi
+            ;;
+        esac
+      fi
+      ;;
+
+    # ---- pwd : flags ----------------------------------------------------
+    pwd)
+      COMPREPLY=($(compgen -W "--no-color --ps1 --help -h" -- "$cur"))
+      ;;
+
+    # ---- completion : internal subcommands ------------------------------
+    completion)
+      if [[ $cword -eq 2 ]]; then
+        COMPREPLY=($(compgen -W "projects components todo config-keys" -- "$cur"))
+      elif [[ $cword -eq 3 && "${COMP_WORDS[2]}" == "components" ]]; then
+        # complete project name for: completion components <project>
+        if [[ -z "$_ALIASES_PROJECTS_CACHE" ]]; then
+          _ALIASES_PROJECTS_CACHE=$(aliases-cli completion projects 2>/dev/null)
+        fi
+        local names=()
+        while IFS='|' read -r display_name _rest; do
+          [[ -n "$display_name" ]] && names+=("$display_name")
+        done <<< "$_ALIASES_PROJECTS_CACHE"
+        COMPREPLY=($(compgen -W "${names[*]}" -- "$cur"))
+      fi
+      ;;
+
+  esac
+  return 0
+}
+
+complete -F _aliases_cli_completion aliases-cli
+
+# ---------------------------------------------------------------------------
+# Clear caches when the completion file is (re-)sourced
+# ---------------------------------------------------------------------------
+unset _ALIASES_CONFIG_KEYS_CACHE
+
+# ---------------------------------------------------------------------------
+# Tab completion for the 'c' command (aliases-cli code shorthand)
+# ---------------------------------------------------------------------------
 _aliases_code_completion() {
   local cur prev words cword
   
@@ -153,8 +302,8 @@ _complete_project_specs() {
   return 0
 }
 
-# Register completion for the 'c' command only (as requested)
+# Register completion for the 'c' command
 complete -F _aliases_code_completion c
 
-# Clear cache on new shell or when completion is reloaded
+# Clear caches on new shell or when completion is reloaded
 unset _ALIASES_PROJECTS_CACHE
