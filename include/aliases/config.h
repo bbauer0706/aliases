@@ -61,20 +61,6 @@ public:
     std::string get_preferred_component() const; // "server", "web", "ask"
     void set_preferred_component(const std::string& component);
 
-    // ========== Todo Settings ==========
-
-    int get_todo_default_priority() const;
-    void set_todo_default_priority(int priority);
-
-    std::string get_todo_default_sort() const; // "priority", "created", "category", "alphabetical"
-    void set_todo_default_sort(const std::string& sort);
-
-    bool get_todo_show_completed() const;
-    void set_todo_show_completed(bool show);
-
-    bool get_todo_auto_categorize() const;
-    void set_todo_auto_categorize(bool enable);
-
     // ========== Project Environment Settings ==========
 
     int get_env_base_port() const;
@@ -121,12 +107,6 @@ public:
     std::string get_sync_method() const; // "git", "rsync", "http", "file"
     void set_sync_method(const std::string& method);
 
-    bool get_sync_todos() const;
-    void set_sync_todos(bool sync_todos);
-
-    int64_t get_sync_last_todo_sync() const;
-    void set_sync_last_todo_sync(int64_t timestamp);
-
     // ========== Projects Settings ==========
 
     std::vector<std::string> get_workspace_directories() const;
@@ -150,12 +130,20 @@ public:
     std::vector<PromptPathReplacement> get_prompt_path_replacements() const;
     void set_prompt_path_replacements(const std::vector<PromptPathReplacement>& replacements);
 
+    // Color for the "user@host" portion of the prompt (e.g. "bold_green").
+    // Empty string means no color / inherit terminal default.
+    std::string get_prompt_user_host_color() const;
+    void set_prompt_user_host_color(const std::string& color);
+
+    // Fallback color for the path when no path_replacement rule matches.
+    // Empty string means no color.
+    std::string get_prompt_default_path_color() const;
+    void set_prompt_default_path_color(const std::string& color);
+
     // ========== Path Management ==========
 
     std::string get_config_directory() const;
     std::string get_config_file_path() const;
-    std::string get_todos_file_path() const;
-    std::string get_todos_external_file_path() const;
     std::string get_cache_directory() const;
 
     // Test mode - allows overriding config directory for isolated testing
@@ -202,10 +190,6 @@ private:
     static constexpr const char* DEFAULT_CODE_FALLBACK = "auto";
     static constexpr const char* DEFAULT_PREFERRED_COMPONENT = "server";
 
-    static constexpr int DEFAULT_TODO_PRIORITY = 0;
-    static constexpr const char* DEFAULT_TODO_SORT = "priority";
-    static constexpr bool DEFAULT_TODO_SHOW_COMPLETED = false;
-    static constexpr bool DEFAULT_TODO_AUTO_CATEGORIZE = false;
 
     static constexpr int DEFAULT_ENV_BASE_PORT = 3000;
     static constexpr int DEFAULT_ENV_PORT_OFFSET = 100;
@@ -217,10 +201,10 @@ private:
     static constexpr int DEFAULT_SYNC_INTERVAL = 86400; // 24 hours
     static constexpr int64_t DEFAULT_SYNC_LAST_SYNC = 0;
     static constexpr const char* DEFAULT_SYNC_METHOD = "git";
-    static constexpr bool DEFAULT_SYNC_TODOS = false;
-    static constexpr int64_t DEFAULT_SYNC_LAST_TODO_SYNC = 0;
 
     static constexpr bool DEFAULT_PROMPT_ENABLED = true;
+    static constexpr const char* DEFAULT_PROMPT_USER_HOST_COLOR = "bold_green";
+    static constexpr const char* DEFAULT_PROMPT_DEFAULT_PATH_COLOR = "";
 
     static constexpr const char* DEFAULT_SECRETS_STORE_PATH   = ""; // empty = use config dir
     static constexpr int         DEFAULT_SECRETS_KDF_ITER      = 100000;

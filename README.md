@@ -1,6 +1,6 @@
 # aliases-cli
 
-> A high-performance C++ project management system with lightning-fast workspace navigation, TUI todo management, and cloud configuration sync.
+> A high-performance C++ project management system with lightning-fast workspace navigation and cloud configuration sync.
 
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -10,8 +10,7 @@
 
 - ⚡ **50x faster** than bash equivalents (1ms vs 50ms startup)
 - 🎯 **Intelligent project discovery** with shortcuts and auto-completion
-- 📝 **Interactive TUI todo manager** with ncurses support
-- 🔧 **JSON-based configuration** for maintainable project mappings
+-  **JSON-based configuration** for maintainable project mappings
 - 🌐 **Multi-component navigation** (server, web, multiple projects)
 - 🚀 **Environment setup** with automatic detection
 - 🔄 **Config sync** - Sync settings across machines (git/rsync/file/http)
@@ -43,10 +42,6 @@ c dispatch              # Go to project
 c dip                  # Use shortcuts  
 c dispatch server      # Open specific component
 
-# Interactive todo management
-aliases-cli todo       # Launch TUI mode
-aliases-cli todo add "Fix bug"  # CLI mode
-
 # Configuration management
 aliases-cli config list         # View all settings
 aliases-cli config sync push    # Push config to remote
@@ -61,37 +56,10 @@ project_env            # Auto-detect and setup
 | Command | Alias | Description | Performance |
 |---------|-------|-------------|-------------|
 | `aliases-cli code` | `c` | Navigate to projects/components | 50x faster |
-| `aliases-cli todo` | - | Interactive todo management | TUI + CLI |
 | `aliases-cli config` | - | Configuration management & sync | 40x faster |
 | `aliases-cli env` | `project_env` | Setup environment variables | 20x faster |
 
-## 📝 Todo Management
-
-Enhanced with **ncurses TUI support**:
-
-### Interactive Mode
-```bash
-aliases-cli todo       # Launch TUI interface
-```
-
-**TUI Controls:**
-- `↑↓/jk` - Navigate todos
-- `Space/Enter` - Toggle completion
-- `a` - Add new todo
-- `d` - Delete todo
-- `c` - Show/hide completed
-- `r` - Refresh
-- `q` - Quit
-
-### CLI Mode
-```bash
-aliases-cli todo add "Implement feature"     # Add todo
-aliases-cli todo list                        # List active todos  
-aliases-cli todo done 1                      # Complete todo
-aliases-cli todo priority 1 3               # Set priority (0-3)
-```
-
-## 🔄 Configuration Sync
+##  Configuration Sync
 
 Keep your configuration synchronized across multiple machines:
 
@@ -122,19 +90,16 @@ See **[Config Sync Guide](docs/user-guide/config-sync.md)** for detailed documen
 │   ├── commands/           # Command implementations
 │   │   ├── code_navigator.cpp
 │   │   ├── config_cmd.cpp    # 🆕 Config management
-│   │   ├── project_env.cpp
-│   │   └── todo.cpp          # 🆕 TUI todo manager
+│   │   └── project_env.cpp
 │   └── core/                 # Core functionality
 │       ├── config.cpp        # 🆕 Configuration system
 │       └── config_sync.cpp   # 🆕 Multi-method sync
 ├── include/               # C++ headers
 │   └── third_party/      # Dependencies
-│       ├── json.hpp      # JSON library
-│       └── ncurses/      # 🆕 Built ncurses (1.9M)
+│       └── json.hpp      # JSON library
 ├── docs/                 # 📚 Documentation
 │   ├── user-guide/       # User documentation
-│   │   ├── config-sync.md   # 🆕 Sync guide
-│   │   └── todo-management.md
+│   │   └── config-sync.md   # 🆕 Sync guide
 │   ├── development/      # Developer guides
 │   ├── integrations/     # Shell integration docs
 │   └── reference/        # API reference
@@ -241,10 +206,7 @@ c dip[s<TAB>      # Completes to dip[sw]
 
 ## 🏗️ Build System
 
-The build system automatically detects and uses:
-- **Local ncurses** (included) for TUI support
-- **System ncurses** as fallback
-- **No ncurses** (CLI-only mode)
+The build system uses direct g++ invocation:
 
 ```bash
 ./build.sh              # Release build
@@ -309,11 +271,10 @@ See existing tests in `tests/unit/` for more examples.
 | Startup time | ~50ms | ~1ms | **50x faster** |
 | Memory usage | ~8MB | ~2MB | **75% less** |
 | Binary size | N/A | 924KB | Standalone |
-| Todo operations | N/A | ~0.1ms | Instant |
 
 ## 📚 Documentation
 
-- **[User Guide](docs/user-guide/)** - Installation, todo management, config sync
+- **[User Guide](docs/user-guide/)** - Installation and config sync
 - **[Development](docs/development/)** - Building and contributing
 - **[Integrations](docs/integrations/)** - Shell integration details
 - **[Reference](docs/reference/)** - Command reference and configuration

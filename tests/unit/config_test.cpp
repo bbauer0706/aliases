@@ -177,61 +177,6 @@ TEST_F(ConfigTest, GetSetPreferredComponent) {
     EXPECT_EQ(config.get_preferred_component(), "ask");
 }
 
-// ========== Todo Settings Tests ==========
-
-TEST_F(ConfigTest, GetSetTodoDefaultPriority) {
-    auto& config = Config::instance();
-    config.initialize();
-    
-    config.set_todo_default_priority(1);
-    EXPECT_EQ(config.get_todo_default_priority(), 1);
-    
-    config.set_todo_default_priority(5);
-    EXPECT_EQ(config.get_todo_default_priority(), 5);
-    
-    config.set_todo_default_priority(10);
-    EXPECT_EQ(config.get_todo_default_priority(), 10);
-}
-
-TEST_F(ConfigTest, GetSetTodoDefaultSort) {
-    auto& config = Config::instance();
-    config.initialize();
-    
-    config.set_todo_default_sort("priority");
-    EXPECT_EQ(config.get_todo_default_sort(), "priority");
-    
-    config.set_todo_default_sort("created");
-    EXPECT_EQ(config.get_todo_default_sort(), "created");
-    
-    config.set_todo_default_sort("category");
-    EXPECT_EQ(config.get_todo_default_sort(), "category");
-    
-    config.set_todo_default_sort("alphabetical");
-    EXPECT_EQ(config.get_todo_default_sort(), "alphabetical");
-}
-
-TEST_F(ConfigTest, GetSetTodoShowCompleted) {
-    auto& config = Config::instance();
-    config.initialize();
-    
-    config.set_todo_show_completed(true);
-    EXPECT_TRUE(config.get_todo_show_completed());
-    
-    config.set_todo_show_completed(false);
-    EXPECT_FALSE(config.get_todo_show_completed());
-}
-
-TEST_F(ConfigTest, GetSetTodoAutoCategorize) {
-    auto& config = Config::instance();
-    config.initialize();
-    
-    config.set_todo_auto_categorize(true);
-    EXPECT_TRUE(config.get_todo_auto_categorize());
-    
-    config.set_todo_auto_categorize(false);
-    EXPECT_FALSE(config.get_todo_auto_categorize());
-}
-
 // ========== Environment Settings Tests ==========
 
 TEST_F(ConfigTest, GetSetEnvBasePort) {
@@ -421,24 +366,6 @@ TEST_F(ConfigTest, GetConfigFilePath) {
     EXPECT_TRUE(path.find("config.json") != std::string::npos);
 }
 
-TEST_F(ConfigTest, GetTodosFilePath) {
-    auto& config = Config::instance();
-    config.initialize();
-    
-    auto path = config.get_todos_file_path();
-    EXPECT_FALSE(path.empty());
-    EXPECT_TRUE(path.find("todos.json") != std::string::npos);
-}
-
-TEST_F(ConfigTest, GetTodosExternalFilePath) {
-    auto& config = Config::instance();
-    config.initialize();
-    
-    auto path = config.get_todos_external_file_path();
-    EXPECT_FALSE(path.empty());
-    EXPECT_TRUE(path.find("todos-external.json") != std::string::npos);
-}
-
 TEST_F(ConfigTest, GetCacheDirectory) {
     auto& config = Config::instance();
     config.initialize();
@@ -458,14 +385,12 @@ TEST_F(ConfigTest, MultipleSettingsChanges) {
     config.set_editor("vim");
     config.set_terminal_colors(false);
     config.set_verbosity("verbose");
-    config.set_todo_default_priority(7);
     config.set_env_base_port(4000);
     
     // Verify all changes
     EXPECT_EQ(config.get_editor(), "vim");
     EXPECT_FALSE(config.get_terminal_colors());
     EXPECT_EQ(config.get_verbosity(), "verbose");
-    EXPECT_EQ(config.get_todo_default_priority(), 7);
     EXPECT_EQ(config.get_env_base_port(), 4000);
 }
 

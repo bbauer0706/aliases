@@ -91,15 +91,6 @@ private:
 };
 ```
 
-### Todo Command (`todo.cpp`)
-
-**Architecture Pattern:**
-```
-Todo Command
-├── TodoManager           # Business logic and data persistence
-└── Todo                 # CLI interface and argument parsing
-```
-
 ### Command Registration
 
 Commands are registered in `main.cpp` using a simple if/else dispatch:
@@ -113,35 +104,16 @@ auto mapper = std::make_shared<ProjectMapper>();
 if (command == "code" || command == "c") {
     CodeNavigator cmd(mapper);
     return cmd.execute(args);
-} else if (command == "todo") {
-    Todo cmd(mapper);
-    return cmd.execute(args);
 } // ...
 ```
 
 ## Data Layer
 
 ### Persistence Strategy
-- **JSON files** for structured data (todos, configuration)
+- **JSON files** for structured data (configuration)
 - **File-based** for simplicity and transparency
 - **Atomic writes** to prevent corruption
 - **Location**: `~/.config/aliases-cli/`
-
-### Data Models
-
-**TodoItem Structure:**
-```cpp
-struct TodoItem {
-    int id;                              // Unique identifier
-    std::string description;             // User-facing text
-    bool completed = false;              // Completion status
-    int priority = 0;                    // 0-3 priority levels
-    std::string category;                // Optional categorization
-    std::optional<std::time_t> due_date; // Optional due date
-    std::time_t created_at;             // Creation timestamp
-    std::optional<std::time_t> completed_at; // Completion timestamp
-};
-```
 
 ## Dependency Management
 
@@ -181,7 +153,6 @@ Build Process
 
 **Key Features:**
 - Parallel compilation support
-- Automatic ncurses integration
 - Debug/Release configurations
 - Install target for system-wide access
 
@@ -218,11 +189,6 @@ class Result {
 - Lazy initialization of heavy components
 - Fast argument parsing
 - Minimal file I/O during startup
-
-### TUI Performance
-- Efficient screen updates (only redraw changed areas)
-- Optimized data structures for large todo lists
-- Responsive keyboard handling
 
 ### Memory Management
 - RAII for resource management

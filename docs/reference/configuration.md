@@ -8,7 +8,6 @@ All configuration is stored in:
 ```
 ~/.config/aliases-cli/
 ├── config.json          # Main configuration (includes project settings)
-├── todos.json          # Todo data
 └── cache/              # Cache directory
     └── sync/           # Config sync cache
 ```
@@ -85,35 +84,6 @@ aliases-cli config set code.preferred_component web
 
 ---
 
-### Todo Settings (`todo.*`)
-
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `default_priority` | integer | `0` | Default priority for new todos (0-3) |
-| `default_sort` | string | `priority` | Default sort order: `priority`, `created`, `category`, `alphabetical` |
-| `show_completed` | boolean | `false` | Include completed todos in list by default |
-| `auto_categorize` | boolean | `false` | Enable smart auto-categorization of todos |
-
-**Examples:**
-```bash
-# Set default priority for new todos
-aliases-cli config set todo.default_priority 2
-
-# Change default sort order
-aliases-cli config set todo.default_sort created
-
-# Show completed todos by default
-aliases-cli config set todo.show_completed true
-```
-
-**Priority Levels:**
-- `0`: No priority
-- `1`: Low priority (🟢)
-- `2`: Medium priority (🟡)
-- `3`: High priority (🔴)
-
----
-
 ### Environment Settings (`env.*`)
 
 | Setting | Type | Default | Description |
@@ -154,8 +124,6 @@ Project 3: base_port + (port_offset * 2) (3200)
 | `sync_interval` | integer | `86400` | Seconds between automatic syncs (default: 24 hours) |
 | `last_sync` | integer | `0` | Unix timestamp of last sync (auto-managed) |
 | `method` | string | `git` | Sync method: `git`, `rsync`, `file`, `http` |
-| `sync_todos` | boolean | `false` | Also sync todos to the remote |
-| `last_todo_sync` | integer | `0` | Unix timestamp of last todo sync (auto-managed) |
 
 **Examples:**
 ```bash
@@ -346,12 +314,6 @@ Here's a complete example `config.json`:
     "fallback_behavior": "auto",
     "preferred_component": "server"
   },
-  "todo": {
-    "default_priority": 1,
-    "default_sort": "priority",
-    "show_completed": false,
-    "auto_categorize": false
-  },
   "env": {
     "base_port": 3000,
     "port_offset": 100,
@@ -420,7 +382,7 @@ To reset a specific category, edit the config file and remove that section. It w
 
 ```bash
 aliases-cli config edit
-# Delete the "todo" section
+# Delete a section you want to reset
 # Save and exit
 
 # Rerun any command to regenerate defaults

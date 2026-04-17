@@ -53,14 +53,12 @@ target_link_libraries(aliases_core Threads::Threads)
 set(COMMAND_SOURCES
     src/commands/code_navigator.cpp
     src/commands/project_env.cpp
-    src/commands/todo.cpp
     src/commands/config_cmd.cpp
 )
 
 set(COMMAND_HEADERS
     include/aliases/commands/code_navigator.h
     include/aliases/commands/project_env.h
-    include/aliases/commands/todo.h
     include/aliases/commands/config_cmd.h
 )
 

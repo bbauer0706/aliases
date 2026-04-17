@@ -116,7 +116,6 @@ COMMAND_SOURCES=(
     "src/commands/code_navigator.cpp"
     "src/commands/project_env.cpp"
     "src/commands/secrets_cmd.cpp"
-    "src/commands/todo.cpp"
     "src/commands/config_cmd.cpp"
 )
 

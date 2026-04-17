@@ -22,7 +22,6 @@ applyTo: "tests/**"
 | `git_operations_test.cpp` | `get_git_status()`, `get_current_branch()`, branch checks |
 | `process_utils_test.cpp` | Sync/async execution, exit codes, stdout capture |
 | `project_mapper_test.cpp` | Project discovery, shorthand resolution, component paths |
-| `todo_test.cpp` | CRUD, persistence, priority/category sorting |
 | `config_sync_test.cpp` | Pull/push/status across sync methods |
 
 ## Fixture Pattern
@@ -70,7 +69,7 @@ std::filesystem::remove_all(test_dir_);
 ## Writing Good Tests
 
 - One `TEST_F` per logical behavior, not per function.
-- Name tests `VerbNoun_Condition`: `LoadsTodos_WhenFileExists`, `ReturnsError_WhenPathMissing`.
+- Name tests `VerbNoun_Condition`: `LoadsProjects_WhenFileExists`, `ReturnsError_WhenPathMissing`.
 - Test both success and failure paths.
 - Don't rely on test execution order — each test must be self-contained.
 - Avoid `system()` for file setup; prefer `std::filesystem` or `FileUtils` helpers.
@@ -78,8 +77,8 @@ std::filesystem::remove_all(test_dir_);
 ## Running Specific Tests
 
 ```bash
-./build/tests/todo_test                       # single binary
-./build/tests/todo_test --gtest_filter="*CRUD*"  # filter by pattern
+./build/tests/config_test                       # single binary
+./build/tests/config_test --gtest_filter="*Sync*"  # filter by pattern
 ./run_tests.sh 2>&1 | grep FAILED             # scan for failures
 ```
 

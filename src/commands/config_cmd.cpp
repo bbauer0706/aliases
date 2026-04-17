@@ -103,7 +103,6 @@ void ConfigCmd::show_help() const {
     std::cout << "Configuration categories:" << std::endl;
     std::cout << "  general.*      - General settings (editor, colors, verbosity)" << std::endl;
     std::cout << "  code.*         - Code command settings" << std::endl;
-    std::cout << "  todo.*         - Todo command settings" << std::endl;
     std::cout << "  env.*          - Environment command settings" << std::endl;
     std::cout << "  sync.*         - Config sync settings" << std::endl;
 }

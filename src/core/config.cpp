@@ -83,14 +83,6 @@ std::string Config::get_config_file_path() const {
     return get_config_directory() + "/config.json";
 }
 
-std::string Config::get_todos_file_path() const {
-    return get_config_directory() + "/todos.json";
-}
-
-std::string Config::get_todos_external_file_path() const {
-    return get_config_directory() + "/todos-external.json";
-}
-
 std::string Config::get_cache_directory() const {
     return get_config_directory() + "/cache";
 }
@@ -175,40 +167,6 @@ std::string Config::get_preferred_component() const {
 
 void Config::set_preferred_component(const std::string& component) {
     (*config_data_)["code"]["preferred_component"] = component;
-}
-
-// ========== Todo Settings ==========
-
-int Config::get_todo_default_priority() const {
-    return (*config_data_)["todo"]["default_priority"].get<int>();
-}
-
-void Config::set_todo_default_priority(int priority) {
-    (*config_data_)["todo"]["default_priority"] = priority;
-}
-
-std::string Config::get_todo_default_sort() const {
-    return (*config_data_)["todo"]["default_sort"].get<std::string>();
-}
-
-void Config::set_todo_default_sort(const std::string& sort) {
-    (*config_data_)["todo"]["default_sort"] = sort;
-}
-
-bool Config::get_todo_show_completed() const {
-    return (*config_data_)["todo"]["show_completed"].get<bool>();
-}
-
-void Config::set_todo_show_completed(bool show) {
-    (*config_data_)["todo"]["show_completed"] = show;
-}
-
-bool Config::get_todo_auto_categorize() const {
-    return (*config_data_)["todo"]["auto_categorize"].get<bool>();
-}
-
-void Config::set_todo_auto_categorize(bool enable) {
-    (*config_data_)["todo"]["auto_categorize"] = enable;
 }
 
 // ========== Project Environment Settings ==========
@@ -318,29 +276,6 @@ std::string Config::get_sync_method() const {
 
 void Config::set_sync_method(const std::string& method) {
     (*config_data_)["sync"]["method"] = method;
-}
-
-bool Config::get_sync_todos() const {
-    auto& value = (*config_data_)["sync"]["sync_todos"];
-    if (value.is_boolean()) {
-        return value.get<bool>();
-    } else if (value.is_string()) {
-        std::string str_val = value.get<std::string>();
-        return str_val == "true" || str_val == "1";
-    }
-    return false;
-}
-
-void Config::set_sync_todos(bool sync_todos) {
-    (*config_data_)["sync"]["sync_todos"] = sync_todos;
-}
-
-int64_t Config::get_sync_last_todo_sync() const {
-    return (*config_data_)["sync"]["last_todo_sync"].get<int64_t>();
-}
-
-void Config::set_sync_last_todo_sync(int64_t timestamp) {
-    (*config_data_)["sync"]["last_todo_sync"] = timestamp;
 }
 
 // ========== Projects Settings ==========
@@ -671,6 +606,22 @@ void Config::set_prompt_path_replacements(const std::vector<PromptPathReplacemen
     }
 }
 
+std::string Config::get_prompt_user_host_color() const {
+    return (*config_data_)["prompt"]["user_host_color"].get<std::string>();
+}
+
+void Config::set_prompt_user_host_color(const std::string& color) {
+    (*config_data_)["prompt"]["user_host_color"] = color;
+}
+
+std::string Config::get_prompt_default_path_color() const {
+    return (*config_data_)["prompt"]["default_path_color"].get<std::string>();
+}
+
+void Config::set_prompt_default_path_color(const std::string& color) {
+    (*config_data_)["prompt"]["default_path_color"] = color;
+}
+
 void Config::apply_defaults() {
     json& cfg = *config_data_;
 
@@ -689,13 +640,6 @@ void Config::apply_defaults() {
     if (!cfg["code"].contains("fallback_behavior")) cfg["code"]["fallback_behavior"] = DEFAULT_CODE_FALLBACK;
     if (!cfg["code"].contains("preferred_component")) cfg["code"]["preferred_component"] = DEFAULT_PREFERRED_COMPONENT;
 
-    // Todo
-    if (!cfg.contains("todo")) cfg["todo"] = json::object();
-    if (!cfg["todo"].contains("default_priority")) cfg["todo"]["default_priority"] = DEFAULT_TODO_PRIORITY;
-    if (!cfg["todo"].contains("default_sort")) cfg["todo"]["default_sort"] = DEFAULT_TODO_SORT;
-    if (!cfg["todo"].contains("show_completed")) cfg["todo"]["show_completed"] = DEFAULT_TODO_SHOW_COMPLETED;
-    if (!cfg["todo"].contains("auto_categorize")) cfg["todo"]["auto_categorize"] = DEFAULT_TODO_AUTO_CATEGORIZE;
-
     // Env
     if (!cfg.contains("env")) cfg["env"] = json::object();
     if (!cfg["env"].contains("base_port")) cfg["env"]["base_port"] = DEFAULT_ENV_BASE_PORT;
@@ -710,8 +654,6 @@ void Config::apply_defaults() {
     if (!cfg["sync"].contains("sync_interval")) cfg["sync"]["sync_interval"] = DEFAULT_SYNC_INTERVAL;
     if (!cfg["sync"].contains("last_sync")) cfg["sync"]["last_sync"] = DEFAULT_SYNC_LAST_SYNC;
     if (!cfg["sync"].contains("method")) cfg["sync"]["method"] = DEFAULT_SYNC_METHOD;
-    if (!cfg["sync"].contains("sync_todos")) cfg["sync"]["sync_todos"] = DEFAULT_SYNC_TODOS;
-    if (!cfg["sync"].contains("last_todo_sync")) cfg["sync"]["last_todo_sync"] = DEFAULT_SYNC_LAST_TODO_SYNC;
 
     // Projects
     if (!cfg.contains("projects")) cfg["projects"] = json::object();
@@ -749,6 +691,8 @@ void Config::apply_defaults() {
     // Prompt
     if (!cfg.contains("prompt")) cfg["prompt"] = json::object();
     if (!cfg["prompt"].contains("enabled")) cfg["prompt"]["enabled"] = DEFAULT_PROMPT_ENABLED;
+    if (!cfg["prompt"].contains("user_host_color")) cfg["prompt"]["user_host_color"] = DEFAULT_PROMPT_USER_HOST_COLOR;
+    if (!cfg["prompt"].contains("default_path_color")) cfg["prompt"]["default_path_color"] = DEFAULT_PROMPT_DEFAULT_PATH_COLOR;
     if (!cfg["prompt"].contains("path_replacements")) cfg["prompt"]["path_replacements"] = json::array();
 }
 

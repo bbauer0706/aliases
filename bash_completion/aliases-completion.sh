@@ -16,7 +16,7 @@ _aliases_cli_completion() {
   cword=$COMP_CWORD
 
   # Top-level subcommands
-  local -r _SUBCMDS="code c env secrets todo config pwd completion version help --help --version -h -v"
+  local -r _SUBCMDS="code c env secrets config pwd completion version help --help --version -h -v"
 
   # ---- word 1: complete the subcommand itself ----------------------------
   if [[ $cword -eq 1 ]]; then
@@ -53,17 +53,6 @@ _aliases_cli_completion() {
       fi
       ;;
 
-    # ---- todo : subcommands + value hints --------------------------------
-    todo)
-      if [[ $cword -eq 2 ]]; then
-        COMPREPLY=($(compgen -W "add list ls done complete remove rm delete priority prio category cat tui -i --interactive --help -h" -- "$cur"))
-      elif [[ $cword -ge 3 ]]; then
-        case "${COMP_WORDS[2]}" in
-          priority|prio) COMPREPLY=($(compgen -W "1 2 3 4 5" -- "$cur")) ;;
-        esac
-      fi
-      ;;
-
     # ---- config : subcommands, keys, and value hints --------------------
     config)
       if [[ $cword -eq 2 ]]; then
@@ -86,8 +75,8 @@ _aliases_cli_completion() {
               local key="${COMP_WORDS[3]}"
               case "$key" in
                 general.terminal_colors|general.confirm_destructive_actions|\
-                code.reuse_window|todo.show_completed|todo.auto_categorize|\
-                sync.enabled|sync.auto_sync|sync.todos|prompt.enabled)
+                code.reuse_window|\
+                sync.enabled|sync.auto_sync|prompt.enabled)
                   COMPREPLY=($(compgen -W "true false" -- "$cur")) ;;
                 general.verbosity)
                   COMPREPLY=($(compgen -W "quiet normal verbose" -- "$cur")) ;;
@@ -95,8 +84,6 @@ _aliases_cli_completion() {
                   COMPREPLY=($(compgen -W "always never auto" -- "$cur")) ;;
                 code.preferred_component)
                   COMPREPLY=($(compgen -W "server web ask" -- "$cur")) ;;
-                todo.default_sort)
-                  COMPREPLY=($(compgen -W "priority created category alphabetical" -- "$cur")) ;;
                 env.default_env)
                   COMPREPLY=($(compgen -W "dev staging prod" -- "$cur")) ;;
                 sync.method)
@@ -127,7 +114,7 @@ _aliases_cli_completion() {
     # ---- completion : internal subcommands ------------------------------
     completion)
       if [[ $cword -eq 2 ]]; then
-        COMPREPLY=($(compgen -W "projects components todo config-keys" -- "$cur"))
+        COMPREPLY=($(compgen -W "projects components config-keys" -- "$cur"))
       elif [[ $cword -eq 3 && "${COMP_WORDS[2]}" == "components" ]]; then
         # complete project name for: completion components <project>
         if [[ -z "$_ALIASES_PROJECTS_CACHE" ]]; then

@@ -11,7 +11,6 @@
 #include "aliases/commands/code_navigator.h"
 #include "aliases/commands/project_env.h"
 #include "aliases/commands/secrets_cmd.h"
-#include "aliases/commands/todo.h"
 #include "aliases/commands/config_cmd.h"
 
 namespace {
@@ -35,7 +34,6 @@ void show_help() {
     std::cout << "  code, c          VS Code project navigation" << std::endl;
     std::cout << "  env              Setup project environment variables" << std::endl;
     std::cout << "  secrets          Encrypted secrets / env-var manager" << std::endl;
-    std::cout << "  todo             Todo list manager with CLI and TUI modes" << std::endl;
     std::cout << "  config           Manage aliases-cli configuration" << std::endl;
     std::cout << "  pwd              Print formatted working directory (for PS1)" << std::endl;
     std::cout << "  completion       Generate completion data (for bash completion)" << std::endl;
@@ -47,8 +45,6 @@ void show_help() {
     std::cout << "Examples:" << std::endl;
     std::cout << "  " << PROGRAM_NAME << " code urm          # Open project 'urm' in VS Code" << std::endl;
     std::cout << "  " << PROGRAM_NAME << " env -p 3000       # Setup environment with port 3000" << std::endl;
-    std::cout << "  " << PROGRAM_NAME << " todo              # Launch interactive todo TUI" << std::endl;
-    std::cout << "  " << PROGRAM_NAME << " todo add \"Fix bug\" # Add a new todo via CLI" << std::endl;
     std::cout << "  " << PROGRAM_NAME << " config list       # View all configuration" << std::endl;
 }
 
@@ -56,7 +52,7 @@ int handle_completion(std::shared_ptr<aliases::ProjectMapper> project_mapper, co
     if (args.empty()) {
         std::cerr << "Error: completion command requires a subcommand" << std::endl;
         std::cerr << "Usage: " << PROGRAM_NAME << " completion <subcommand>" << std::endl;
-        std::cerr << "Subcommands: projects, components, todo" << std::endl;
+        std::cerr << "Subcommands: projects, components" << std::endl;
         return 1;
     }
     
@@ -95,27 +91,6 @@ int handle_completion(std::shared_ptr<aliases::ProjectMapper> project_mapper, co
         
         return 0;
     }
-    else if (subcommand == "todo") {
-        // Output todo command completions
-        std::cout << "add" << std::endl;
-        std::cout << "list" << std::endl;
-        std::cout << "ls" << std::endl;
-        std::cout << "done" << std::endl;
-        std::cout << "complete" << std::endl;
-        std::cout << "remove" << std::endl;
-        std::cout << "rm" << std::endl;
-        std::cout << "delete" << std::endl;
-        std::cout << "priority" << std::endl;
-        std::cout << "prio" << std::endl;
-        std::cout << "category" << std::endl;
-        std::cout << "cat" << std::endl;
-        std::cout << "tui" << std::endl;
-        std::cout << "-i" << std::endl;
-        std::cout << "--interactive" << std::endl;
-        std::cout << "--help" << std::endl;
-        std::cout << "-h" << std::endl;
-        return 0;
-    }
     else if (subcommand == "config-keys") {
         // Output all known configuration keys (one per line)
         std::cout << "general.editor" << std::endl;
@@ -126,10 +101,6 @@ int handle_completion(std::shared_ptr<aliases::ProjectMapper> project_mapper, co
         std::cout << "code.fallback_behavior" << std::endl;
         std::cout << "code.preferred_component" << std::endl;
         std::cout << "code.vscode_flags" << std::endl;
-        std::cout << "todo.default_priority" << std::endl;
-        std::cout << "todo.default_sort" << std::endl;
-        std::cout << "todo.show_completed" << std::endl;
-        std::cout << "todo.auto_categorize" << std::endl;
         std::cout << "env.base_port" << std::endl;
         std::cout << "env.port_offset" << std::endl;
         std::cout << "env.default_env" << std::endl;
@@ -141,7 +112,6 @@ int handle_completion(std::shared_ptr<aliases::ProjectMapper> project_mapper, co
         std::cout << "sync.auto_sync" << std::endl;
         std::cout << "sync.interval" << std::endl;
         std::cout << "sync.method" << std::endl;
-        std::cout << "sync.todos" << std::endl;
         std::cout << "prompt.enabled" << std::endl;
         return 0;
     }
@@ -182,8 +152,8 @@ int main(int argc, char* argv[]) {
         std::cerr << "Warning: Failed to initialize configuration, using defaults" << std::endl;
     }
 
-    // Auto-sync if enabled and needed (only for config and todo commands)
-    if (command == "config" || command == "todo") {
+    // Auto-sync if enabled and needed (only for config command)
+    if (command == "config") {
         aliases::ConfigSync sync_manager;
         sync_manager.auto_sync_if_needed();
     }
@@ -212,10 +182,6 @@ int main(int argc, char* argv[]) {
             aliases::commands::SecretsCmd secrets_cmd(project_mapper);
             return secrets_cmd.execute(subcommand_args);
         }
-        else if (command == "todo") {
-            aliases::commands::Todo todo_cmd(project_mapper);
-            return todo_cmd.execute(subcommand_args);
-        }
         else if (command == "config") {
             aliases::commands::ConfigCmd config_cmd(project_mapper);
             return config_cmd.execute(subcommand_args);
@@ -226,15 +192,30 @@ int main(int argc, char* argv[]) {
         else if (command == "pwd") {
             bool no_color = false;
             bool ps1_mode = false;
+            bool user_host_color_mode = false;
             for (const auto& arg : subcommand_args) {
-                if (arg == "--no-color") no_color = true;
-                if (arg == "--ps1")      ps1_mode = true;
+                if (arg == "--no-color")         no_color = true;
+                if (arg == "--ps1")              ps1_mode = true;
+                if (arg == "--user-host-color")  user_host_color_mode = true;
             }
             if (config.get_prompt_enabled()) {
                 bool colors = !no_color && config.get_terminal_colors();
+                if (user_host_color_mode) {
+                    // Output just the ANSI code for the user@host color (for use in PS1).
+                    if (colors) {
+                        std::string code = aliases::PwdFormatter::ansi_code(
+                            config.get_prompt_user_host_color());
+                        if (!code.empty()) {
+                            std::cout << (ps1_mode ? aliases::PwdFormatter::ps1_wrap(code) : code);
+                        }
+                    }
+                    return 0;
+                }
                 auto replacements = config.get_prompt_path_replacements();
                 std::string cwd = aliases::get_current_directory();
-                std::cout << aliases::PwdFormatter::format(cwd, replacements, colors, ps1_mode) << std::endl;
+                std::cout << aliases::PwdFormatter::format(
+                    cwd, replacements, colors, ps1_mode,
+                    config.get_prompt_default_path_color()) << std::endl;
             } else {
                 std::cout << aliases::get_current_directory() << std::endl;
             }

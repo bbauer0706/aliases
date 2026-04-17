@@ -32,17 +32,20 @@ public:
     /**
      * Format `path` using the supplied replacement rules.
      *
-     * @param path         Absolute path to format (typically $PWD / getcwd()).
-     * @param replacements Ordered list of path-replacement rules from config.
-     * @param colors       When true, emit ANSI color codes around the label.
-     * @param ps1_mode     When true, wrap ANSI codes in \001...\002 so bash
-     *                     does not count them toward the line length.
+     * @param path               Absolute path to format (typically $PWD / getcwd()).
+     * @param replacements       Ordered list of path-replacement rules from config.
+     * @param colors             When true, emit ANSI color codes around the label.
+     * @param ps1_mode           When true, wrap ANSI codes in \001...\002 so bash
+     *                           does not count them toward the line length.
+     * @param default_path_color Color name (e.g. "bold_blue") applied to the path
+     *                           when no replacement rule matches. Empty = no color.
      */
     static std::string format(
         const std::string& path,
         const std::vector<PromptPathReplacement>& replacements,
         bool colors,
-        bool ps1_mode
+        bool ps1_mode,
+        const std::string& default_path_color = ""
     );
 
     /** Return the ANSI escape sequence for the given color name, or "". */

@@ -2,7 +2,7 @@
 
 ## What This Project Is
 
-`aliases-cli` is a high-performance C++ CLI tool (50× faster than bash equivalents) for developer workspace management. It handles project discovery, environment setup, todo management, config sync, and shell prompt formatting across multi-project workspaces.
+`aliases-cli` is a high-performance C++ CLI tool (50× faster than bash equivalents) for developer workspace management. It handles project discovery, environment setup, config sync, and shell prompt formatting across multi-project workspaces.
 
 ## Architecture
 
@@ -21,7 +21,6 @@ src/commands/              → One class per top-level CLI subcommand
   code_navigator.cpp       → Opens project in VS Code with component awareness
   config_cmd.cpp           → get/set/list/reset config keys
   project_env.cpp          → Exports project environment variables to shell
-  todo.cpp                 → TodoManager: CRUD + TUI + sync for todo items
 ```
 
 **Dependency Direction**: commands → core. Core modules do not depend on commands.
@@ -36,21 +35,20 @@ src/commands/              → One class per top-level CLI subcommand
 ## Configuration
 
 - Singleton: `Config::instance()` — call `initialize()` once at startup
-- JSON sections: `general`, `code`, `todo`, `env`, `sync`, `projects`, `prompt`
+- JSON sections: `general`, `code`, `env`, `sync`, `projects`, `prompt`
 - Typed getters/setters for every key; call `save()` to persist changes
 - Tests use `Config::set_test_config_directory(path)` for isolation
-- Todos stored separately at `~/.config/aliases-cli/todos.json`
 
 ## Build & Test Commands
 
 ```bash
-make              # Release build → build/aliases-cli
-make debug        # Debug build with -g -O0
-make clean        # Remove build/
-make rebuild      # clean + release
-make install      # build + cp to /usr/local/bin
-./run_tests.sh    # Build and run all unit tests
-./build.sh -h     # Full build flag reference
+./build.sh            # Release build → build/aliases-cli
+./build.sh -d         # Debug build with -g -O0
+./build.sh -c         # Clean build directory
+./build.sh -c && ./build.sh  # Clean + release
+./build.sh -i         # Build + install to /usr/local/bin
+./run_tests.sh        # Build and run all unit tests
+./build.sh -h         # Full build flag reference
 ```
 
 Build uses **direct g++ invocation** (not cmake at runtime). CMakeLists.txt exists but `build.sh` is primary. Version string injected via `-DVERSION=$(git describe --tags)`.

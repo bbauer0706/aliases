@@ -15,7 +15,7 @@ applyTo: ["src/**/*.cpp", "src/**/*.h", "include/**/*.h"]
 | Entity | Style | Example |
 |---|---|---|
 | Class / Struct / Enum | PascalCase | `ProjectMapper`, `ComponentType` |
-| Public/private function | snake_case | `get_project_info()`, `load_todos()` |
+| Public/private function | snake_case | `get_project_info()`, `execute_command()` |
 | Member variable | trailing underscore | `mapper_`, `config_data_` |
 | Local variable & param | snake_case | `project_name`, `base_port` |
 | Constant / macro | ALL_CAPS | `PROGRAM_NAME`, `VERSION` |

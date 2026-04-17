@@ -70,13 +70,32 @@ _aliases_prompt_pwd() {
 # ---------------------------------------------------------------------------
 # aliases_setup_prompt
 #   Installs a PS1 that uses _aliases_prompt_pwd for the directory portion.
+#   The user@host color is read from aliases-cli config (prompt.user_host_color).
 #   Safe to call multiple times (idempotent).
 # ---------------------------------------------------------------------------
 aliases_setup_prompt() {
-    # \001 / \002 around \u, \h, \$ are already handled by bash; only the
-    # dynamically-generated portion (from _aliases_prompt_pwd --ps1) needs
-    # the \001...\002 wrapping, which the CLI handles internally.
-    PS1='\u@\h:$(_aliases_prompt_pwd)\$ '
+    local color_prompt=
+    case "$TERM" in
+        xterm-color|*-256color) color_prompt=yes ;;
+    esac
+    if [ -n "$force_color_prompt" ]; then
+        if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+            color_prompt=yes
+        fi
+    fi
+
+    if [ "$color_prompt" = yes ] && [ -n "$_ALIASES_CLI_PATH" ]; then
+        # Ask the CLI for the ps1-wrapped ANSI code for user@host and reset.
+        local uh_color reset
+        uh_color=$("$_ALIASES_CLI_PATH" pwd --user-host-color --ps1 2>/dev/null)
+        reset=$(printf '\001\033[0m\002')
+        PS1="${uh_color}\u@\h${reset}:\$(_aliases_prompt_pwd)\$ "
+    elif [ "$color_prompt" = yes ]; then
+        # Fallback: bold green (matches Debian default) when CLI is unavailable.
+        PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:$(_aliases_prompt_pwd)\$ '
+    else
+        PS1='\u@\h:$(_aliases_prompt_pwd)\$ '
+    fi
     export PS1
 }
 

@@ -52,7 +52,8 @@ std::string PwdFormatter::format(
     const std::string& path,
     const std::vector<PromptPathReplacement>& replacements,
     bool colors,
-    bool ps1_mode)
+    bool ps1_mode,
+    const std::string& default_path_color)
 {
     // Helper: resolve a rule to its expanded prefix string.
     // Returns "" for invalid rules (both or neither of env_var/path set).
@@ -95,6 +96,7 @@ std::string PwdFormatter::format(
         // suffix is either empty or starts with '/'.
 
         std::string label_text;
+        std::string suffix_text;
         if (colors) {
             std::string code = ansi_code(rule.color);
             std::string rst  = ansi_reset();
@@ -103,24 +105,48 @@ std::string PwdFormatter::format(
             } else {
                 label_text = code + rule.label + rst;
             }
+            // Apply default_path_color to the suffix, if configured.
+            if (!suffix.empty() && !default_path_color.empty()) {
+                std::string dcode = ansi_code(default_path_color);
+                if (!dcode.empty()) {
+                    if (ps1_mode) {
+                        suffix_text = ps1_wrap(dcode) + suffix + ps1_wrap(rst);
+                    } else {
+                        suffix_text = dcode + suffix + rst;
+                    }
+                }
+            }
         } else {
             label_text = rule.label;
         }
 
-        return label_text + suffix;
+        return label_text + (suffix_text.empty() ? suffix : suffix_text);
     }
 
-    // No rule matched – apply ~ substitution for $HOME.
+    // No rule matched – apply ~ substitution for $HOME, then optionally color.
+    std::string result;
     const char* home_env = std::getenv("HOME");
     if (home_env && *home_env != '\0') {
         std::string home(home_env);
         while (home.size() > 1 && home.back() == '/') home.pop_back();
         if (path.rfind(home, 0) == 0) {
-            return "~" + path.substr(home.size());
+            result = "~" + path.substr(home.size());
         }
     }
+    if (result.empty()) result = path;
 
-    return path;
+    if (colors && !default_path_color.empty()) {
+        std::string code = ansi_code(default_path_color);
+        std::string rst  = ansi_reset();
+        if (!code.empty()) {
+            if (ps1_mode) {
+                return ps1_wrap(code) + result + ps1_wrap(rst);
+            } else {
+                return code + result + rst;
+            }
+        }
+    }
+    return result;
 }
 
 } // namespace aliases

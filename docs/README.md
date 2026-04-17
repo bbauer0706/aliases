@@ -7,7 +7,6 @@ Welcome to the aliases-cli documentation. This directory contains comprehensive 
 ### 📘 [User Guide](user-guide/)
 Complete guides for end users:
 - **[Installation](user-guide/installation.md)** - Setup and configuration
-- **[Todo Management](user-guide/todo-management.md)** - TUI and CLI todo system
 - **[Config Sync](user-guide/config-sync.md)** - Sync configuration across machines
 - **Tab Completion** - Smart completion system *(coming soon)*
 
@@ -35,8 +34,6 @@ Complete API and command references:
 ### New Users
 1. Start with **[Installation Guide](user-guide/installation.md)**
 2. Read **[Command Reference](reference/commands.md)** for basic usage
-3. Try **[Todo Management](user-guide/todo-management.md)** for the TUI interface
-
 ### Developers  
 1. Check **[Building Guide](development/building.md)** for compilation
 2. Review **[Architecture](development/architecture.md)** for code structure and patterns
@@ -44,22 +41,19 @@ Complete API and command references:
 4. Review **[Bash Integration](integrations/bash-integration.md)** for shell features
 
 ### Power Users
-1. Explore **[Todo Management](user-guide/todo-management.md)** for advanced features
-2. Review **[Bash Aliases](integrations/bash-aliases.md)** for utility integration
+1. Review **[Bash Aliases](integrations/bash-aliases.md)** for utility integration
 3. Check configuration guides for customization
 
 ## 📋 Feature Overview
 
 ### Core Commands
 - **`c` (code)** - Lightning-fast project navigation (50x faster than bash)
-- **`todo`** - Interactive TUI todo management with ncurses
 - **`config`** - Configuration management with multi-method sync (git/rsync/file/http)
 - **`env`** - Automatic environment variable setup
 
 ### Key Features
 - **🎯 Smart Discovery** - Auto-detect projects and components
 - **⚡ Performance** - 50x faster than bash equivalents  
-- **📝 TUI Interface** - Full ncurses todo management
 - **🔧 JSON Configuration** - Maintainable project mappings
 - **🌐 Multi-Component** - Server/web component support
 - **🔄 Parallel Operations** - Efficient workspace updates
@@ -67,13 +61,11 @@ Complete API and command references:
 ## 🏗️ Architecture Overview
 
 ### Hybrid Design
-- **C++ Core** - Performance-critical operations (navigation, updates, todo)
+- **C++ Core** - Performance-critical operations (navigation, updates)
 - **Bash Integration** - Shell environment management and utilities
 - **JSON Configuration** - Human-readable project mappings
-- **ncurses TUI** - Rich interactive interfaces
 
 ### Dependencies
-- **Built-in ncurses** - Included for TUI support (1.9M)
 - **nlohmann/json** - Header-only JSON library
 - **C++17 Standard** - Modern C++ features
 - **Bash Integration** - For environment variable management
@@ -83,7 +75,6 @@ Complete API and command references:
 | Operation | Bash Version | C++ Version | Improvement |
 |-----------|-------------|-------------|-------------|
 | Project navigation | ~50ms | ~1ms | **50x faster** |
-| Todo operations | N/A | ~0.1ms | **Instant** |
 | Config operations | ~20ms | ~0.5ms | **40x faster** |
 | Memory usage | ~8MB | ~2MB | **75% less** |
 
@@ -92,7 +83,6 @@ Complete API and command references:
 ### Finding Information
 - **Commands** → [Command Reference](reference/commands.md)
 - **Installation** → [Installation Guide](user-guide/installation.md)  
-- **Todo System** → [Todo Management](user-guide/todo-management.md)
 - **Building** → [Building Guide](development/building.md)
 - **Shell Integration** → [Integrations](integrations/)
 
@@ -117,7 +107,6 @@ Every command includes built-in help:
 ```bash
 aliases-cli --help              # Global help
 aliases-cli code --help         # Code command help
-aliases-cli todo --help         # Todo command help
 aliases-cli config --help       # Config command help
 ```
 
@@ -126,7 +115,6 @@ aliases-cli config --help       # Config command help
 # Most common operations
 c <project>                     # Navigate to project
 uw                             # Update all workspaces
-aliases-cli todo               # Launch todo TUI
 project_env                    # Setup environment
 ```
 
@@ -134,7 +122,6 @@ project_env                    # Setup environment
 
 ### ✅ Complete
 - Installation guide
-- Todo management guide  
 - Config sync guide (NEW)
 - Building guide
 - Command reference (updated with config sync)

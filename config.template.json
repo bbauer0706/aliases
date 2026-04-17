@@ -11,12 +11,6 @@
     "fallback_behavior": "auto",
     "preferred_component": "server"
   },
-  "todo": {
-    "default_priority": 0,
-    "default_sort": "priority",
-    "show_completed": false,
-    "auto_categorize": false
-  },
   "env": {
     "base_port": 3000,
     "port_offset": 100,
@@ -28,9 +22,7 @@
     "auto_sync": false,
     "sync_interval": 86400,
     "last_sync": 0,
-    "method": "git",
-    "sync_todos": false,
-    "last_todo_sync": 0
+    "method": "git"
   },
   "projects": {
     "workspace_directories": ["~/workspaces"],
@@ -45,11 +37,13 @@
   },
   "prompt": {
     "enabled": true,
+    "user_host_color": "bold_green",
+    "default_path_color": "bold_blue",
     "path_replacements": [
       {
         "env_var": "INSTROOT",
         "label": "INSTROOT",
-        "color": "bold_cyan"
+        "color": "bold_yellow"
       },
       {
         "path": "/opt/company/platform",

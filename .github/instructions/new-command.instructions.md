@@ -160,7 +160,7 @@ if [ -f "\$ALIASES_DIR/bash_integration/my-cmd.sh" ]; then
 fi
 ```
 
-If the command only prints data (like `todo list`), no wrapper needed and no install.sh change needed.
+If the command only prints data (like `config list`), no wrapper needed and no install.sh change needed.
 
 ## 8. Documentation
 

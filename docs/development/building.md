@@ -168,7 +168,6 @@ build/
 **Commands (`src/commands/`):**
 - `code_navigator.cpp` - Project navigation command
 - `project_env.cpp` - Environment setup command
-- `todo.cpp` - Todo management CLI interface
 - `config_cmd.cpp` - Configuration management command
 
 **Main Entry Point:**

@@ -140,9 +140,6 @@ c <your-project>
 
 # Test tab completion
 c <TAB><TAB>
-
-# Test todo functionality
-aliases-cli todo --help
 ```
 
 ## Troubleshooting

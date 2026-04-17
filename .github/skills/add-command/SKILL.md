@@ -19,7 +19,7 @@ Implements a complete new CLI subcommand in aliases-cli, following established c
 ### Phase 1 — Understand the Request
 
 1. Clarify (if not obvious): command name, purpose, CLI syntax, required config keys, whether it needs bash integration.
-2. Study the closest existing command as a reference (e.g., `src/commands/todo.cpp` for complex state, `src/commands/config_cmd.cpp` for simple dispatch).
+2. Study the closest existing command as a reference (e.g., `src/commands/secrets_cmd.cpp` for complex state, `src/commands/config_cmd.cpp` for simple dispatch).
 3. Read the dispatch table in `src/main.cpp` to understand registration.
 
 ### Phase 2 — Design
@@ -58,7 +58,7 @@ Fix any compile errors or test failures before proceeding.
 
 - [new-command instructions](../../.github/instructions/new-command.instructions.md) — full step checklist
 - [src/main.cpp](../../src/main.cpp) — dispatch table pattern
-- [src/commands/todo.cpp](../../src/commands/todo.cpp) — complex command reference
+- [src/commands/secrets_cmd.cpp](../../src/commands/secrets_cmd.cpp) — complex command reference
 - [src/commands/config_cmd.cpp](../../src/commands/config_cmd.cpp) — simple dispatch reference
 - [include/aliases/config.h](../../include/aliases/config.h) — config key pattern
 - [build.sh](../../build.sh) — where to add source files

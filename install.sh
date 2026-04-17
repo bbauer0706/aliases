@@ -193,7 +193,8 @@ ALIASES_DIR="$ALIASES_DIR"
 ##############################################################################
 
 # Fast C++ workspace management aliases
-alias aliases-cli='\$ALIASES_DIR/aliases-cli'
+alias aliases='\$ALIASES_DIR/aliases-cli'
+alias a='\$ALIASES_DIR/aliases-cli'
 alias c='\$ALIASES_DIR/aliases-cli code'
 
 ##############################################################################
@@ -208,9 +209,6 @@ if [ -d "\$ALIASES_DIR/bash_aliases" ]; then
     fi
   done
 fi
-
-# Mark that C++ aliases are active (no legacy navigation/update sourcing)
-export USE_CPP_ALIASES=true
 
 # Load bash completion for aliases-cli
 if [ -f "\$ALIASES_DIR/bash_completion/aliases-completion.sh" ]; then
@@ -438,28 +436,6 @@ PYTHON_SCRIPT
             fi
         else
             # Fallback: Just check for critical missing fields
-            if ! grep -q "sync_todos" "$CONFIG_DIR/config.json"; then
-                status "Adding missing sync_todos field..."
-                # Create backup
-                cp "$CONFIG_DIR/config.json" "$CONFIG_DIR/config.json.bak"
-
-                # Add sync_todos field using sed (simple append to sync section)
-                sed -i '/"method": "git"/a\    "sync_todos": false,' "$CONFIG_DIR/config.json"
-                success "Added sync_todos field (backup at config.json.bak)"
-            fi
-
-            if ! grep -q "last_todo_sync" "$CONFIG_DIR/config.json"; then
-                status "Adding missing last_todo_sync field..."
-                # Create backup if not already done
-                if [[ ! -f "$CONFIG_DIR/config.json.bak" ]]; then
-                    cp "$CONFIG_DIR/config.json" "$CONFIG_DIR/config.json.bak"
-                fi
-
-                # Add last_todo_sync field
-                sed -i '/"sync_todos":/a\    "last_todo_sync": 0,' "$CONFIG_DIR/config.json"
-                success "Added last_todo_sync field (backup at config.json.bak)"
-            fi
-
             if ! grep -q '"ignore"' "$CONFIG_DIR/config.json"; then
                 status "Adding missing projects.ignore field..."
                 # Create backup if not already done
@@ -570,7 +546,6 @@ echo -e "${BLUE}Available Commands:${NC}"
 echo -e "  • ${GREEN}c <project>${NC}    - Navigate to project (50x faster than bash)"
 echo -e "  • ${GREEN}env${NC}            - Setup project environment variables"
 echo -e "  • ${GREEN}secrets${NC}        - Encrypted secrets / env-var manager"
-echo -e "  • ${GREEN}todo${NC}           - Todo list manager"
 echo -e "  • ${GREEN}config${NC}         - Manage configuration"
 echo -e "  • ${GREEN}pwd${NC}            - Print formatted working directory (for PS1)"
 echo -e "  • ${GREEN}completion${NC}     - Generate bash completion data"

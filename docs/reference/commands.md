@@ -18,7 +18,6 @@ aliases-cli [GLOBAL_OPTIONS] <command> [COMMAND_OPTIONS] [ARGUMENTS]
 | Command | Alias | Description |
 |---------|-------|-------------|
 | [`code`](#code-command) | `c` | Navigate to projects and components |
-| [`todo`](#todo-command) | - | Manage todos (TUI + CLI) |
 | [`config`](#config-command) | - | Manage aliases-cli configuration |
 | [`env`](#env-command) | `project_env` | Setup environment variables |
 | [`secrets`](#secrets-command) | - | Encrypted env-var secrets manager |
@@ -132,192 +131,6 @@ c dispatch[<TAB>            # Shows bracket completions
 
 ---
 
-## `todo` Command
-
-Manage todos with both TUI and CLI interfaces.
-
-### Syntax
-
-```bash
-aliases-cli todo [SUBCOMMAND] [OPTIONS] [ARGUMENTS]
-```
-
-### Subcommands
-
-| Subcommand | Description |
-|------------|-------------|
-| *(none)* | Launch interactive TUI mode |
-| [`add`](#todo-add) | Add new todo |
-| [`list`](#todo-list) | List todos |
-| [`done`](#todo-done) | Mark todo as completed |
-| [`remove`](#todo-remove) | Remove todo |
-| [`priority`](#todo-priority) | Set todo priority |
-| [`category`](#todo-category) | Set todo category |
-| [`tui`](#todo-tui) | Launch TUI mode explicitly |
-
-### Global Options
-
-| Option | Description |
-|--------|-------------|
-| `--help`, `-h` | Show help for todo command |
-| `--interactive`, `-i` | Launch TUI mode |
-
----
-
-### `todo add`
-
-Add a new todo item.
-
-#### Syntax
-```bash
-aliases-cli todo add <DESCRIPTION>
-```
-
-#### Examples
-```bash
-aliases-cli todo add "Fix authentication bug"
-aliases-cli todo add Implement user dashboard
-aliases-cli todo add "Review PR #123"
-```
-
----
-
-### `todo list`
-
-List todo items.
-
-#### Syntax
-```bash
-aliases-cli todo list [OPTIONS]
-# Alias: aliases-cli todo ls
-```
-
-#### Examples
-```bash
-aliases-cli todo list           # List active todos
-aliases-cli todo ls             # Short form
-```
-
-#### Output Format
-```
-Active todos:
-
-#3 !!! [bug] Fix authentication system     (red)
-#1 !! [feature] Implement user dashboard   (yellow)
-#2 ! Complete documentation               (blue)
-```
-
----
-
-### `todo done`
-
-Mark a todo as completed.
-
-#### Syntax
-```bash
-aliases-cli todo done <ID>
-# Alias: aliases-cli todo complete <ID>
-```
-
-#### Examples
-```bash
-aliases-cli todo done 1         # Complete todo #1
-aliases-cli todo complete 3     # Alternative command
-```
-
----
-
-### `todo remove`
-
-Remove a todo permanently.
-
-#### Syntax
-```bash
-aliases-cli todo remove <ID>
-# Aliases: rm, delete
-```
-
-#### Examples
-```bash
-aliases-cli todo remove 1       # Remove todo #1
-aliases-cli todo rm 2           # Short form
-aliases-cli todo delete 3       # Alternative
-```
-
----
-
-### `todo priority`
-
-Set todo priority level.
-
-#### Syntax
-```bash
-aliases-cli todo priority <ID> <PRIORITY>
-# Alias: aliases-cli todo prio <ID> <PRIORITY>
-```
-
-#### Priority Levels
-| Level | Indicator | Description |
-|-------|-----------|-------------|
-| `0` | *(none)* | No priority |
-| `1` | ! | Low priority (blue) |
-| `2` | !! | Medium priority (yellow) |
-| `3` | !!! | High priority (red) |
-
-#### Examples
-```bash
-aliases-cli todo priority 1 3   # Set high priority
-aliases-cli todo prio 2 0       # Remove priority
-```
-
----
-
-### `todo category`
-
-Set todo category.
-
-#### Syntax
-```bash
-aliases-cli todo category <ID> <CATEGORY>
-# Alias: aliases-cli todo cat <ID> <CATEGORY>
-```
-
-#### Examples
-```bash
-aliases-cli todo category 1 bug     # Set category
-aliases-cli todo cat 2 feature      # Short form
-```
-
----
-
-### `todo tui`
-
-Launch interactive TUI mode.
-
-#### Syntax
-```bash
-aliases-cli todo tui
-# Aliases: aliases-cli todo -i, aliases-cli todo --interactive
-```
-
-#### TUI Controls
-
-| Key | Action |
-|-----|--------|
-| `↑↓` or `j k` | Navigate todos |
-| `Space/Enter` | Toggle completion |
-| `n` | Add new todo |
-| `e` | Edit selected todo |
-| `x` or `Del` | Delete todo |
-| `d` or `→` | Increase priority |
-| `a` or `←` | Decrease priority |
-| `o` | Toggle sort mode (also re-sorts) |
-| `c` | Toggle completed view |
-| `r` | Refresh from disk |
-| `q` | Quit |
-
----
-
 ## `config` Command
 
 Manage aliases-cli configuration.
@@ -355,7 +168,6 @@ aliases-cli config get general.editor
 # Set a value
 aliases-cli config set general.editor vim
 aliases-cli config set code.reuse_window false
-aliases-cli config set todo.default_priority 2
 
 # Edit configuration file
 aliases-cli config edit
@@ -377,7 +189,6 @@ aliases-cli config sync status
 
 - `general.*` - General settings (editor, colors, verbosity)
 - `code.*` - Code command settings
-- `todo.*` - Todo command settings
 - `env.*` - Environment command settings
 - `sync.*` - Config sync settings
 - `projects.*` - Project mappings and workspace settings
@@ -455,10 +266,6 @@ $ c nonexistent
 ✗ Project 'nonexistent' not found
 Available projects: dispatch, urm, project3
 
-# Invalid todo ID  
-$ aliases-cli todo done 999
-✗ Todo not found
-
 # Git repository issues
 $ uw project-with-conflicts
 ✗ project-with-conflicts: Merge conflicts detected
@@ -469,8 +276,7 @@ $ uw project-with-conflicts
 
 Commands read configuration from:
 - `~/.config/aliases-cli/config.json` - Main configuration including project mappings
-- `~/.config/aliases-cli/todos.json` - Todo data storage
-- `~/.config/aliases-cli/secrets.enc` - Encrypted secrets store (created by `secrets set`)
+- `~/.config/aliases-cli/secrets.enc` - Encrypted secrets store
 
 ---
 

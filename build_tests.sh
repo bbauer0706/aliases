@@ -117,7 +117,6 @@ CORE_SOURCES=(
     "src/core/common.cpp"
     "src/core/config.cpp"
     "src/core/config_sync.cpp"
-    "src/commands/todo.cpp"
     "src/core/secrets_store.cpp"
     "src/commands/secrets_cmd.cpp"
 )

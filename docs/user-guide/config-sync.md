@@ -110,7 +110,6 @@ aliases-cli config set sync.auto_sync true
 - `config.json` - All settings including project mappings
 
 **What Doesn't Get Synced:**
-- `todos.json` - Kept local (task lists are machine-specific)
 - `cache/` - Temporary files
 
 ### Rsync Method
@@ -303,7 +302,6 @@ aliases-cli config set sync.auto_sync false
 3. **Enable Auto-Sync**: Keep configs in sync automatically
 4. **Short Sync Intervals**: Use 1-4 hour intervals for active development
 5. **Manual Push After Big Changes**: Don't rely only on auto-sync for important changes
-6. **Keep Todos Local**: The system intentionally doesn't sync todos.json
 
 ## Security Considerations
 

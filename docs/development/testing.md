@@ -13,10 +13,7 @@ The project uses **Google Test (gtest)** v1.15.2 for unit and integration testin
 ./run_tests.sh
 
 # Run a specific test binary directly
-./build/tests/todo_test
-
-# Run with test filter
-./build/tests/todo_test --gtest_filter="*CRUD*"
+./build/tests/config_test
 ```
 
 ## Test Structure
@@ -30,8 +27,7 @@ tests/
 │   ├── file_utils_test.cpp    # Path utilities, file I/O, directory listing
 │   ├── git_operations_test.cpp # get_git_status(), branch detection
 │   ├── process_utils_test.cpp # Sync/async execution, exit codes, output capture
-│   ├── project_mapper_test.cpp # Project discovery, shorthand resolution, component paths
-│   └── todo_test.cpp          # CRUD, persistence, priority/category sorting
+│   └── project_mapper_test.cpp # Project discovery, shorthand resolution, component paths
 └── integration/               # Integration tests (future)
 ```
 
@@ -228,7 +224,6 @@ Planned for testing:
 - ⏳ Git operations
 - ⏳ Configuration management
 - ⏳ Config sync
-- ⏳ Todo management
 
 ## CI/CD Integration
 
