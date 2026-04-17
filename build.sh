@@ -152,7 +152,11 @@ $CXX $CXXFLAGS $INCLUDES -c "$MAIN_SOURCE" -o "$MAIN_OBJECT"
 # Link everything together
 print_status "Linking executable..."
 BINARY_PATH="$BUILD_DIR/aliases-cli"
-$CXX $CXXFLAGS -o "$BINARY_PATH" "$MAIN_OBJECT" "${COMMAND_OBJECTS[@]}" "${CORE_OBJECTS[@]}" -pthread -lssl -lcrypto
+# -static-libgcc -static-libstdc++ bundles the C++ runtime into the binary so it
+# runs on machines with older libstdc++ versions (e.g. GLIBCXX < 3.4.32).
+# glibc itself is still linked dynamically; to run on machines with glibc < 2.38
+# build on the oldest target machine instead.
+$CXX $CXXFLAGS -static-libgcc -static-libstdc++ -o "$BINARY_PATH" "$MAIN_OBJECT" "${COMMAND_OBJECTS[@]}" "${CORE_OBJECTS[@]}" -pthread -lssl -lcrypto
 
 if [[ $? -ne 0 ]]; then
     print_error "Linking failed"
