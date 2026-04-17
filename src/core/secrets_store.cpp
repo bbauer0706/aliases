@@ -1,8 +1,10 @@
 #include "aliases/secrets_store.h"
 
+#ifdef ALIASES_HAVE_OPENSSL
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <openssl/crypto.h>
+#endif
 
 #include <algorithm>
 #include <cstring>
@@ -17,6 +19,8 @@ namespace aliases {
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
+
+#ifdef ALIASES_HAVE_OPENSSL
 
 static constexpr uint8_t  FILE_MAGIC[4] = {'A', 'L', 'S', '1'};
 static constexpr uint32_t FILE_VERSION  = 1;
@@ -314,5 +318,55 @@ Result<std::string> SecretsStore::decrypt(const std::string& blob) const {
     return Result<std::string>::success_with(
         std::string(reinterpret_cast<char*>(plaintext.data()), total_len));
 }
+
+#else // ALIASES_HAVE_OPENSSL not defined — stub implementations
+
+static const char* NO_OPENSSL_MSG =
+    "secrets: this binary was built without OpenSSL support. "
+    "Rebuild on a machine with libssl-dev installed.";
+
+SecretsStore::SecretsStore(const std::string& store_path, int kdf_iterations)
+    : store_path_(store_path), kdf_iterations_(kdf_iterations) {}
+
+SecretsStore::~SecretsStore() {}
+
+bool SecretsStore::store_exists() const {
+    struct stat st;
+    return stat(store_path_.c_str(), &st) == 0;
+}
+
+Result<bool> SecretsStore::unlock(const std::string&) {
+    return Result<bool>::error(NO_OPENSSL_MSG);
+}
+
+Result<bool> SecretsStore::save() {
+    return Result<bool>::error(NO_OPENSSL_MSG);
+}
+
+Result<bool> SecretsStore::set(const std::string&, const std::string&) {
+    return Result<bool>::error(NO_OPENSSL_MSG);
+}
+
+Result<std::string> SecretsStore::get(const std::string&) const {
+    return Result<std::string>::error(NO_OPENSSL_MSG);
+}
+
+Result<bool> SecretsStore::remove(const std::string&) {
+    return Result<bool>::error(NO_OPENSSL_MSG);
+}
+
+StringVector SecretsStore::list_names() const { return {}; }
+
+StringMap SecretsStore::get_all() const { return {}; }
+
+Result<std::string> SecretsStore::encrypt(const std::string&) const {
+    return Result<std::string>::error(NO_OPENSSL_MSG);
+}
+
+Result<std::string> SecretsStore::decrypt(const std::string&) const {
+    return Result<std::string>::error(NO_OPENSSL_MSG);
+}
+
+#endif // ALIASES_HAVE_OPENSSL
 
 } // namespace aliases

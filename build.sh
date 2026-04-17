@@ -81,6 +81,26 @@ else
     CXXFLAGS="$CXXFLAGS -O3 -DNDEBUG"
 fi
 
+# ---------------------------------------------------------------------------
+# Optional dependency: OpenSSL (required only for the 'secrets' command)
+# Auto-detected; build succeeds without it but 'aliases secrets' will print
+# an error explaining the binary was built without encryption support.
+# ---------------------------------------------------------------------------
+LDFLAGS_EXTRA=""
+if pkg-config --exists openssl 2>/dev/null; then
+    OPENSSL_CFLAGS=$(pkg-config --cflags openssl)
+    OPENSSL_LIBS=$(pkg-config --libs openssl)
+    CXXFLAGS="$CXXFLAGS -DALIASES_HAVE_OPENSSL $OPENSSL_CFLAGS"
+    LDFLAGS_EXTRA="$OPENSSL_LIBS"
+    print_status "OpenSSL found — secrets command enabled"
+elif [[ -f /usr/include/openssl/evp.h ]]; then
+    CXXFLAGS="$CXXFLAGS -DALIASES_HAVE_OPENSSL"
+    LDFLAGS_EXTRA="-lssl -lcrypto"
+    print_status "OpenSSL found (fallback detection) — secrets command enabled"
+else
+    print_status "OpenSSL not found — secrets command will be disabled at runtime"
+fi
+
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -156,7 +176,7 @@ BINARY_PATH="$BUILD_DIR/aliases-cli"
 # runs on machines with older libstdc++ versions (e.g. GLIBCXX < 3.4.32).
 # glibc itself is still linked dynamically; to run on machines with glibc < 2.38
 # build on the oldest target machine instead.
-$CXX $CXXFLAGS -static-libgcc -static-libstdc++ -o "$BINARY_PATH" "$MAIN_OBJECT" "${COMMAND_OBJECTS[@]}" "${CORE_OBJECTS[@]}" -pthread -lssl -lcrypto
+$CXX $CXXFLAGS -static-libgcc -static-libstdc++ -o "$BINARY_PATH" "$MAIN_OBJECT" "${COMMAND_OBJECTS[@]}" "${CORE_OBJECTS[@]}" -pthread $LDFLAGS_EXTRA
 
 if [[ $? -ne 0 ]]; then
     print_error "Linking failed"

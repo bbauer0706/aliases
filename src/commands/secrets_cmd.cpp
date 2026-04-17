@@ -2,14 +2,27 @@
 #include "aliases/config.h"
 #include "aliases/common.h"
 
-#include <openssl/crypto.h>
-
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <termios.h>
 #include <unistd.h>
+
+namespace {
+// Portable secure memory wipe — prevents the compiler from optimising away the
+// zeroing of sensitive buffers (passwords, secrets).  Uses explicit_bzero when
+// available (glibc ≥ 2.25 / musl), otherwise a volatile memset.
+inline void secure_zero(void* ptr, std::size_t len) {
+#if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 25))
+    explicit_bzero(ptr, len);
+#else
+    volatile unsigned char* p = static_cast<volatile unsigned char*>(ptr);
+    while (len--) *p++ = 0;
+#endif
+}
+} // anonymous namespace
 
 namespace aliases::commands {
 
@@ -83,7 +96,7 @@ int SecretsCmd::cmd_set(const StringVector& args) {
 
     auto store = open_store();
     auto unlock = store.unlock(password);
-    OPENSSL_cleanse(password.data(), password.size());
+    secure_zero(password.data(), password.size());
 
     if (!unlock) {
         std::cerr << "Error: " << unlock.error_message << "\n";
@@ -91,7 +104,7 @@ int SecretsCmd::cmd_set(const StringVector& args) {
     }
 
     store.set(name, value);
-    OPENSSL_cleanse(value.data(), value.size());
+    secure_zero(value.data(), value.size());
 
     auto saved = store.save();
     if (!saved) {
@@ -120,13 +133,13 @@ int SecretsCmd::cmd_get(const StringVector& args) {
 
     auto store = open_store();
     if (!store.store_exists()) {
-        OPENSSL_cleanse(password.data(), password.size());
+        secure_zero(password.data(), password.size());
         std::cerr << "Error: no secrets store found — use 'aliases secrets set' first\n";
         return 1;
     }
 
     auto unlock = store.unlock(password);
-    OPENSSL_cleanse(password.data(), password.size());
+    secure_zero(password.data(), password.size());
 
     if (!unlock) {
         std::cerr << "Error: " << unlock.error_message << "\n";
@@ -152,13 +165,13 @@ int SecretsCmd::cmd_list() {
 
     auto store = open_store();
     if (!store.store_exists()) {
-        OPENSSL_cleanse(password.data(), password.size());
+        secure_zero(password.data(), password.size());
         std::cout << "(no secrets stored)\n";
         return 0;
     }
 
     auto unlock = store.unlock(password);
-    OPENSSL_cleanse(password.data(), password.size());
+    secure_zero(password.data(), password.size());
 
     if (!unlock) {
         std::cerr << "Error: " << unlock.error_message << "\n";
@@ -204,13 +217,13 @@ int SecretsCmd::cmd_delete(const StringVector& args) {
 
     auto store = open_store();
     if (!store.store_exists()) {
-        OPENSSL_cleanse(password.data(), password.size());
+        secure_zero(password.data(), password.size());
         std::cerr << "Error: no secrets store found\n";
         return 1;
     }
 
     auto unlock = store.unlock(password);
-    OPENSSL_cleanse(password.data(), password.size());
+    secure_zero(password.data(), password.size());
 
     if (!unlock) {
         std::cerr << "Error: " << unlock.error_message << "\n";
@@ -243,13 +256,13 @@ int SecretsCmd::cmd_load(const StringVector& args) {
 
     auto store = open_store();
     if (!store.store_exists()) {
-        OPENSSL_cleanse(password.data(), password.size());
+        secure_zero(password.data(), password.size());
         // Empty store — output nothing; not an error for scripted use.
         return 0;
     }
 
     auto unlock = store.unlock(password);
-    OPENSSL_cleanse(password.data(), password.size());
+    secure_zero(password.data(), password.size());
 
     if (!unlock) {
         std::cerr << "Error: " << unlock.error_message << "\n";
@@ -305,7 +318,7 @@ int SecretsCmd::cmd_rotate_master() {
 
     auto store = open_store();
     auto unlock_result = store.unlock(old_password);
-    OPENSSL_cleanse(old_password.data(), old_password.size());
+    secure_zero(old_password.data(), old_password.size());
 
     if (!unlock_result) {
         std::cerr << "Error: " << unlock_result.error_message << "\n";
@@ -321,8 +334,8 @@ int SecretsCmd::cmd_rotate_master() {
     const std::string new_pw2 = prompt_password("Confirm new master password: ");
 
     if (new_pw1 != new_pw2) {
-        OPENSSL_cleanse(const_cast<char*>(new_pw1.data()), new_pw1.size());
-        OPENSSL_cleanse(const_cast<char*>(new_pw2.data()), new_pw2.size());
+        secure_zero(const_cast<char*>(new_pw1.data()), new_pw1.size());
+        secure_zero(const_cast<char*>(new_pw2.data()), new_pw2.size());
         std::cerr << "Error: passwords do not match\n";
         return 1;
     }
@@ -341,8 +354,8 @@ int SecretsCmd::cmd_rotate_master() {
     // Create a fresh store instance, unlock with new password, re-populate, save.
     auto new_store = open_store();
     auto new_unlock = new_store.unlock(new_pw1);
-    OPENSSL_cleanse(const_cast<char*>(new_pw1.data()), new_pw1.size());
-    OPENSSL_cleanse(const_cast<char*>(new_pw2.data()), new_pw2.size());
+    secure_zero(const_cast<char*>(new_pw1.data()), new_pw1.size());
+    secure_zero(const_cast<char*>(new_pw2.data()), new_pw2.size());
 
     if (!new_unlock) {
         std::cerr << "Error: failed to initialise new store: "
