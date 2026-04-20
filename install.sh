@@ -193,7 +193,7 @@ ALIASES_DIR="$ALIASES_DIR"
 ##############################################################################
 
 # Fast C++ workspace management aliases
-alias aliases='\$ALIASES_DIR/aliases-cli'
+alias aliases-cli='\$ALIASES_DIR/aliases-cli'
 alias a='\$ALIASES_DIR/aliases-cli'
 alias c='\$ALIASES_DIR/aliases-cli code'
 
