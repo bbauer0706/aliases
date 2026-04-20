@@ -136,3 +136,114 @@ prjpull() {
     echo "Updating autobuild scripts in ${dir} ..."
     git -C "${dir}" pull
 }
+
+# ---------------------------------------------------------------------------
+# relink — repoint an _Actual.jar symlink in $INSTROOT/bin to a dev jar.
+#
+# Usage:  relink <jar-file>
+#
+# <jar-file> is a versioned .jar in the current directory (e.g. ~/link).
+# The prefix is extracted as everything before the first '-', then the
+# matching  $INSTROOT/bin/<prefix>_Actual.jar  symlink is repointed to it.
+#
+# Example:
+#   cd ~/link
+#   relink SyncroTessErpClient-main-dev.jar
+#   → ln -sf ~/link/SyncroTessErpClient-main-dev.jar \
+#             $INSTROOT/bin/SyncroTessErpClient_Actual.jar
+# ---------------------------------------------------------------------------
+relink() {
+    local jar_file="${1:-}"
+    if [[ -z "${jar_file}" ]]; then
+        echo "relink: usage: relink <jar-file>" >&2
+        return 1
+    fi
+
+    if [[ -z "${INSTROOT}" ]]; then
+        echo "relink: INSTROOT is not set." >&2
+        return 1
+    fi
+
+    # Resolve to absolute path
+    local abs_path
+    case "${jar_file}" in
+        /*) abs_path="${jar_file}" ;;
+        *)  abs_path="${PWD}/${jar_file}" ;;
+    esac
+
+    if [[ ! -f "${abs_path}" ]]; then
+        echo "relink: file not found: ${abs_path}" >&2
+        return 1
+    fi
+
+    # Extract the name prefix (everything before the first '-')
+    local bn
+    bn="$(basename "${abs_path}")"
+    local prefix="${bn%%-*}"
+
+    local actual="${INSTROOT}/bin/${prefix}_Actual.jar"
+    if [[ ! -e "${actual}" && ! -L "${actual}" ]]; then
+        echo "relink: no matching _Actual.jar for prefix '${prefix}' in ${INSTROOT}/bin" >&2
+        echo "  Expected: ${actual}" >&2
+        return 1
+    fi
+
+    echo "Relinking: ${actual}"
+    echo "       -> ${abs_path}"
+    ln -sf "${abs_path}" "${actual}"
+}
+
+_relink_completion() {
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    COMPREPLY=( $(compgen -f -X '!*.jar' -- "${cur}") )
+}
+complete -o filenames -F _relink_completion relink
+
+# ---------------------------------------------------------------------------
+# stpush — SCP a dev jar to ~/link on the Syncrotess VM and relink it there.
+#
+# Usage:  stpush <jar-file>
+#
+# Copies <jar-file> to ${SYNCROTESS_REMOTE_HOST:-p23-cmpl09}:~/link/, then
+# runs the equivalent of 'relink' on the remote via SSH:
+#   ln -sf ~/link/<jar>  $INSTROOT/bin/<prefix>_Actual.jar
+#
+# Override defaults with env vars:
+#   SYNCROTESS_REMOTE_HOST   (default: p23-cmpl09)
+#   SYNCROTESS_REMOTE_USER   (default: current $USER)
+# ---------------------------------------------------------------------------
+stpush() {
+    local jar_file="${1:-}"
+    if [[ -z "${jar_file}" ]]; then
+        echo "stpush: usage: stpush <jar-file>" >&2
+        return 1
+    fi
+
+    local remote_host="${SYNCROTESS_REMOTE_HOST:-p23-cmpl09}"
+    local remote_user="${SYNCROTESS_REMOTE_USER:-${USER}}"
+    local remote_target="${remote_user}@${remote_host}"
+
+    # Resolve to absolute path
+    local abs_path
+    case "${jar_file}" in
+        /*) abs_path="${jar_file}" ;;
+        *)  abs_path="${PWD}/${jar_file}" ;;
+    esac
+
+    if [[ ! -f "${abs_path}" ]]; then
+        echo "stpush: file not found: ${abs_path}" >&2
+        return 1
+    fi
+
+    local bn
+    bn="$(basename "${abs_path}")"
+
+    echo "Pushing ${bn} → ${remote_target}:~/link/"
+    scp "${abs_path}" "${remote_target}:~/link/"
+}
+
+_stpush_completion() {
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    COMPREPLY=( $(compgen -f -X '!*.jar' -- "${cur}") )
+}
+complete -o filenames -F _stpush_completion stpush
