@@ -81,6 +81,7 @@ _prjbuilds_find_script() {
 }
 
 # Core dispatcher.  Usage: _prjbuild_run <autobuild-cmd> [version] [extra-flags...]
+# If cmd is empty, script is sourced without cmd parameter.
 _prjbuild_run() {
     local cmd="$1"; shift
 
@@ -101,7 +102,11 @@ _prjbuild_run() {
     # remember the version so follow-up commands don't need to repeat it
     [[ "${cmd}" == "prjsel" ]] && export PRJBUILDS_VERSION="${version}"
 
-    source "${script}" "${cmd}" "$@"
+    if [[ -n "${cmd}" ]]; then
+        source "${script}" "${cmd}" "$@"
+    else
+        source "${script}" "$@"
+    fi
 }
 
 # --- public commands ---
@@ -110,7 +115,7 @@ prjsel()      { _prjbuild_run prjsel     "$@"; }
 prjserver()   { _prjbuild_run server     "$@"; }
 prjsst()      { _prjbuild_run sst        "$@"; }
 prjwebtools() { _prjbuild_run webtools   "$@"; }
-prjupdate()   { _prjbuild_run update     "$@"; }
+prjupdate()   { _prjbuild_run update         "$@"; }
 prjstart()    { _prjbuild_run start      "$@"; }
 prjstop()     { _prjbuild_run stop       "$@"; }
 prjtest()     { _prjbuild_run test       "$@"; }
