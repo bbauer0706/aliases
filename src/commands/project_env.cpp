@@ -34,16 +34,12 @@ EnvironmentConfig ProjectEnv::parse_arguments(const StringVector& args) {
     for (size_t i = 0; i < args.size(); ++i) {
         if ((args[i] == "-e") && i + 1 < args.size()) {
             config.profile = args[++i];
-        } else if ((args[i] == "-s") && i + 1 < args.size()) {
-            config.use_https = (args[++i] == "true");
         } else if ((args[i] == "-p") && i + 1 < args.size()) {
             config.starting_port = std::stoi(args[++i]);
         } else if ((args[i] == "-i") && i + 1 < args.size()) {
             config.introspection = (args[++i] == "true");
         } else if ((args[i] == "-t") && i + 1 < args.size()) {
             config.transfer_mode = args[++i];
-        } else if ((args[i] == "--host") && i + 1 < args.size()) {
-            config.host = args[++i];
         } else if (args[i] == "-n") {
             config.no_port_offset = true;
         }
@@ -58,12 +54,10 @@ void ProjectEnv::show_help() const {
     std::cout << std::endl;
     std::cout << "Options:" << std::endl;
     std::cout << "  -e ENV      Set environment profile (dev, prod, etc). Default: dev" << std::endl;
-    std::cout << "  -s FLAG     Enable/disable HTTPS (true/false). Default: false" << std::endl;
     std::cout << "  -p PORT     Starting port number to check availability. Default: 3000" << std::endl;
     std::cout << "  -i FLAG     Enable/disable GraphQL introspection (true/false). Default: true" << std::endl;
     std::cout << "  -t MODE     Set transfer mode (plain, compressed, etc). Default: plain" << std::endl;
     std::cout << "  -n          No port offset - use same port for WEB and GQL services" << std::endl;
-    std::cout << "  --host HOST Set hostname override (useful for WSL). Default: auto-detect" << std::endl;
     std::cout << "  --show      Display current environment variables and exit" << std::endl;
     std::cout << "  -h, --help  Display this help message and exit" << std::endl;
 }
@@ -73,9 +67,8 @@ void ProjectEnv::show_environment_variables() const {
     std::cout << "------------------------------------" << std::endl;
     
     const char* env_vars[] = {
-        "PROJECT_NAME", "PROFILE", "GQLHOST", "WEBPORT", "GQLPORT", 
-        "SBPORT", "NDEBUGPORT", "GQLNUMBEROFMAXRETRIES", "GQLSERVERPATH",
-        "GQLHTTPS", "GQLINTROSPECTION", "GQLTRANSFERMODE"
+        "PROJECT_NAME", "PROFILE", "WEBPORT", "GQLPORT",
+        "GQLNUMBEROFMAXRETRIES", "GQLINTROSPECTION", "GQLTRANSFERMODE"
     };
     
     for (const char* var : env_vars) {
@@ -92,12 +85,8 @@ ProjectEnvironment ProjectEnv::setup_project_environment(const EnvironmentConfig
     // Get project name from current directory
     env.project_name = get_project_name_from_directory();
     env.profile = config.profile;
-    env.gql_https = config.use_https;
     env.gql_introspection = config.introspection;
     env.gql_transfer_mode = config.transfer_mode;
-
-    // Get hostname
-    env.gql_host = config.host.empty() ? get_current_hostname() : config.host;
 
     // Calculate ports
     int project_offset = get_project_port_offset(env.project_name);
@@ -113,9 +102,6 @@ ProjectEnvironment ProjectEnv::setup_project_environment(const EnvironmentConfig
         env.gql_port = env.web_port + 1;
     }
     
-    env.sb_port = env.web_port + 2;
-    env.ndebug_port = env.web_port + 3;
-    
     return env;
 }
 
@@ -123,14 +109,9 @@ void ProjectEnv::export_environment_variables(const ProjectEnvironment& env) {
     // Output shell commands that can be eval'ed by the calling shell
     std::cout << "export PROJECT_NAME='" << env.project_name << "';" << std::endl;
     std::cout << "export PROFILE='" << env.profile << "';" << std::endl;
-    std::cout << "export GQLHOST='" << env.gql_host << "';" << std::endl;
     std::cout << "export WEBPORT=" << env.web_port << ";" << std::endl;
     std::cout << "export GQLPORT=" << env.gql_port << ";" << std::endl;
-    std::cout << "export SBPORT=" << env.sb_port << ";" << std::endl;
-    std::cout << "export NDEBUGPORT=" << env.ndebug_port << ";" << std::endl;
     std::cout << "export GQLNUMBEROFMAXRETRIES=" << env.gql_max_retries << ";" << std::endl;
-    std::cout << "export GQLSERVERPATH='" << env.gql_server_path << "';" << std::endl;
-    std::cout << "export GQLHTTPS=" << (env.gql_https ? "true" : "false") << ";" << std::endl;
     std::cout << "export GQLINTROSPECTION=" << (env.gql_introspection ? "true" : "false") << ";" << std::endl;
     std::cout << "export GQLTRANSFERMODE='" << env.gql_transfer_mode << "';" << std::endl;
 }
@@ -198,11 +179,6 @@ int ProjectEnv::find_available_port(int starting_port, bool is_server_dir) const
 
 bool ProjectEnv::is_port_available(int port) const {
     return ProcessUtils::is_port_available(port);
-}
-
-std::string ProjectEnv::get_current_hostname() const {
-    auto result = ProcessUtils::execute("hostname");
-    return result.success() ? trim(result.stdout_output) : "localhost";
 }
 
 void ProjectEnv::print_success_message(const ProjectEnvironment& env) const {

@@ -7,25 +7,18 @@ namespace aliases::commands {
 
 struct EnvironmentConfig {
     std::string profile = "dev";
-    bool use_https = false;
     int starting_port = 3000;
     bool introspection = true;
     std::string transfer_mode = "plain";
     bool no_port_offset = false;
-    std::string host = "";
 };
 
 struct ProjectEnvironment {
     std::string project_name;
     std::string profile;
-    std::string gql_host;
     int web_port = 0;
     int gql_port = 0;
-    int sb_port = 0;
-    int ndebug_port = 0;
     int gql_max_retries = 3;
-    std::string gql_server_path = "/graphql";
-    bool gql_https = false;
     bool gql_introspection = true;
     std::string gql_transfer_mode = "plain";
 };
@@ -64,7 +57,6 @@ private:
     void setup_new_terminal();
     
     // Utility functions
-    std::string get_current_hostname() const;
     void print_success_message(const ProjectEnvironment& env) const;
 };
 
