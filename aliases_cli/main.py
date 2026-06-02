@@ -97,10 +97,13 @@ cli.add_command(secrets_group)
 @click.option("--no-color", is_flag=True, help="Disable ANSI colour codes.")
 @click.option("--ps1", is_flag=True, help="Wrap codes in \\001..\\002 for readline safety.")
 @click.option("--user-host-color", "user_host_color", is_flag=True, help="Return user@host colour code only.")
-def pwd_command(no_color: bool, ps1: bool, user_host_color: bool) -> None:
+@click.option("--user-host", "user_host", is_flag=True, help="Return formatted user@host string (with label replacements applied).")
+def pwd_command(no_color: bool, ps1: bool, user_host_color: bool, user_host: bool) -> None:
     """Print a formatted working directory path for use in PS1."""
     cfg = Config.instance()
-    if user_host_color:
+    if user_host:
+        click.echo(pwd_formatter.get_user_host_label(cfg, no_color=no_color, ps1=ps1), nl=False, color=True)
+    elif user_host_color:
         click.echo(pwd_formatter.get_user_host_color(cfg, ps1=ps1), nl=False, color=True)
     else:
         click.echo(pwd_formatter.format_pwd(cfg, no_color=no_color, ps1=ps1), nl=False, color=True)

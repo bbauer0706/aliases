@@ -13,6 +13,8 @@
 #       "enabled": true,
 #       "user_host_color": "bold_green",
 #       "default_path_color": "bold_blue",
+#       "host_replacements": [{"hostname": "host123, "label": "prod"}],
+#       "user_replacements": [{"username": "user123", "label": "user"}],
 #       "path_replacements": [
 #         { "env_var": "INSTROOT", "label": "INSTROOT", "color": "bold_yellow" }
 #       ]
@@ -27,6 +29,13 @@ _aliases_prompt_pwd() {
 }
 
 # ---------------------------------------------------------------------------
+# _aliases_prompt_user_host – formatted user@host for PS1 (with label rules)
+# ---------------------------------------------------------------------------
+_aliases_prompt_user_host() {
+    aliases-cli pwd --user-host --ps1 2>/dev/null || printf '%s@%s' "$USER" "$HOSTNAME"
+}
+
+# ---------------------------------------------------------------------------
 # aliases_setup_prompt – install the custom PS1
 # ---------------------------------------------------------------------------
 aliases_setup_prompt() {
@@ -37,12 +46,9 @@ aliases_setup_prompt() {
         return
     fi
 
-    local uh_color reset
-    uh_color=$(aliases-cli pwd --user-host-color --ps1 2>/dev/null)
-    reset=$'\001\033[0m\002'
-
     # Build PS1: user@host:path$
-    PS1="${uh_color}\\u@\\h${reset}:\$(_aliases_prompt_pwd)\\$ "
+    # _aliases_prompt_user_host handles colour + label replacements
+    PS1="\$(_aliases_prompt_user_host):\$(_aliases_prompt_pwd)\\$ "
     export PS1
 }
 

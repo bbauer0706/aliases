@@ -50,6 +50,12 @@
         "label": "PLATFORM",
         "color": "bold_yellow"
       }
+    ],
+    "host_replacements": [
+      { "hostname": "my-long-hostname.example.com", "label": "dev" }
+    ],
+    "user_replacements": [
+      { "username": "firstname.lastname", "label": "fl" }
     ]
   },
   "secrets": {

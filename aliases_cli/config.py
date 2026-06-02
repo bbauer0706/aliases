@@ -61,6 +61,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "user_host_color": "bold_green",
         "default_path_color": "bold_blue",
         "path_replacements": [],
+        "host_replacements": [],
+        "user_replacements": [],
     },
 }
 

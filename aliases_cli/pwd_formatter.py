@@ -1,13 +1,15 @@
 """PS1 / prompt path formatting.
 
-Reads ``prompt.path_replacements`` from config and applies the first matching
-rule to the current working directory.  ANSI escape codes can be wrapped in
-``\\001...\\002`` (readline non-printing delimiters) for use inside PS1.
+Reads ``prompt.path_replacements``, ``prompt.host_replacements``, and
+``prompt.user_replacements`` from config and applies the first matching rule.
+ANSI escape codes can be wrapped in ``\\001...\\002`` (readline non-printing
+delimiters) for use inside PS1.
 """
 
 from __future__ import annotations
 
 import os
+import socket
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -114,3 +116,46 @@ def get_user_host_color(config: "Config", *, ps1: bool = False) -> str:
     color_name: str = config.get("prompt.user_host_color", "bold_green")
     code = ANSI_COLORS.get(color_name, "")
     return _wrap(code, ps1) if code else ""
+
+
+def get_user_host_label(config: "Config", *, no_color: bool = False, ps1: bool = False) -> str:
+    """Return the formatted ``user@host`` string with optional label replacements.
+
+    Checks ``prompt.user_replacements`` and ``prompt.host_replacements`` in config.
+    Each rule is a dict with ``username``/``hostname`` (to match) and ``label`` (to display).
+    First matching rule wins.  Falls back to the real username/hostname if no rule matches.
+
+    Example config::
+
+        "host_replacements": [{"hostname": "ip-10-80-1-32", "label": "prod"}],
+        "user_replacements": [{"username": "benedikt.bauer", "label": "bb"}]
+    """
+    real_user: str = os.environ.get("USER") or os.environ.get("LOGNAME") or ""
+    try:
+        real_host: str = socket.gethostname()
+    except OSError:
+        real_host = ""
+
+    # Resolve user label
+    user_label = real_user
+    for rule in config.get("prompt.user_replacements", []):
+        if rule.get("username") == real_user:
+            user_label = rule.get("label", real_user)
+            break
+
+    # Resolve host label
+    host_label = real_host
+    for rule in config.get("prompt.host_replacements", []):
+        if rule.get("hostname") == real_host:
+            host_label = rule.get("label", real_host)
+            break
+
+    use_color = config.get("general.terminal_colors", True) and not no_color
+    if use_color:
+        color_name: str = config.get("prompt.user_host_color", "bold_green")
+        code = ANSI_COLORS.get(color_name, "")
+        open_code = _wrap(code, ps1) if code else ""
+        close_code = _wrap(_RESET, ps1) if code else ""
+        return f"{open_code}{user_label}@{host_label}{close_code}"
+
+    return f"{user_label}@{host_label}"
