@@ -20,23 +20,21 @@ from aliases_cli.config import Config, DEFAULT_CONFIG
 # Data files bundled inside the Python package under aliases_cli/data/
 _DATA_ROOT = files("aliases_cli") / "data"
 
-# Files to copy: (package-relative source, destination relative to config_dir)
-_SHELL_FILES = [
-    ("shell/project-env.sh", "shell/project-env.sh"),
-    ("shell/prompt.sh", "shell/prompt.sh"),
-    ("shell/secrets.sh", "shell/secrets.sh"),
-]
-_ALIAS_FILES = [
-    ("bash_aliases/basic.ali.sh", "bash_aliases/basic.ali.sh"),
-    ("bash_aliases/clear.ali.sh", "bash_aliases/clear.ali.sh"),
-    ("bash_aliases/git.ali.sh", "bash_aliases/git.ali.sh"),
-    ("bash_aliases/maven.ali.sh", "bash_aliases/maven.ali.sh"),
-    ("bash_aliases/npm.ali.sh", "bash_aliases/npm.ali.sh"),
-    ("bash_aliases/syncrotess.ali.sh", "bash_aliases/syncrotess.ali.sh"),
-]
-_COMPLETION_FILES = [
-    ("bash_completion/aliases-completion.sh", "bash_completion/aliases-completion.sh"),
-]
+# Subdirectories under data/ whose contents are copied to config_dir.
+# config.template.json at the root is handled separately.
+_COPY_SUBDIRS = ("shell", "bash_aliases", "bash_completion")
+
+
+def _discover_data_files() -> list[tuple[str, str]]:
+    """Return (src_rel, dest_rel) pairs for every file in the data subdirs."""
+    result: list[tuple[str, str]] = []
+    with as_file(_DATA_ROOT) as data_path:
+        for subdir in _COPY_SUBDIRS:
+            for f in sorted((data_path / subdir).iterdir()):
+                if f.is_file():
+                    rel = f"{subdir}/{f.name}"
+                    result.append((rel, rel))
+    return result
 
 
 @click.command("setup")
@@ -78,7 +76,7 @@ def setup_command(force: bool, update: bool) -> None:
         click.echo(f"  Config updated with new defaults: {config_file}")
 
     # ── 3. Copy shell integration, aliases, completion ─────────────────────
-    all_files = _SHELL_FILES + _ALIAS_FILES + _COMPLETION_FILES
+    all_files = _discover_data_files()
     for src_rel, dest_rel in all_files:
         dest = config_dir / dest_rel
         dest.parent.mkdir(parents=True, exist_ok=True)
