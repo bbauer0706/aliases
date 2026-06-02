@@ -1,4 +1,4 @@
-# Local configurations
+# Local alias/config overrides (never commit machine-specific files)
 .local.ali.sh
 local.ali.sh
 mappings.local.sh
@@ -15,96 +15,67 @@ mappings.json
 *.tmp
 
 ##############################################################################
-# C++ Build Artifacts
+# Python
 ##############################################################################
 
-# Build directories
+# Byte-compiled / optimised / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Distribution / packaging
+dist/
 build/
-build-*/
-cmake-build-*/
+*.egg-info/
+*.egg
+MANIFEST
+wheels/
+pip-wheel-metadata/
 
-# Compiled binaries (allow build/aliases-cli for distribution)
-# aliases-cli  # Commented out to allow committing the built binary
-*.exe
-*.out
-*.app
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.python-version
 
-# Object files
-*.o
-*.obj
-*.lo
-*.slo
-*.ko
+# uv
+.uv/
 
-# Libraries
-*.a
-*.la
-*.lib
-*.so
-*.so.*
-*.dylib
-*.dll
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
 
-# CMake
-CMakeCache.txt
-CMakeFiles/
-CMakeScripts/
-cmake_install.cmake
-compile_commands.json
-CTestTestfile.cmake
-Testing/
-_deps/
+# pytest / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+*.coveragerc
+nosetests.xml
+test-results/
 
-# Make
-Makefile.in
-.deps/
-.dirstamp
+# mypy / type checkers
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
 
 # Profiling
 *.prof
-gmon.out
 
-# Static analysis
-cppcheck-report.xml
-*.cppcheck
-
-# Clang
-.clang_complete
-.clangd/
-
-# GCC
-*.gch
-*.pch
-
-# Intel C++ Compiler
-*.iobj
-*.ipdb
-
-# Coverage
-*.gcda
-*.gcno
-*.gcov
-lcov.info
-coverage/
-
-# Valgrind
-*.memcheck
-*.callgrind
-*.cachegrind
-
-# Conan
-conandata.txt
-conanfile.py.user
-conan.lock
-
-# vcpkg
-vcpkg_installed/
+##############################################################################
+# Shell / workspace
+##############################################################################
 
 # added by .workspace
 .bashrc

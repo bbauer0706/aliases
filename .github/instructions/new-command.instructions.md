@@ -1,183 +1,102 @@
 ---
-description: "Use when adding a new CLI subcommand, implementing a new feature block, or extending an existing command in aliases-cli. Covers the full checklist: header, implementation, main.cpp registration, config keys, tests, bash integration, and build system wiring."
+description: "Use when adding a new CLI subcommand, implementing a new feature block, or extending an existing command in aliases-cli. Covers the full checklist: Click command, config keys, tests, bash integration, and docs."
 ---
 
 # Adding a New Command to aliases-cli
 
-Follow every step in order. Do not skip steps — the build will fail silently if source files aren't added to `build.sh`.
+Follow every step in order.
 
-## 1. Header — `include/aliases/commands/my_cmd.h`
+## 1. Click Command — `aliases_cli/commands/my_cmd.py`
 
-```cpp
-#pragma once
-#include "aliases/project_mapper.h"
-#include "aliases/common.h"
-#include <memory>
-#include <string>
+```python
+import click
+from aliases_cli.config import Config
+from aliases_cli.project_mapper import ProjectMapper
 
-namespace aliases {
 
-class MyCommand {
-public:
-    explicit MyCommand(std::shared_ptr<ProjectMapper> mapper);
-    int execute(const StringVector& args);
-
-private:
-    std::shared_ptr<ProjectMapper> mapper_;
-    // add private helpers here
-};
-
-} // namespace aliases
+@click.command("my-cmd")
+@click.argument("args", nargs=-1)
+@click.pass_context
+def my_command(ctx: click.Context, args: tuple[str, ...]) -> None:
+    """Short description shown in --help."""
+    config = Config.instance()
+    mapper: ProjectMapper = ctx.obj["mapper"]
+    # ...
+    raise SystemExit(0)
 ```
 
 Rules:
-- Constructor takes `shared_ptr<ProjectMapper>` (only; don't reach into `Config` at construction time).
-- `execute()` returns `int` exit code — `0` success, `1` error, `2` usage/bad args.
-- One class per file.
+- One `@click.command` (or `@click.group`) per file.
+- Print errors with `click.echo("...", err=True)`.
+- Shell-evaluable output to stdout; status messages to stderr.
+- Exit codes: `0` success, `1` runtime error, `2` bad usage.
 
-## 2. Implementation — `src/commands/my_cmd.cpp`
+## 2. Register in `aliases_cli/main.py`
 
-```cpp
-#include "aliases/commands/my_cmd.h"
-#include "aliases/config.h"
-#include "aliases/common.h"
-#include <iostream>
+```python
+from aliases_cli.commands.my_cmd import my_command
 
-namespace aliases {
-
-MyCommand::MyCommand(std::shared_ptr<ProjectMapper> mapper)
-    : mapper_(std::move(mapper)) {}
-
-int MyCommand::execute(const StringVector& args) {
-    if (args.empty()) {
-        std::cerr << "Usage: aliases my-cmd <subcommand>\n";
-        return 2;
-    }
-    // ...
-    return 0;
-}
-
-} // namespace aliases
+cli.add_command(my_command)
 ```
 
-Print errors to `std::cerr`. Print output to `std::cout`. Use `Config::instance()` to read settings.
+Add in alphabetical order among the other `add_command` calls.
 
-## 3. Register in `src/main.cpp`
+## 3. Add Config Keys (if needed) — `aliases_cli/config.py`
 
-Find the command dispatch block and add:
+Add to `DEFAULT_CONFIG`:
 
-```cpp
-#include "aliases/commands/my_cmd.h"
-
-// In the dispatch table:
-} else if (command == "my-cmd") {
-    MyCommand cmd(mapper);
-    return cmd.execute(args);
-```
-
-Look for the existing pattern (`} else if (command == "code") {`) to place it in alphabetical order.
-
-## 4. Add Config Keys (if needed) — `include/aliases/config.h` + `src/core/config.cpp`
-
-**Header** — add typed getters/setters in the appropriate section (create a new section if needed):
-```cpp
-// my_cmd section
-std::string get_my_cmd_option() const;
-void set_my_cmd_option(const std::string& value);
-```
-
-**Implementation** — follow the existing pattern: read from `config_data_["my_cmd"]["option"]` with a default fallback:
-```cpp
-std::string Config::get_my_cmd_option() const {
-    return config_data_.value("/my_cmd/option"_json_pointer, std::string("default_value"));
-}
-void Config::set_my_cmd_option(const std::string& value) {
-    config_data_["my_cmd"]["option"] = value;
+```python
+DEFAULT_CONFIG = {
+    ...
+    "my_section": {
+        "my_key": "default_value",
+    },
 }
 ```
 
-Also add the key to `reset_to_defaults()` and `config.template.json`.
+## 4. Document Config Keys — `docs/reference/configuration.md`
 
-## 5. Wire into `build.sh`
+Add a table entry for every new key under the correct section heading.
 
-Find the `SOURCES` array (or equivalent) and add:
-- `src/commands/my_cmd.cpp`
+## 5. Tests — `tests/test_my_cmd.py`
 
-Find the test binary block and add the new test binary target there too (see step 6).
+```python
+import pytest
+from pathlib import Path
+from aliases_cli.config import Config
 
-## 6. Unit Tests — `tests/unit/my_cmd_test.cpp`
 
-```cpp
-#include <gtest/gtest.h>
-#include "aliases/commands/my_cmd.h"
-#include "aliases/project_mapper.h"
-#include "aliases/config.h"
-#include <filesystem>
+@pytest.fixture(autouse=True)
+def isolated_config(tmp_path: Path):
+    Config.set_test_config_directory(tmp_path / "aliases-cli")
+    yield
+    Config.reset()
 
-class MyCommandTest : public ::testing::Test {
-protected:
-    std::string test_dir_;
-    std::shared_ptr<aliases::ProjectMapper> mapper_;
 
-    void SetUp() override {
-        test_dir_ = "/tmp/aliases_test_" + std::to_string(getpid()) + "_mycmd";
-        std::filesystem::create_directories(test_dir_);
-        aliases::Config::set_test_config_directory(test_dir_);
-        aliases::Config::instance().initialize();
-        mapper_ = std::make_shared<aliases::ProjectMapper>();
-    }
-
-    void TearDown() override {
-        std::filesystem::remove_all(test_dir_);
-    }
-};
-
-TEST_F(MyCommandTest, ReturnsErrorOnEmptyArgs) {
-    aliases::MyCommand cmd(mapper_);
-    EXPECT_EQ(cmd.execute({}), 2);
-}
+def test_my_cmd_basic():
+    ...
 ```
 
-See `.github/instructions/testing.instructions.md` for full testing conventions.
+See `.github/instructions/testing.instructions.md` for full patterns.
 
-## 7. Bash Integration (if the command outputs shell code)
+## 6. Bash Integration (if output needs `eval`)
 
-If your command outputs lines meant to be `eval`-ed (env vars, `cd` commands, etc.):
+If the command prints `export VAR='value';` lines:
 
-1. Create `bash_integration/my-cmd.sh`:
+1. Create `aliases_cli/data/shell/my-cmd.sh` with a bash wrapper function.
+2. Add the filename to the copy list in `aliases_cli/commands/setup_cmd.py` (`_SHELL_FILES`).
+3. Document in `docs/integrations/bash-integration.md`.
+
+## 7. Update Docs
+
+- `docs/reference/commands.md` — add full command reference entry.
+- `docs/reference/configuration.md` — add any new config keys.
+- `docs/integrations/bash-integration.md` — if bash wrapper added.
+
+## Verification
+
 ```bash
-my_cmd() {
-    local result
-    result=$(aliases-cli my-cmd "$@") || return $?
-    eval "$result"
-}
+uv run aliases-cli my-cmd --help
+uv run pytest tests/test_my_cmd.py -v
+uv run pytest -q   # all green
 ```
-2. Add a `source` block for it inside the `BASH_ALIASES_TEMPLATE` in `install.sh`:
-```bash
-# Load bash integration for my-cmd
-if [ -f "\$ALIASES_DIR/bash_integration/my-cmd.sh" ]; then
-  source "\$ALIASES_DIR/bash_integration/my-cmd.sh"
-fi
-```
-
-If the command only prints data (like `config list`), no wrapper needed and no install.sh change needed.
-
-## 8. Documentation
-
-Update:
-- `docs/reference/commands.md` — add entry for the new subcommand
-- `docs/reference/configuration.md` — list any new config keys
-- `README.md` — add to the features/commands section if user-facing
-
-## Checklist
-
-- [ ] `include/aliases/commands/my_cmd.h` created
-- [ ] `src/commands/my_cmd.cpp` created
-- [ ] Registered in `src/main.cpp` dispatch table
-- [ ] Config keys added to header + implementation + defaults + template (if any)
-- [ ] `src/commands/my_cmd.cpp` added to `build.sh` sources
-- [ ] `tests/unit/my_cmd_test.cpp` created and added to `build.sh`
-- [ ] `./run_tests.sh` passes
-- [ ] Bash wrapper created in `bash_integration/` (if eval needed)
-- [ ] `install.sh` `BASH_ALIASES_TEMPLATE` updated (if bash wrapper created)
-- [ ] Docs updated

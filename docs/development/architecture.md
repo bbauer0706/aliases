@@ -1,254 +1,122 @@
-# Architecture Overview
+# Architecture
 
-This document describes the architecture and design patterns used in aliases-cli.
+## Overview
 
-## High-Level Architecture
-
-aliases-cli follows a modular command-based architecture with clear separation of concerns:
+aliases-cli is a Click-based Python CLI. Modules are organized in a flat
+dependency hierarchy:
 
 ```
-aliases-cli
-├── Core Layer (src/core/)          # Shared utilities and base functionality
-├── Command Layer (src/commands/)   # Feature implementations
-├── Entry Point (src/main.cpp)     # Command dispatch and CLI parsing
-└── Third Party (include/third_party/) # Bundled dependencies
+commands/ → core modules → stdlib
 ```
 
-## Core Components
+Core modules do not import from commands. No circular dependencies.
 
-### Project Mapper (`project_mapper.cpp`)
-- **Purpose**: Discovers and resolves project structures from configured workspace directories
-- **Responsibilities**:
-  - Scan workspace directories for project subdirectories
-  - Resolve shorthand names (e.g. `dip` → `dispatch`) via config shortcuts
-  - Detect server/web component paths per project
-  - Return `ProjectInfo` structs with full path and component details
-- **Pattern**: PIMPL — internal state hidden behind `std::unique_ptr<Impl>`
+## Package Layout
 
-### String & ANSI Utilities (`common.cpp`)
-- **Purpose**: Low-level string helpers and shared terminal output constants
-- **Responsibilities**:
-  - `trim()`, `split()`, `starts_with()`, `ends_with()`
-  - `get_home_directory()`, `get_current_directory()`
-  - ANSI color constants: `SUCCESS`, `ERROR`, `WARNING`, `INFO`, `RESET`, `SERVER`, `WEB`
-- **Pattern**: Free functions in the `aliases` namespace
-
-### File Utilities (`file_utils.cpp`)
-- **Purpose**: Filesystem operations — path manipulation, directory traversal, file I/O
-- **Responsibilities**:
-  - `discover_workspace_projects()` — recursive directory listing
-  - `find_component_directory()` — searches candidate paths for server/web components
-  - `join_path()`, `get_basename()`, `resolve_path()`, `normalize_path()`
-  - `read_file()` returns `std::optional<std::string>`; `file_exists()`, `directory_exists()`
-- **Pattern**: Static utility class (no state)
-
-### Process Utilities (`process_utils.cpp`)
-- **Purpose**: subprocess execution — wraps `popen()` / `std::async`
-- **Responsibilities**:
-  - `execute(StringVector)` / `execute(string)` → `ProcessResult`
-  - `execute_async()` → `std::future<ProcessResult>`
-  - `command_exists()`, `escape_shell_argument()`, `is_port_available()`
-- **Pattern**: Static utility class
-
-### Prompt Formatter (`pwd_formatter.cpp`)
-- **Purpose**: Format the current working directory for shell prompts using path-replacement rules
-- **Responsibilities**:
-  - Apply `PromptPathReplacement` rules from config in order (first match wins)
-  - Resolve `env_var`-based or literal-`path`-based prefixes
-  - Emit ANSI color codes; wrap in `\001...\002` for PS1 readline safety
-- **Pattern**: Static methods (`PwdFormatter::format()`, `ansi_code()`, `ps1_wrap()`)
-
-### Git Operations (`git_operations.cpp`)
-- **Purpose**: Git repository interaction
-- **Responsibilities**:
-  - Repository status checking
-  - Branch operations
-  - Commit information extraction
-- **Pattern**: Service class with command execution
-
-### Configuration System (`config.cpp` + `config_sync.cpp`)
-- **Purpose**: JSON-based configuration management with remote sync
-- **Responsibilities**:
-  - Load/save configuration files (config.cpp)
-  - Type-safe configuration access with singleton pattern
-  - Default value handling
-  - Remote sync support via git/rsync/file/http (config_sync.cpp)
-- **Pattern**: Singleton pattern with comprehensive getters/setters
-
-## Command Architecture
-
-Each command follows a consistent pattern:
-
-```cpp
-class CommandName {
-public:
-    explicit CommandName(std::shared_ptr<ProjectMapper> mapper);
-    int execute(const StringVector& args); // returns 0=ok, 1=error, 2=usage
-
-private:
-    std::shared_ptr<ProjectMapper> mapper_;
-    // command-specific state
-};
+```
+src/aliases_cli/
+├── __init__.py          # version via importlib.metadata
+├── main.py              # Click group, entry point (aliases_cli.main:main)
+├── config.py            # Config singleton
+├── project_mapper.py    # Project discovery + component detection
+├── config_sync.py       # Remote config sync
+├── pwd_formatter.py     # PS1 path formatting
+├── process_utils.py     # subprocess helpers + port check
+├── git_operations.py    # git CLI wrappers
+├── commands/
+│   ├── code_navigator.py  # `code` / `c`
+│   ├── config_cmd.py      # `config` + sync subgroup
+│   ├── project_env.py     # `env`
+│   ├── secrets_cmd.py     # `secrets`
+│   └── setup_cmd.py       # `setup`
+└── data/                  # bundled shell / alias / completion files
+    ├── shell/
+    │   ├── project-env.sh
+    │   ├── prompt.sh
+    │   └── secrets.sh
+    ├── bash_aliases/
+    │   ├── basic.ali.sh
+    │   ├── clear.ali.sh
+    │   ├── git.ali.sh
+    │   ├── maven.ali.sh
+    │   ├── npm.ali.sh
+    │   └── syncrotess.ali.sh
+    ├── bash_completion/
+    │   └── aliases-completion.sh
+    └── config.template.json
 ```
 
-### Command Registration
+## Core Modules
 
-Commands are registered in `main.cpp` using a simple if/else dispatch:
+### `config.py` — Config Singleton
 
-```cpp
-// Initialization
-Config::instance().initialize();
-auto mapper = std::make_shared<ProjectMapper>();
+- `Config.instance()` returns the singleton (lazy-initialised on first call)
+- Config dir defaults to `~/.config/aliases-cli/`; overridden by
+  `Config.set_test_config_directory(path)` for test isolation
+- `config.get("section.key")` — dot-notation access, returns `None` if missing
+- `config.set("section.key", "value")` — type-coerces to the existing stored type
+  (bool, int, float, list, or string)
+- On load: deep-merges the saved JSON with `DEFAULT_CONFIG` so missing keys
+  always get defaults
 
-// Dispatch
-if (command == "code" || command == "c") {
-    CodeNavigator cmd(mapper);
-    return cmd.execute(args);
-} // ...
+### `project_mapper.py` — ProjectInfo + Discovery
+
+- `ProjectMapper(config).discover_projects()` → `list[ProjectInfo]`
+- Scans each directory in `projects.workspace_directories`
+- Skips hidden dirs (`.git`, `.venv`, …) and entries in `projects.ignore`
+- Applies shortcut map: `full_name → display_name`
+- Auto-detects server/web components by trying default subdir names in order,
+  then custom overrides from `projects.server_paths` / `projects.web_paths`
+- `find_project(name)` — exact match then case-insensitive fallback
+- `find_project_by_path(path)` — returns the project that contains the path
+
+### `config_sync.py` — Remote Sync
+
+Four methods share the same `setup/pull/push/status` interface:
+- **git**: clone to `~/.config/aliases-cli/cache/sync/config-repo`, pull/commit/push
+- **rsync**: `rsync -az` to/from remote path
+- **file**: `shutil.copy2` to/from local/network path
+- **http**: `urllib.request.urlopen` (read-only)
+
+`maybe_auto_sync()` is called at startup — it is a no-op unless sync is enabled,
+a URL is configured, and the interval has elapsed.
+
+### `pwd_formatter.py` — Prompt Path
+
+`format_pwd(config, pwd=None, *, no_color, ps1)` applies
+`prompt.path_replacements` rules in order. `get_user_host_color` returns the
+raw ANSI escape code (optionally wrapped for readline).
+
+### `process_utils.py`
+
+Thin wrapper: `execute(cmd, cwd) → (code, stdout, stderr)`.  
+`is_port_available(port)` — TCP connect with 50 ms timeout.
+
+## Shell Integration
+
+`aliases-cli setup` copies bundled files from `aliases_cli/data/` to
+`~/.config/aliases-cli/` and generates `~/.bash_aliases`. The bash functions
+in `shell/*.sh` call `aliases-cli` (from PATH) and `eval` its output.
+
+```
+bash: project_env()
+  → aliases-cli env [opts]   (captures stdout)
+  → eval "export VAR=value;"
 ```
 
-## Data Layer
-
-### Persistence Strategy
-- **JSON files** for structured data (configuration)
-- **File-based** for simplicity and transparency
-- **Atomic writes** to prevent corruption
-- **Location**: `~/.config/aliases-cli/`
-
-## Dependency Management
-
-### Bundled Dependencies
-
-**nlohmann/json (header-only):**
-- Type-safe JSON parsing
-- Modern C++ interface
-- Error handling and validation
-- No runtime dependencies
-
-### Dependency Philosophy
-
-1. **Minimal external dependencies** - Reduces setup complexity
-2. **Bundle critical dependencies** - Ensures consistent behavior
-3. **System fallback** - Use system libraries when available
-4. **Graceful degradation** - Core functionality works without optional deps
-
-## Build System Architecture
-
-### Build Script Design (`build.sh`)
-
-**Goals:**
-- Transparent build process
-- Automatic dependency detection
-- Cross-platform compatibility
-- Developer-friendly output
-
-**Architecture:**
-```bash
-Build Process
-├── Dependency Detection    # Find ncurses, check compiler
-├── Flag Configuration      # Set up compile flags
-├── Compilation Phase       # Build object files
-└── Linking Phase          # Create final executable
+```
+bash: PS1 via _aliases_prompt_pwd()
+  → aliases-cli pwd --ps1    (stdout → inserted into PS1 string)
 ```
 
-**Key Features:**
-- Parallel compilation support
-- Debug/Release configurations
-- Install target for system-wide access
+## Entry Point
 
-## Error Handling Strategy
+`pyproject.toml`:
 
-### Result Type Pattern
-
-```cpp
-template<typename T>
-class Result {
-    // Success/error state with typed return values
-    // Prevents exception-based control flow
-    // Explicit error handling at call sites
-};
+```toml
+[project.scripts]
+aliases-cli = "aliases_cli.main:main"
 ```
 
-### Error Categories
-
-1. **System errors** - File I/O, process execution
-2. **User errors** - Invalid arguments, missing files
-3. **Logic errors** - Programming mistakes (debug builds)
-4. **Resource errors** - Memory allocation, file handles
-
-### Recovery Strategies
-
-- **Graceful degradation** - Disable features when dependencies missing
-- **User guidance** - Clear error messages with suggested actions
-- **Safe defaults** - Reasonable fallback behavior
-- **State preservation** - Don't lose user data on errors
-
-## Performance Considerations
-
-### Startup Performance
-- Lazy initialization of heavy components
-- Fast argument parsing
-- Minimal file I/O during startup
-
-### Memory Management
-- RAII for resource management
-- Smart pointers for ownership clarity
-- Minimal dynamic allocation in hot paths
-
-## Testing Strategy
-
-### Unit Testing (Planned)
-- Core utilities and business logic
-- Mock interfaces for external dependencies
-- Test fixtures for common scenarios
-
-### Integration Testing
-- End-to-end command execution
-- File system interaction testing
-- TUI behavior validation
-
-### Manual Testing
-- Cross-platform compatibility
-- Terminal compatibility
-- Performance with large datasets
-
-## Future Architecture Improvements
-
-### Plugin System
-- Dynamic command loading
-- Configuration-based command registration
-- Third-party command extensions
-
-### Configuration Management
-- Hierarchical configuration (system, user, project)
-- Schema validation
-- Migration between config versions
-
-### Data Layer Evolution
-- Database backend option (SQLite)
-- Sync/backup mechanisms
-- Import/export capabilities
-
-### UI Enhancements
-- Multiple TUI themes
-- Keyboard shortcut customization
-- Mouse support
-
-## Security Considerations
-
-### Input Validation
-- Sanitize user input in all commands
-- Prevent path traversal attacks
-- Validate JSON configuration
-
-### File System Security
-- Respect file permissions
-- Create files with appropriate modes
-- Avoid following symbolic links blindly
-
-### Process Execution
-- Validate command arguments
-- Use safe process execution patterns
-- Limit resource consumption
-
-This architecture provides a solid foundation for the current feature set while allowing for future growth and enhancement.
+`main.py` initialises Config (singleton), calls `maybe_auto_sync()`, then
+delegates to Click's group dispatcher.

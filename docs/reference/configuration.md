@@ -1,418 +1,154 @@
 # Configuration Reference
 
-Complete reference for aliases-cli configuration system.
+Config file: `~/.config/aliases-cli/config.json`
 
-## Configuration Location
-
-All configuration is stored in:
-```
-~/.config/aliases-cli/
-├── config.json          # Main configuration (includes project settings)
-└── cache/              # Cache directory
-    └── sync/           # Config sync cache
-```
-
-## Managing Configuration
-
-### Using the Config Command
+Edit directly with `aliases-cli config edit`, or use get/set:
 
 ```bash
-# View all settings
-aliases-cli config list
-
-# Get a specific value
 aliases-cli config get general.editor
-
-# Set a value
 aliases-cli config set general.editor vim
-
-# Edit config file directly
-aliases-cli config edit
-
-# Show config file path
-aliases-cli config path
-
-# Reset to defaults
-aliases-cli config reset
-```
-
-## Configuration Categories
-
-### General Settings (`general.*`)
-
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `editor` | string | `code` | Default editor for opening files |
-| `terminal_colors` | boolean | `true` | Enable/disable colored output |
-| `verbosity` | string | `normal` | Verbosity level: `quiet`, `normal`, `verbose` |
-| `confirm_destructive_actions` | boolean | `true` | Require confirmation for delete/remove operations |
-
-**Examples:**
-```bash
-aliases-cli config set general.editor vim
-aliases-cli config set general.verbosity verbose
-aliases-cli config set general.terminal_colors false
+aliases-cli config list
 ```
 
 ---
 
-### Code Command Settings (`code.*`)
+## `general`
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `vscode_flags` | array | `[]` | Default VS Code flags (e.g., `--new-window`) |
-| `reuse_window` | boolean | `true` | Reuse existing VS Code window |
-| `fallback_behavior` | string | `auto` | Fallback behavior: `always`, `never`, `auto` |
-| `preferred_component` | string | `server` | Default component when ambiguous: `server`, `web`, `ask` |
-
-**Examples:**
-```bash
-# Add VS Code flags
-aliases-cli config edit  # Then add: "vscode_flags": ["--new-window"]
-
-# Change fallback behavior
-aliases-cli config set code.fallback_behavior never
-
-# Set preferred component
-aliases-cli config set code.preferred_component web
-```
-
-**Fallback Behavior Options:**
-- `always`: Always fallback to `code` command if no project matches
-- `never`: Never fallback, show error message instead
-- `auto` (default): Smart fallback - fallback for paths and flags, error for unknown project names
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `general.editor` | string | `code` | Editor opened by `config edit` |
+| `general.terminal_colors` | bool | `true` | Enable ANSI color output |
+| `general.verbosity` | string | `normal` | `quiet` / `normal` / `verbose` |
+| `general.confirm_destructive_actions` | bool | `true` | Prompt before reset/delete |
 
 ---
 
-### Environment Settings (`env.*`)
+## `code`
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `base_port` | integer | `3000` | Starting port for projects |
-| `port_offset` | integer | `100` | Port increment between projects |
-| `default_env` | string | `dev` | Default environment: `dev`, `staging`, `prod` |
+Settings for the `code` / `c` command.
 
-**Examples:**
-```bash
-# Change base port
-aliases-cli config set env.base_port 8000
-
-# Set port offset
-aliases-cli config set env.port_offset 50
-
-# Change default environment
-aliases-cli config set env.default_env prod
-```
-
-**How Port Assignment Works:**
-```
-Project 1: base_port (3000)
-Project 2: base_port + port_offset (3100)
-Project 3: base_port + (port_offset * 2) (3200)
-...
-```
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `code.reuse_window` | bool | `true` | Pass `--reuse-window` to VS Code |
+| `code.vscode_flags` | list | `[]` | Extra flags passed to `code` |
+| `code.fallback_behavior` | string | `auto` | `always` / `never` / `auto` — when to fall back to plain `code` |
+| `code.preferred_component` | string | `server` | Default component when ambiguous: `server` / `web` / `ask` |
 
 ---
 
-### Sync Settings (`sync.*`)
+## `env`
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `enabled` | boolean | `false` | Enable/disable config sync |
-| `remote_url` | string | `""` | Remote storage location (git repo, rsync path, file path, or HTTP URL) |
-| `auto_sync` | boolean | `false` | Automatically sync on startup |
-| `sync_interval` | integer | `86400` | Seconds between automatic syncs (default: 24 hours) |
-| `last_sync` | integer | `0` | Unix timestamp of last sync (auto-managed) |
-| `method` | string | `git` | Sync method: `git`, `rsync`, `file`, `http` |
+Settings for the `env` command.
 
-**Examples:**
-```bash
-# Setup git sync
-aliases-cli config sync setup git@github.com:user/aliases-config.git git
-
-# Enable auto-sync
-aliases-cli config set sync.auto_sync true
-
-# Set sync interval to 1 hour
-aliases-cli config set sync.sync_interval 3600
-```
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `env.base_port` | int | `3000` | Lowest port to consider when scanning |
+| `env.port_offset` | int | `100` | Unused (offset is derived from project name hash) |
+| `env.default_env` | string | `dev` | Default `-e` value |
 
 ---
 
-### Secrets Settings (`secrets.*`)
+## `sync`
 
-Controls the encrypted secrets store. See the [secrets command reference](commands.md#secrets-command) for usage.
+Settings for `config sync`.
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `store_path` | string | `""` | Absolute path to the encrypted store file. Empty = `~/.config/aliases-cli/secrets.enc` |
-| `kdf_iterations` | integer | `100000` | PBKDF2-SHA256 iterations for key derivation. Higher = slower brute-force |
-| `password_env_var` | string | `ALIASES_MASTER_PASSWORD` | Name of the env var consulted for the master password |
-
-> **Note:** The secrets store file (`secrets.enc`) is **not** included in config sync — it is intentionally kept local only.
-
-**Examples:**
-```bash
-# Use a custom store location
-aliases-cli config set secrets.store_path /secure/vault/aliases.enc
-
-# Increase KDF iterations for higher security (slower unlock)
-aliases-cli config set secrets.kdf_iterations 200000
-
-# Use a different env var for the master password
-aliases-cli config set secrets.password_env_var MY_VAULT_PASSWORD
-```
-
-
-**Sync Methods:**
-- `git`: Version-controlled sync with commit history (recommended)
-- `rsync`: Fast incremental sync over SSH or local paths
-- `file`: Simple file copy (works with Dropbox, Google Drive, network drives)
-- `http`: Read-only HTTP fetch (good for distributing team configs)
-
-**See Also:** [Config Sync Guide](../user-guide/config-sync.md)
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `sync.enabled` | bool | `false` | Enable remote sync |
+| `sync.remote_url` | string | `""` | Remote URL (git repo, rsync path, file path, or HTTP URL) |
+| `sync.method` | string | `git` | `git` / `rsync` / `file` / `http` |
+| `sync.auto_sync` | bool | `false` | Pull on startup when interval has elapsed |
+| `sync.sync_interval` | int | `86400` | Seconds between auto-sync pulls |
+| `sync.last_sync` | int | `0` | Unix timestamp of last successful sync (auto-managed) |
 
 ---
 
-### Projects Settings (`projects.*`)
+## `projects`
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `workspace_directories` | array | `[\"~/workspaces\"]` | Base directories to scan for projects (supports multiple sources) |
-| `shortcuts` | object | `{}` | Project name shortcuts/aliases |
-| `server_paths` | object | `{}` | Custom server component paths per project |
-| `web_paths` | object | `{}` | Custom web component paths per project |
-| `ignore` | array | `[]` | Directory names to ignore when scanning workspace |
-| `default_paths.server` | array | `[\"java/serverJava\",\"serverJava\",\"backend\",\"server\"]` | Default server paths to search |
-| `default_paths.web` | array | `[\"webapp\",\"webApp\",\"web\",\"frontend\",\"client\"]` | Default web paths to search |
+Project discovery settings.
 
-**Examples:**
-```bash
-# View current project mappings
-aliases-cli config get projects.shortcuts
-aliases-cli config get projects.server_paths
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `projects.workspace_directories` | list | `["~/workspaces"]` | Directories to scan for projects |
+| `projects.shortcuts` | object | `{}` | Map of `"display_name": "full_dir_name"` |
+| `projects.server_paths` | object | `{}` | Override server component path per project: `"project": "rel/path"` |
+| `projects.web_paths` | object | `{}` | Override web component path per project |
+| `projects.ignore` | list | `[]` | Directory names to skip during scan |
+| `projects.default_paths.server` | list | `["java/serverJava","serverJava","backend","server"]` | Default server subdir search order |
+| `projects.default_paths.web` | list | `["webapp","webApp","web","frontend","client"]` | Default web subdir search order |
 
-# Add multiple workspace directories
-aliases-cli config edit  # Then modify: "workspace_directories": ["~/workspaces", "~/dev/projects", "/opt/projects"]
-
-# Ignore specific directories in workspace
-aliases-cli config edit  # Then add to projects: "ignore": ["node_modules", "temp", ".git"]
-```
-
-**Multiple Workspace Sources:**
-The `workspace_directories` array allows you to discover projects from multiple locations. All directories will be scanned and projects from all sources will be available:
+### Shortcuts Example
 
 ```json
-{
-  "projects": {
-    "workspace_directories": [
-      "~/workspaces",
-      "~/dev/personal-projects",
-      "/mnt/shared/team-projects"
-    ]
-  }
+"shortcuts": {
+  "dis": "dispatch-backend",
+  "ui":  "company-frontend"
 }
 ```
 
-**Ignore Patterns:**
-The `ignore` array specifies directory names to exclude when scanning the workspace directory. This is useful for:
-- Ignoring build artifacts or temporary directories
-- Excluding symlinks or special directories
-- Filtering out non-project directories
+Then `c dis` opens the `dispatch-backend` directory.
 
-Example:
+### Multiple Workspace Directories
+
 ```json
-{
-  "projects": {
-    "ignore": ["node_modules", "temp", "build", ".cache"]
-  }
-}
+"workspace_directories": ["~/workspaces", "~/work/clients"]
 ```
-
-**Configuration via JSON:**
-```json
-{
-  "projects": {
-    "workspace_directories": ["~/workspaces", "~/dev/projects"],
-    "shortcuts": {
-      "urm20": "urm",
-      "dispatch20": "dip"
-    },
-    "server_paths": {
-      "urm20": "serverJava"
-    },
-    "web_paths": {
-      "urm20": "urm2"
-    },
-    "ignore": [],
-    "default_paths": {
-      "server": ["java/serverJava", "serverJava", "backend", "server"],
-      "web": ["webapp", "webApp", "web", "frontend", "client"]
-    }
-  }
-}
-```
-
-**See Also:** [Commands Reference - Code Command](commands.md#code-command)
 
 ---
 
-### Prompt Settings (`prompt.*`)
+## `prompt`
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `enabled` | boolean | `false` | Enable the custom PS1 path formatter |
-| `path_replacements` | array | `[]` | Ordered list of path-prefix replacement rules |
+PS1 / prompt formatting settings.
 
-Each entry in `path_replacements` supports:
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `prompt.enabled` | bool | `true` | Enable custom prompt |
+| `prompt.user_host_color` | string | `bold_green` | ANSI color for `user@host` |
+| `prompt.default_path_color` | string | `bold_blue` | Color when no replacement rule matches |
+| `prompt.path_replacements` | list | `[]` | Ordered list of path replacement rules |
+
+### Path Replacement Rules
+
+Each rule in `path_replacements` must have exactly one of `env_var` or `path`,
+plus a `label`. The first matching rule wins.
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `env_var` | XOR with `path` | Environment variable whose runtime value is used as the path prefix |
-| `path` | XOR with `env_var` | Literal path prefix (supports leading `~` for `$HOME`) |
-| `label` | yes | Short text shown in prompt instead of the matched prefix |
-| `color` | no (default `bold_cyan`) | ANSI color name for the label |
+| `env_var` | XOR `path` | Env variable whose runtime value is used as the path prefix |
+| `path` | XOR `env_var` | Literal path prefix (supports leading `~`) |
+| `label` | yes | Short text shown in place of the prefix |
+| `color` | no | ANSI color name for the label (default: `bold_cyan`) |
 
-Available colors: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white` — and all with `bold_` prefix (e.g. `bold_cyan`).
+Available colors: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`,
+`white` — all also with `bold_` prefix (e.g. `bold_cyan`).
 
-Rules are evaluated in order; **first match wins**. Rules with both or neither of `env_var`/`path` set are silently skipped.
+### Example
 
-**Example configuration:**
 ```json
 "prompt": {
   "enabled": true,
+  "user_host_color": "bold_green",
+  "default_path_color": "bold_blue",
   "path_replacements": [
-    {
-      "env_var": "INSTROOT",
-      "label": "INSTROOT",
-      "color": "bold_cyan"
-    },
-    {
-      "path": "~/workspaces",
-      "label": "ws",
-      "color": "bold_green"
-    }
+    { "env_var": "INSTROOT",             "label": "INSTROOT",  "color": "bold_yellow" },
+    { "path":    "/opt/company/platform","label": "PLATFORM",  "color": "bold_yellow" },
+    { "path":    "~/projects/internal",  "label": "internal",  "color": "bold_magenta" }
   ]
 }
 ```
 
-**See Also:** [Bash Integration — Prompt path replacement](../integrations/bash-integration.md#prompt-path-replacement)
+With `$INSTROOT=/srv/release` and CWD `/srv/release/auth/src`, the prompt shows:
 
-Here's a complete example `config.json`:
-
-```json
-{
-  "general": {
-    "editor": "code",
-    "terminal_colors": true,
-    "verbosity": "normal",
-    "confirm_destructive_actions": true
-  },
-  "code": {
-    "vscode_flags": ["--reuse-window"],
-    "reuse_window": true,
-    "fallback_behavior": "auto",
-    "preferred_component": "server"
-  },
-  "env": {
-    "base_port": 3000,
-    "port_offset": 100,
-    "default_env": "dev"
-  },
-  "sync": {
-    "enabled": false,
-    "remote_url": "",
-    "auto_sync": false,
-    "sync_interval": 86400,
-    "last_sync": 0,
-    "method": "git"
-  },
-  "projects": {
-    "workspace_directories": ["~/workspaces"],
-    "shortcuts": {
-      "urm20": "urm",
-      "dispatch20": "dip"
-    },
-    "server_paths": {
-      "urm20": "serverJava"
-    },
-    "web_paths": {
-      "urm20": "urm2"
-    },
-    "ignore": [],
-    "default_paths": {
-      "server": ["java/serverJava", "serverJava", "backend", "server"],
-      "web": ["webapp", "webApp", "web", "frontend", "client"]
-    }
-  }
-}
+```
+you@host:INSTROOT/auth/src$
 ```
 
-## Advanced Usage
+---
 
-### Programmatic Access
+## `secrets`
 
-In your bash scripts, you can read config values:
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `secrets.password_env_var` | string | `ALIASES_MASTER_PASSWORD` | Unused (kept for legacy compat; keyring handles auth) |
 
-```bash
-# Get editor setting
-EDITOR=$(aliases-cli config get general.editor)
-
-# Get base port
-BASE_PORT=$(aliases-cli config get env.base_port)
-```
-
-### Configuration Migration
-
-When upgrading aliases-cli, your configuration is automatically preserved. New settings are added with default values.
-
-### Backup Configuration
-
-```bash
-# Backup
-cp ~/.config/aliases-cli/config.json ~/.config/aliases-cli/config.json.backup
-
-# Restore
-cp ~/.config/aliases-cli/config.json.backup ~/.config/aliases-cli/config.json
-```
-
-### Reset Specific Categories
-
-To reset a specific category, edit the config file and remove that section. It will be recreated with defaults on next run:
-
-```bash
-aliases-cli config edit
-# Delete a section you want to reset
-# Save and exit
-
-# Rerun any command to regenerate defaults
-aliases-cli config list
-```
-
-## Troubleshooting
-
-### Config File Not Found
-
-If the config file is missing, it will be automatically created with defaults on first run.
-
-### Invalid JSON
-
-If your config file contains invalid JSON:
-
-1. Check syntax: `python3 -m json.tool ~/.config/aliases-cli/config.json`
-2. Fix errors or delete the file to regenerate defaults
-3. Restore from backup if available
-
-### Permission Issues
-
-Ensure the config directory has proper permissions:
-```bash
-chmod 755 ~/.config/aliases-cli
-chmod 644 ~/.config/aliases-cli/config.json
-```
-
-## See Also
-
-- [Commands Reference](commands.md)
-- [User Guide](../user-guide/README.md)
-- [Project Mappings](projects.md)
+Secrets are stored in the OS keychain — no file path or master password config is needed.

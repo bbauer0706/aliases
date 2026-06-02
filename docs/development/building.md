@@ -1,282 +1,60 @@
-# Building aliases-cli
+# Building & Development
 
-This guide covers building aliases-cli from source, including dependencies and build options.
+## Prerequisites
 
-## Quick Build
+- Python 3.12+
+- [uv](https://docs.astral.sh/uv/)
 
-```bash
-./build.sh                    # Release build
-```
-
-The build script handles everything automatically, including ncurses integration.
-
-## Build System
-
-aliases-cli uses a custom bash build script (`build.sh`) instead of CMake or Makefile for simplicity and transparency.
-
-### Build Script Options
+## Setup
 
 ```bash
-./build.sh [OPTIONS]
-
-Options:
-  -d, --debug       Build in Debug mode (with debug symbols)
-  -c, --clean       Clean build directory before building
-  -i, --install     Install binary to /usr/local/bin
-  -j, --jobs N      Number of parallel compilation jobs
-  -h, --help        Show help message
+git clone https://github.com/bbauer0706/aliases
+cd aliases
+uv sync --group dev
 ```
 
-### Examples
+## Running Locally
 
 ```bash
-# Debug build with verbose output
-./build.sh --debug
-
-# Clean release build with 8 parallel jobs
-./build.sh --clean --jobs 8
-
-# Build and install system-wide
-./build.sh --install
+uv run aliases-cli --version
+uv run aliases-cli --help
+uv run aliases-cli config list
+uv run aliases-cli completion projects
 ```
 
-## Dependencies
-
-### Required Dependencies
-
-**C++ Compiler:**
-- GCC 7+ or Clang 5+ (C++17 support)
-- Standard library with C++17 features
-
-**System Libraries:**
-- `pthread` for threading support
-
-### Included Dependencies
-
-**ncurses (1.9M):**
-- Pre-built and included in `include/third_party/ncurses/`
-- Automatically detected and used by build system
-- Enables TUI functionality
-
-**nlohmann/json (header-only):**
-- Included as `include/third_party/json.hpp`
-- Used for configuration and data persistence
-
-### Build Process
-
-The build system performs these steps:
-
-1. **Compile core**: Builds core functionality (`src/core/*.cpp`)
-2. **Compile commands**: Builds command implementations (`src/commands/*.cpp`)
-3. **Link executable**: Creates final binary with all dependencies
-
-## Build Configurations
-
-### Release Build (Default)
+## Tests
 
 ```bash
-./build.sh
+uv run pytest               # all tests
+uv run pytest -v            # verbose
+uv run pytest -k config     # match test names
+uv run pytest --cov=src     # with coverage
 ```
 
-**Flags:**
-- `-std=c++17` - C++17 standard
-- `-O3` - Aggressive optimization
-- `-DNDEBUG` - Disable debug assertions
-- `-Wall -Wextra` - Enable warnings
-
-**Output:**
-- Optimized binary (~924KB)
-- Fast startup and execution
-- No debug symbols
-
-### Debug Build
+## Building the Wheel
 
 ```bash
-./build.sh --debug
+uv build
+# → dist/aliases_cli-2.0.0-py3-none-any.whl
 ```
 
-**Flags:**
-- `-std=c++17` - C++17 standard
-- `-g` - Debug symbols
-- `-O0` - No optimization
-- `-DDEBUG` - Enable debug assertions
-- `-Wall -Wextra` - Enable warnings
-
-**Output:**
-- Larger binary with debug info
-- Slower execution
-- Debugging symbols for GDB
-
-## Build Output
-
-### Success Output
-
-```
-[INFO] Starting build process...
-[INFO] Build type: Release
-[INFO] Compiler: g++
-[INFO] Flags: -std=c++17 -Wall -Wextra -O3 -DNDEBUG
-[INFO] Building core library...
-[INFO] Building commands library...
-[INFO] Building main executable...
-[INFO] Linking executable...
-[SUCCESS] Build completed successfully!
-[SUCCESS] Binary created: build/aliases-cli (size: 924K)
-```
-
-### Build Directory Structure
-
-```
-build/
-├── aliases-cli              # Final executable
-├── *.o                     # Object files
-├── core/                   # Core object files
-└── commands/               # Command object files
-```
-
-## Compilation Details
-
-### Compiler Requirements
-
-**GCC 7+ required for:**
-- `std::optional` (C++17)
-- `std::filesystem` (C++17)
-- `std::string_view` (C++17)
-
-**Clang 5+ required for:**
-- Same C++17 features
-- Better error messages
-- Static analysis support
-
-### Include Paths
-
-```
--Iinclude                                              # Main headers
-```
-
-### Source Organization
-
-**Core Library (`src/core/`):**
-- `project_mapper.cpp` - Project discovery and mapping
-- `git_operations.cpp` - Git repository operations
-- `file_utils.cpp` - File system utilities
-- `config.cpp` - Configuration management with sync support
-- `config_sync.cpp` - Multi-method sync (git/rsync/file/http)
-- `process_utils.cpp` - Process execution utilities
-- `common.cpp` - Common utilities and types
-
-**Commands (`src/commands/`):**
-- `code_navigator.cpp` - Project navigation command
-- `project_env.cpp` - Environment setup command
-- `config_cmd.cpp` - Configuration management command
-
-**Main Entry Point:**
-- `src/main.cpp` - Command dispatcher and argument parsing
-
-## Platform Support
-
-### Linux
-- **Tested on**: Ubuntu 20.04+, Debian 11+
-- **Compiler**: GCC 7+, Clang 5+
-- **Status**: ✅ Fully supported
-
-### macOS
-- **Tested on**: macOS 11+
-- **Compiler**: Clang (Xcode Command Line Tools)
-- **Status**: ✅ Should work (not regularly tested)
-
-### Windows (WSL)
-- **Environment**: WSL 1/2 with Ubuntu
-- **Status**: ✅ Should work via WSL
-
-### Windows (Native)
-- **Status**: ❌ Not supported (bash integration required)
-
-## Troubleshooting
-
-### Compilation Errors
-
-**Missing C++17 support:**
-```bash
-error: 'optional' is not a member of 'std'
-```
-**Solution:** Upgrade to GCC 7+ or Clang 5+
-
-**Missing headers:**
-```bash
-fatal error: ncurses.h: No such file or directory
-```
-**Solution:** This shouldn't happen (ncurses included), but check build output
-
-### Linking Errors
-
-**Missing pthread:**
-```bash
-undefined reference to 'pthread_create'
-```
-**Solution:** Ensure `-pthread` flag is used (automatic in build script)
-
-**Missing ncurses:**
-```bash
-undefined reference to 'initscr'
-```
-**Solution:** Check that ncurses libraries are properly linked
-
-### Runtime Issues
-
-**Command not found:**
-```bash
-aliases-cli: command not found
-```
-**Solutions:**
-- Use full path: `./build/aliases-cli`
-- Install system-wide: `./build.sh --install`
-- Add to PATH: `export PATH=$PATH:/path/to/aliases-cli/build`
-
-### Clean Build
-
-If you encounter persistent build issues:
+## Installing the Local Build
 
 ```bash
-# Clean everything and rebuild
-rm -rf build/
-./build.sh --clean
+uv tool install dist/aliases_cli-2.0.0-py3-none-any.whl --force-reinstall
 ```
 
-## Cross-Compilation
-
-Currently not supported, but could be added by:
-1. Setting appropriate compiler in build script
-2. Ensuring ncurses libraries for target platform
-3. Testing on target platform
-
-## Performance Optimization
-
-The build system is already optimized for performance:
-
-**Compile-time optimizations:**
-- `-O3` aggressive optimization
-- Link-time optimization (could be added)
-- Header-only JSON library (no separate compilation)
-
-**Runtime optimizations:**
-- PIMPL pattern for fast compilation
-- Minimal dependencies
-- Efficient algorithms and data structures
-
-## Development Builds
-
-For active development:
+Or stay in the dev venv:
 
 ```bash
-# Quick debug build with verbose output
-./build.sh --debug --clean
-
-# Development cycle
-./build.sh --debug && ./build/aliases-cli --help
+uv sync      # re-install editable
+uv run aliases-cli setup
 ```
 
-Consider using:
-- IDE integration with compile_commands.json
-- Static analysis tools (clang-tidy)
-- Profiling tools (valgrind, perf) for performance analysis
+## Releasing
+
+1. Tag the commit: `git tag v2.x.y && git push --tags`
+2. `uv build`
+3. `uv publish` (or push to GitHub; uv tool install works directly from git)
+
+The version string is read from the git tag at build time via `hatchling`.

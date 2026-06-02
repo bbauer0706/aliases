@@ -2,99 +2,102 @@
 
 ## What This Project Is
 
-`aliases-cli` is a high-performance C++ CLI tool (50× faster than bash equivalents) for developer workspace management. It handles project discovery, environment setup, config sync, and shell prompt formatting across multi-project workspaces.
+`aliases-cli` is a Python CLI tool for developer workspace management. It handles
+project discovery, environment setup, config sync, and shell prompt formatting
+across multi-project workspaces.
+
+Installed via uv: `uv tool install git+https://github.com/bbauer0706/aliases`
 
 ## Architecture
 
 ```
-src/main.cpp               → CLI dispatcher; initializes Config + ProjectMapper, routes to commands
-src/core/                  → Shared infrastructure (no command logic here)
-  config.cpp               → Singleton config (JSON at ~/.config/aliases-cli/config.json)
-  project_mapper.cpp       → Discovers projects via workspace dirs + shortcuts (PIMPL pattern)
-  config_sync.cpp          → Multi-method remote sync (git/rsync/file/http)
-  file_utils.cpp           → Static path/filesystem utilities
-  git_operations.cpp       → Static git CLI wrappers via ProcessUtils
-  process_utils.cpp        → Process execution (sync + async via popen/future)
-  common.cpp               → String utils + ANSI color constants
-  pwd_formatter.cpp        → Shell prompt path formatting with ANSI + PS1 wrapping
-src/commands/              → One class per top-level CLI subcommand
-  code_navigator.cpp       → Opens project in VS Code with component awareness
-  config_cmd.cpp           → get/set/list/reset config keys
-  project_env.cpp          → Exports project environment variables to shell
+aliases_cli/main.py              → Click group entry point; initialises Config, routes to commands
+aliases_cli/config.py            → Singleton config (JSON at ~/.config/aliases-cli/config.json)
+aliases_cli/project_mapper.py    → Discovers projects via workspace dirs + shortcuts
+aliases_cli/config_sync.py       → Multi-method remote sync (git/rsync/file/http)
+aliases_cli/pwd_formatter.py     → Shell prompt path formatting with ANSI + PS1 wrapping
+aliases_cli/process_utils.py     → subprocess helpers + port availability check
+aliases_cli/git_operations.py    → git CLI wrappers
+aliases_cli/commands/
+  code_navigator.py  → opens project in VS Code with component awareness
+  config_cmd.py      → get/set/list/reset config keys + sync subgroup
+  project_env.py     → exports project environment variables to shell (eval)
+  secrets_cmd.py     → OS keychain secrets via keyring
+  setup_cmd.py       → post-install shell wiring wizard
+aliases_cli/data/                → bundled shell / alias / completion files
 ```
 
-**Dependency Direction**: commands → core. Core modules do not depend on commands.
+**Dependency direction**: `commands/` → core modules. Core modules do not import from commands.
 
-## Key Types (include/aliases/common.h)
+## Key Types
 
-- `Result<T>` — generic success/error container; use `Result<T>::success_with(val)` and `Result<T>::error(msg)`. Never throw for recoverable errors.
-- `ProjectInfo` — discovered project with name, path, optional server/web component paths, `ComponentType` enum (`MAIN`/`SERVER`/`WEB`)
-- `StringMap` / `StringVector` — `unordered_map<string,string>` / `vector<string>` aliases
-- `ProcessResult` — exit code + combined stdout/stderr; `.success()` checks exit code
+- `ProjectInfo` — `@dataclass` with `full_name`, `display_name`, `path`, `server_path`, `web_path`, `has_server_component`, `has_web_component`
+- `Config` — singleton; `Config.instance()` / `Config.reset()` / `Config.set_test_config_directory(path)`
+- `config.get("section.key")` → `Any | None`; `config.set("section.key", value)` type-coerces
 
 ## Configuration
 
-- Singleton: `Config::instance()` — call `initialize()` once at startup
-- JSON sections: `general`, `code`, `env`, `sync`, `projects`, `prompt`
-- Typed getters/setters for every key; call `save()` to persist changes
-- Tests use `Config::set_test_config_directory(path)` for isolation
+- Singleton: `Config.instance()` — lazy-initialised on first call
+- JSON at `~/.config/aliases-cli/config.json`
+- `_deep_merge(base, override)` ensures missing keys always get defaults
+- Tests: `Config.set_test_config_directory(tmp_path)` + `Config.reset()` for full isolation
 
 ## Build & Test Commands
 
 ```bash
-./build.sh            # Release build → build/aliases-cli
-./build.sh -d         # Debug build with -g -O0
-./build.sh -c         # Clean build directory
-./build.sh -c && ./build.sh  # Clean + release
-./build.sh -i         # Build + install to /usr/local/bin
-./run_tests.sh        # Build and run all unit tests
-./build.sh -h         # Full build flag reference
+uv sync --group dev    # install dev dependencies
+uv run aliases-cli     # run from dev checkout
+uv run pytest          # run all tests
+uv run pytest -v       # verbose
+uv run pytest --cov=aliases_cli  # with coverage
+uv build               # build wheel
+uv tool install dist/*.whl --force-reinstall  # test the wheel
 ```
 
-Build uses **direct g++ invocation** (not cmake at runtime). CMakeLists.txt exists but `build.sh` is primary. Version string injected via `-DVERSION=$(git describe --tags)`.
+## Python Conventions
 
-## C++ Conventions
-
-- **Standard**: C++17. Use `std::optional`, structured bindings, smart pointers.
-- **Naming**: Classes `PascalCase`, functions/variables `snake_case`, member vars `trailing_underscore_`, constants `ALL_CAPS`
-- **Error handling**: `Result<T>` for fallible operations. `std::optional<T>` for nullable returns. No exceptions in normal flow.
-- **Headers**: `#pragma once`. Local: `"aliases/module.h"`. System: `<vector>`. Third-party: `"third_party/json.hpp"`.
-- **Patterns**: Singleton (`Config`), PIMPL (`ProjectMapper`), static utility class (`FileUtils`, `GitOperations`, `ProcessUtils`)
-- **Memory**: `shared_ptr` for shared resources, `unique_ptr` for exclusive ownership
+- **Version**: Python 3.12+. Use `match`, `str | None`, `dataclass`, `importlib.metadata`.
+- **Naming**: Classes `PascalCase`, functions/variables `snake_case`, private `_prefixed`, constants `ALL_CAPS`
+- **Error handling**: return `None` / bool / tuple for recoverable failures. No bare `except:`. Exit via `raise SystemExit(code)` or `sys.exit(code)`.
+- **Imports**: stdlib → third-party → project. No wildcard imports.
+- **Paths**: `pathlib.Path` everywhere. No `os.path.join()`.
+- **Output**: `click.echo()` in commands. Shell-evaluable output to stdout; status messages to stderr.
 
 ## Adding a New Command
 
 See `.github/instructions/new-command.instructions.md` for the full checklist. Summary:
-1. Add header `include/aliases/commands/my_cmd.h` + source `src/commands/my_cmd.cpp`
-2. Implement class with constructor taking `shared_ptr<ProjectMapper>` + `execute(args)` method returning `int`
-3. Register in `src/main.cpp` dispatch table
-4. Add any new config keys with typed getters/setters in `include/aliases/config.h` + `src/core/config.cpp`
-5. Add unit tests in `tests/unit/my_cmd_test.cpp`
+1. Create `aliases_cli/commands/my_cmd.py` with a `@click.command` or `@click.group`
+2. Register with `cli.add_command(my_command)` in `aliases_cli/main.py`
+3. Add config keys to `DEFAULT_CONFIG` in `aliases_cli/config.py` if needed
+4. Write tests in `tests/test_my_cmd.py` using the `isolated_config` fixture
+5. Update `docs/reference/commands.md` and `docs/reference/configuration.md`
 
 ## Testing Conventions
 
-See `.github/instructions/testing.instructions.md`. All tests use Google Test. Config-touching tests must use `set_test_config_directory()`. File-touching tests use `/tmp/aliases_test_$PID` temp dirs.
+See `.github/instructions/testing.instructions.md`. All tests use pytest.
+Config-touching tests must use `Config.set_test_config_directory(tmp_path)` + `Config.reset()`.
+Never touch `~/.config/aliases-cli/` in tests.
 
 ## Bash Integration
 
-New CLI subcommands may need a bash wrapper in `bash_integration/` if they output shell commands that need `eval`-ing (like `project_env.sh`). Path formatting uses `ps1_wrap()` for bash readline length correctness.
+Commands that output shell-evaluable text (like `env`, `secrets load`) print
+`export VAR='value';` to stdout. Bash wrappers in `aliases_cli/data/shell/` use
+`eval "$(aliases-cli ...)"` to apply them in the current shell. `setup_cmd.py`
+copies these to `~/.config/aliases-cli/shell/`.
 
 ## Documentation Policy
 
-**Every code change or new feature must include a corresponding doc update.** This is non-negotiable:
+Every code change must include a corresponding doc update:
 
 - New command → add entry to `docs/reference/commands.md`
 - New or changed config key → update `docs/reference/configuration.md`
-- New build step or flag → update `docs/development/building.md`
-- Architectural change → update `docs/development/architecture.md`
 - New bash integration file → update `docs/integrations/bash-integration.md`
-- **New bash integration file** → also add a `source` block for it in the `BASH_ALIASES_TEMPLATE` inside `install.sh`
-
-If the relevant doc doesn't exist yet, create it. Never ship code without keeping the docs in sync.
+- Architectural change → update `docs/development/architecture.md`
 
 ## Docs
 
 - `docs/development/architecture.md` — full architecture detail
-- `docs/development/building.md` — build system detail  
+- `docs/development/building.md` — build system
 - `docs/development/testing.md` — test strategy
 - `docs/reference/configuration.md` — all config keys
+- `docs/reference/commands.md` — full command reference

@@ -1,168 +1,118 @@
-# Bash Aliases Integration
+# Bash Aliases
 
-This directory contains both **active utilities** and **deprecated scripts** from the original bash-based system.
+`aliases-cli setup` installs these alias files into
+`~/.config/aliases-cli/bash_aliases/`. They are sourced in alphabetical order
+by `~/.bash_aliases`.
 
-## Clear Command Aliases
+---
 
-Comprehensive typo-resistant aliases for the `clear` command in `bash_aliases/clear.ali.sh`:
+## `basic.ali.sh`
 
-### German Keyboard Support (QWERTZ Layout)
+General navigation and utility aliases.
 
-The clear aliases are optimized for German keyboards with comprehensive typo coverage:
+| Alias / Function | Command |
+|-----------------|---------|
+| `la` | `ls -alh` |
+| `..` | `cd ..` |
+| `...` | `cd ../..` |
+| `~` | `cd ~` |
+| `kp <port>` | `fuser -k <port>/tcp` — kill process on port |
+| `tsc` | `npx tsc --noEmit` |
+| `show_env` | `aliases-cli env --show` |
 
-```bash
-# Common typos
-clear → clera, clare, claer, cler, cear, clar
-clear → cleaar, clearr, cleasr, cleaer, cleer
+---
 
-# German-specific QWERTZ layout typos
-clear → cleaz, clezr, clez        # Z/Y swaps
-clear → cleay, cley, cleyar       # Y positioning
+## `git.ali.sh`
 
-# Umlaut accidents (ä, ö, ü adjacent to standard keys)
-clear → cleäar, cleär, cleä       # Ä instead of A
-clear → cleöar, cleör, cleö       # Ö instead of O
-clear → cleüar, cleür, cleü       # Ü instead of U
+| Alias / Function | Description |
+|-----------------|-------------|
+| `reset-soft` | `git reset --soft HEAD~1` |
+| `git-rm` | `git rm --cached` |
+| `trigger-ci` | Empty commit + push to trigger CI |
+| `rebase` | Safe rebase onto `origin/main` with pre-flight checks |
 
-# German ß key mishits
-clear → cleaß, cleß, clßear, cßlear
+### `rebase` Safety Checks
 
-# Adjacent key mistakes on German keyboard
-clear → cöear, ckear, coear       # L neighbors (Ö, K, O)
-clear → clwar, cldar              # E neighbors (W, D)
-clear → clesar, clesr             # A neighbors (S)
-clear → cleat, cleatar            # R neighbors (T, F)
-```
+Before rebasing, `rebase` verifies:
 
-### Extreme Typo Coverage
+1. Inside a git repository
+2. Not on `main` or `master`
+3. No uncommitted changes
+4. `origin` remote exists
 
-```bash
-# Super short versions for really bad typos
-cr, cl, ce, le
+Then fetches `origin/main`, rebases, and prompts before force-pushing
+(uses `--force-with-lease` to avoid clobbering concurrent pushes).
 
-# One-handed typing errors
-vlera, xlera, vlare, xlear
+---
 
-# Backwards/mixed patterns
-raelc, aelrc, learc, rceal
+## `npm.ali.sh`
 
-# Double letters
-cclear, cllear, cleear, cleaar, clearr
-```
+Script shortcuts and npm wrappers.
 
-### Usage Examples
+| Alias | Expands To |
+|-------|-----------|
+| `dev` | `npm run dev` |
+| `gen` | `npm run gen` |
+| `build` | `npm run build` |
+| `blocal` | `npm run build:local` |
+| `bstatic` | `npm run build:static` |
+| `vit` | `npm run vitest` |
+| `jes` | `npm run test:watch` |
+| `story` | `npm run start:storybook` |
+| `npmi` | `npm i` |
+| `lint` | `npm run lint` |
+| `pipeline` | `npm run pipeline:dry-run` |
+| `npm-clean` | Remove `.next`, `node_modules`, `package-lock.json`, then `npm i` |
 
-```bash
-# All of these work the same as 'clear'
-clera          # Common typo
-cleäar         # German umlaut accident
-cleaz          # German Z/Y swap
-cöear          # Adjacent key on German keyboard
-cr             # Super short typo
-```
+If `pnpm` is installed, `npm` is aliased to `pnpm`. Otherwise an `npm()`
+wrapper adds `--ignore-scripts` to install/update/ci/rebuild/add/remove
+commands automatically.
 
-**Total Coverage:** 80+ aliases covering virtually every possible way to misspell "clear" on a German keyboard.
+---
 
-## Smart Command-Not-Found Handler
+## `maven.ali.sh`
 
-Intelligent fallback for any unmapped clear typos (integrated in `bash_aliases/clear.ali.sh`):
+| Alias | Command |
+|-------|---------|
+| `mcp` | `mvn clean package` |
+| `mcv` | `mvn clean verify` |
 
-### How It Works
+---
 
-The handler intercepts any command that bash can't find and applies smart detection:
+## `clear.ali.sh`
 
-```bash
-# Checks if the unknown command contains all letters: c, l, e, a, r
-command_not_found_handle() {
-    # Example: "rceal" contains c,l,e,a,r → executes clear
-    # Example: "aelrc" contains c,l,e,a,r → executes clear
-    # Example: "xyz" missing letters → normal error
-}
-```
+A compact set of typo aliases for `clear` (common keyboard misfires).
+Defined as a loop rather than 100+ individual lines.
 
-### Detection Rules
+Examples: `clera`, `cler`, `cleear`, `claer`, `cleare`, `clrea`, …
 
-1. **Letter Check:** Must contain all letters `c`, `l`, `e`, `a`, `r` (case-insensitive)
-2. **Length Filter:** Only 3-8 characters (reasonable typo range)
-3. **Smart Fallback:** Uses system command-not-found if no match
+---
 
-### Examples
+## `syncrotess.ali.sh`
 
-```bash
-# These would trigger clear execution:
-$ rceal        # ✅ Contains all clear letters
-🔍 Command 'rceal' not found. Did you mean 'clear'? Executing clear...
+Integration with the internal Syncrotess/Autobuild system.
+Only useful on machines that have the `projectbuilds` scripts installed.
 
-$ aelrc        # ✅ Contains all clear letters
-🔍 Command 'aelrc' not found. Did you mean 'clear'? Executing clear...
+Searches for the scripts directory in this order:
 
-$ learc        # ✅ Contains all clear letters
-🔍 Command 'learc' not found. Did you mean 'clear'? Executing clear...
+1. `$PRJBUILDS_DIR`
+2. `/nethome/svc-gb20-road/syncrotess/scripts`
+3. `~/syncrotess/scripts`
+4. `~/workspaces/projectbuilds`
 
-# These would show normal error:
-$ xyz          # ❌ Missing clear letters
-bash: xyz: command not found
+If none found, all commands silently do nothing.
 
-$ clearterminal # ❌ Too long (>8 chars)
-bash: clearterminal: command not found
-```
-
-### Combined Coverage
-
-**Alias Coverage (clear.ali.sh):** 80+ pre-defined aliases
-**Dynamic Coverage (command_not_found.ali.sh):** Infinite anagram detection
-**Total Result:** Virtually impossible to fail clearing the terminal
-
-## ✅ Active Files (Still Used)
-
-These bash utilities are **still sourced** and provide valuable shortcuts:
-
-- **basic.ali.sh** - ✅ Basic utility aliases and shortcuts
-- **clear.ali.sh** - ✅ Comprehensive clear command typo aliases + smart command-not-found handler
-- **maven.ali.sh** - ✅ Maven-specific aliases and build shortcuts
-- **npm.ali.sh** - ✅ NPM/Node.js development shortcuts
-
-## ❌ Deprecated Files (Replaced by C++)
-
-These files have been **replaced by the C++ implementation** and renamed with `.ali-deprecated.sh` extension:
-
-- **code.ali-deprecated.sh** - ❌ Project navigation (→ `aliases-cli code`)
-- **update-workspaces.ali-deprecated.sh** - ❌ Deprecated (removed)
-- **project-selection.ali-deprecated.sh** - ❌ Environment setup (→ `aliases-cli env`)
-- **mappings.local.sh** - ❌ Bash mappings (→ `~/.config/aliases-cli/config.json`)
-- **mappings.template.sh** - ❌ Bash template (→ `config.template.json`)
-- **local-init-workspaces.sh** - ❌ Initialization (→ integrated in C++)
-- **setup.sh.old** - ❌ Original setup (→ new `install.sh`)
-
-## Migration Status: Hybrid System ⚡
-
-| Component | Implementation | Status | Performance |
-|-----------|---------------|--------|-------------|
-| Project Navigation | C++ | ✅ Active | 50x faster |
-| Workspace Updates | C++ | ✅ Active | 10x faster |
-| Environment Setup | C++ | ✅ Active | 20x faster |
-| Basic Utilities | Bash | ✅ Active | Original |
-| Clear Typo Aliases | Bash | ✅ Active | German keyboard optimized |
-| Maven Shortcuts | Bash | ✅ Active | Original |
-| NPM Shortcuts | Bash | ✅ Active | Original |
-
-## Why Hybrid?
-
-- **Performance-critical** operations (navigation, updates) → C++
-- **Smart shortcuts** (maven, npm, basic) → Bash (flexibility)
-- **Best of both worlds**: Speed where needed, bash convenience for workflows
-
-## Usage
-
-```bash
-# Fast C++ commands (always use these for core operations)
-c <project>           # 50x faster than old bash version
-uw                   # 10x faster parallel updates  
-project_env          # 20x faster environment setup
-# Smart Bash aliases (complement the C++ commands)
-mvn-shortcuts        # From maven.ali.sh
-npm-helpers          # From npm.ali.sh  
-basic-utils          # From basic.ali.sh
-```
-
-**Setup:** Run `./install.sh` to configure both C++ and active bash utilities.
+| Command | Description |
+|---------|-------------|
+| `prjsel <version>` | Select version (sets `$PRJBUILDS_VERSION`) |
+| `prjserver [ver]` | Update server component |
+| `prjsst [ver]` | Update interfaces |
+| `prjwebtools [ver]` | Update web tools |
+| `prjupdate [ver]` | Server + interfaces + webtools |
+| `prjstart [ver]` | Start system |
+| `prjstop [ver]` | Stop system |
+| `prjtest [ver]` | Run test cases |
+| `prjbuild <ver> <cmd>` | Raw wrapper |
+| `prjscripts` | List available product scripts |
+| `prjpull` | `git pull` the scripts repo |
+| `relink <jar>` | Repoint `$INSTROOT/bin/<prefix>_Actual.jar` symlink |

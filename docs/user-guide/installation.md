@@ -1,251 +1,72 @@
-# Installation Guide
+# Installation
 
-This guide covers installation and initial setup of aliases-cli.
+## Requirements
 
-## Prerequisites
+- Python 3.12 or newer
+- [uv](https://docs.astral.sh/uv/) — the recommended Python package manager
+- bash 4.0+ for shell integration (zsh is not currently supported)
 
-- **C++17 compiler** (GCC 7+, Clang 5+)
-- **Git** for repository operations
-- **Bash shell** for integration features
-- **Linux/macOS/WSL** (Windows support via WSL)
-
-## Quick Installation
-
-The simplest way to install aliases-cli:
+## Install
 
 ```bash
-# Clone the repository
-git clone <repository-url> aliases-cli
-cd aliases-cli
-
-# Run the installer (handles everything automatically)
-./install.sh
-
-# Or use force mode to skip prompts and handle conflicts
-./install.sh --force
+uv tool install git+https://github.com/bbauer0706/aliases
 ```
 
-The installer will:
-1. Build the C++ binary (or use precompiled version)
-2. Set up bash integration
-3. Configure shell aliases
-4. Install tab completion
+## First-Time Setup
 
-**Note:** If you encounter errors during installation, the script will now provide clear error messages and stop execution rather than continuing silently. Common issues include binary file being in use or permission problems.
-
-### Force Mode
-
-Use `./install.sh --force` for automated installations that:
-- Automatically kill running aliases-cli processes
-- Auto-accept all .bash_aliases updates without prompting  
-- Override most conflict situations
-- Provide detailed logging of all actions taken
-
-This is useful for CI/CD pipelines, automated setups, or when you want to ensure a clean installation without manual intervention.
-
-## Manual Installation
-
-If you prefer manual control:
-
-### 1. Build the Binary
+Run once after installing:
 
 ```bash
-# Release build
-./build.sh
-
-# Or debug build
-./build.sh --debug
-
-# Or install system-wide
-./build.sh --install
+aliases-cli setup
 ```
 
-### 2. Configure Shell Integration
+What it does:
 
-Add to your `~/.bashrc` or `~/.zshrc`:
+1. Creates `~/.config/aliases-cli/` with the default `config.json`
+2. Copies shell integration, bash aliases, and completion files there
+3. Creates (or updates) `~/.bash_aliases` that sources all those files
+4. Adds `source ~/.bash_aliases` to `~/.bashrc` if missing
+
+Then restart your shell or:
 
 ```bash
-# Core aliases
-alias c='aliases-cli code'
-
-# Source bash integration
-source /path/to/aliases-cli/bash_integration/project-env.sh
-source /path/to/aliases-cli/bash_completion/aliases-completion.sh
-
-# Source utility aliases (optional)
-source /path/to/aliases-cli/bash_aliases/basic.ali.sh
-source /path/to/aliases-cli/bash_aliases/maven.ali.sh
-source /path/to/aliases-cli/bash_aliases/npm.ali.sh
+source ~/.bash_aliases
 ```
 
-### 3. Create Configuration
+## Headless / CI Environments
 
-Configuration is automatically created on first run at `~/.config/aliases-cli/config.json`.
+Systems without a GUI keychain (servers, CI) need the fallback backend:
 
 ```bash
-# Edit configuration
-aliases-cli config edit
-
-# Or manually edit
-vim ~/.config/aliases-cli/config.json
+uv tool install git+https://github.com/bbauer0706/aliases --extra keyring-fallback
 ```
 
-## Configuration
-
-### Project Settings
-
-Configuration is automatically created on first run at `~/.config/aliases-cli/config.json`. You can manage it using the config command:
-
-```bash
-# View all configuration
-aliases-cli config list
-
-# Edit configuration
-aliases-cli config edit
-
-# Set specific values
-aliases-cli config set projects.workspace_directory ~/dev/projects
-
-# Or manually edit
-vim ~/.config/aliases-cli/config.json
-```
-
-### Workspace Structure
-
-The system expects projects in `~/workspaces/`:
-
-```
-~/workspaces/
-├── project-name/
-│   ├── backend/         # Server component
-│   ├── frontend/        # Web component
-│   └── ...
-├── another-project/
-│   ├── java/           # Custom server path
-│   ├── react-app/      # Custom web path
-│   └── ...
-```
-
-## Verification
-
-Test your installation:
-
-```bash
-# Test basic functionality
-aliases-cli --help
-c --help
-
-# Test project navigation (if projects exist)
-c <your-project>
-
-# Test tab completion
-c <TAB><TAB>
-```
-
-## Troubleshooting
-
-### Build Issues
-
-**Missing compiler:**
-```bash
-# Install GCC
-sudo apt-get install build-essential  # Ubuntu/Debian
-brew install gcc                      # macOS
-
-# Or use pre-compiled binary (if available)
-```
-
-**ncurses missing:**
-The build system includes ncurses, but if you encounter issues:
-```bash
-# This should not be necessary (ncurses is included)
-sudo apt-get install libncurses5-dev  # Ubuntu/Debian
-brew install ncurses                  # macOS
-```
-
-### Installation Issues
-
-**Binary in use during installation:**
-```bash
-# Error: "Text file busy" during install
-# Option 1: Close all running aliases-cli instances manually
-pkill aliases-cli
-./install.sh
-
-# Option 2: Use force mode (automatically handles this)
-./install.sh --force
-```
-
-**Permission errors during installation:**
-```bash
-# If install fails with permission errors
-# Check write permissions for:
-ls -la ~/.bash_aliases ~/.bashrc ~/.local/bin/
-# Fix permissions if needed:
-chmod 644 ~/.bash_aliases ~/.bashrc
-chmod 755 ~/.local/bin/
-```
-
-### Runtime Issues
-
-**Command not found:**
-```bash
-# Ensure aliases are loaded
-source ~/.bashrc
-
-# Or use full path
-/path/to/aliases-cli/build/aliases-cli --help
-```
-
-**Project not found:**
-1. Check workspace structure: `~/workspaces/project-name/`
-2. Verify config: `aliases-cli config list`
-3. Test with: `aliases-cli code --list`
-
-**Tab completion not working:**
-```bash
-# Ensure completion script is sourced
-source bash_completion/aliases-completion.sh
-
-# Reload shell
-exec bash
-```
-
-## Advanced Configuration
-
-### Custom Workspace Directory
-
-By default, the system looks for projects in `~/workspaces/`. To use a different directory, modify your project mappings or use full paths.
-
-### Multiple Workspace Roots
-
-You can configure projects in different locations by specifying full paths in your mappings.
-
-### System-wide Installation
-
-```bash
-# Install binary to /usr/local/bin
-./build.sh --install
-
-# Then aliases-cli will be available system-wide
-```
+This adds `keyrings.alt` which stores secrets in an encrypted file instead of
+the OS keychain.
 
 ## Updating
 
-To update aliases-cli:
-
 ```bash
-cd /path/to/aliases-cli
-git pull
-./build.sh
+uv tool upgrade aliases-cli
+aliases-cli setup --update   # refresh bundled shell/alias files
 ```
 
-The installer can be run again safely to update integration scripts.
+`--update` only overwrites the files inside `~/.config/aliases-cli/` — it
+does not touch `~/.bash_aliases` or `~/.bashrc`.
 
-## Uninstallation
+## Uninstalling
 
-To remove aliases-cli:
+```bash
+uv tool uninstall aliases-cli
+rm -rf ~/.config/aliases-cli
+# Remove the source line from ~/.bash_aliases and ~/.bashrc manually
+```
 
-1. Remove the aliases from your shell configuration
-2. Remove the directory: `rm -rf /path/to/aliases-cli`
-3. Remove the binary (if installed system-wide): `sudo rm /usr/local/bin/aliases-cli`
+## Development Install
+
+```bash
+git clone https://github.com/bbauer0706/aliases
+cd aliases
+uv sync --group dev
+uv run aliases-cli --version
+```
