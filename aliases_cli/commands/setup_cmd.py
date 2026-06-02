@@ -71,7 +71,11 @@ def setup_command(force: bool, update: bool) -> None:
         _copy_data_file("config.template.json", config_file)
         click.echo(f"  Created {config_file}")
     else:
-        click.echo(f"  Config already exists: {config_file}")
+        # Config exists — save it back after _deep_merge so any new default
+        # keys added since last install are written to disk.
+        cfg = Config.instance()
+        cfg.save()
+        click.echo(f"  Config updated with new defaults: {config_file}")
 
     # ── 3. Copy shell integration, aliases, completion ─────────────────────
     all_files = _SHELL_FILES + _ALIAS_FILES + _COMPLETION_FILES
