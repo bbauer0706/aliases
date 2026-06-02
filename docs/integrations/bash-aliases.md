@@ -6,6 +6,23 @@ by `~/.bash_aliases`.
 
 ---
 
+## `aws.ali.sh`
+
+AWS profile switching helpers. Requires `aws-cli` and `fzf`.
+
+| Function | Description |
+|----------|-------------|
+| `pickaws` | Interactively select an AWS profile with fzf, set `AWS_PROFILE`, and verify or refresh SSO credentials |
+
+### `pickaws` Behaviour
+
+1. Lists all profiles via `aws configure list-profiles` and lets you pick one with fzf
+2. Exports `AWS_PROFILE` for the current shell session
+3. Runs `aws sts get-caller-identity` to check credential validity
+4. Prints `[OK] Aktiv` (green) if credentials are valid; otherwise prints `[WARN] SSO Login erforderlich` (yellow) and runs `aws sso login`
+
+---
+
 ## `basic.ali.sh`
 
 General navigation and utility aliases.
