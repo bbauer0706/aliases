@@ -22,17 +22,18 @@
 #   }
 
 # ---------------------------------------------------------------------------
-# _aliases_prompt_pwd – formatted CWD for PS1
+# Prompt cache – aliases-cli is only invoked when the directory changes.
+# On every other Enter press, PS1 reads the cached string at zero cost.
 # ---------------------------------------------------------------------------
-_aliases_prompt_pwd() {
-    aliases-cli pwd --ps1 2>/dev/null || printf '%s' "$PWD"
-}
+_ALIASES_PROMPT_CACHE=""
+_ALIASES_PROMPT_CACHE_DIR=""
 
-# ---------------------------------------------------------------------------
-# _aliases_prompt_user_host – formatted user@host for PS1 (with label rules)
-# ---------------------------------------------------------------------------
-_aliases_prompt_user_host() {
-    aliases-cli pwd --user-host --ps1 2>/dev/null || printf '%s@%s' "$USER" "$HOSTNAME"
+_aliases_update_prompt_cache() {
+    if [[ "$PWD" != "$_ALIASES_PROMPT_CACHE_DIR" ]]; then
+        _ALIASES_PROMPT_CACHE="$(aliases-cli pwd --full-prompt --ps1 2>/dev/null)" \
+            || _ALIASES_PROMPT_CACHE="${USER}@${HOSTNAME}:${PWD}"
+        _ALIASES_PROMPT_CACHE_DIR="$PWD"
+    fi
 }
 
 # ---------------------------------------------------------------------------
@@ -46,9 +47,15 @@ aliases_setup_prompt() {
         return
     fi
 
-    # Build PS1: user@host:path$
-    # _aliases_prompt_user_host handles colour + label replacements
-    PS1="\$(_aliases_prompt_user_host):\$(_aliases_prompt_pwd)\\$ "
+    # Populate cache immediately so the first prompt is correct.
+    _aliases_update_prompt_cache
+
+    # Hook into PROMPT_COMMAND so the cache refreshes only on cd.
+    # Preserve any existing PROMPT_COMMAND entries.
+    PROMPT_COMMAND="_aliases_update_prompt_cache${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
+
+    # PS1 just reads the pre-built cached string – no subprocess, no Python.
+    PS1="\${_ALIASES_PROMPT_CACHE}\\$ "
     export PS1
 }
 

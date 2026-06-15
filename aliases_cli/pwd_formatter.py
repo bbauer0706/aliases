@@ -159,3 +159,20 @@ def get_user_host_label(config: "Config", *, no_color: bool = False, ps1: bool =
         return f"{open_code}{user_label}@{host_label}{close_code}"
 
     return f"{user_label}@{host_label}"
+
+
+def format_full_prompt(
+    config: "Config",
+    pwd: str | None = None,
+    *,
+    no_color: bool = False,
+    ps1: bool = False,
+) -> str:
+    """Return the complete ``user@host:path`` prompt string in a single call.
+
+    Combines :func:`get_user_host_label` and :func:`format_pwd` so the shell
+    only needs to spawn one Python process per prompt refresh.
+    """
+    user_host = get_user_host_label(config, no_color=no_color, ps1=ps1)
+    path = format_pwd(config, pwd, no_color=no_color, ps1=ps1)
+    return f"{user_host}:{path}"
