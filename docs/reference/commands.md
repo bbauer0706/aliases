@@ -178,9 +178,38 @@ aliases-cli pwd [OPTIONS]
 |--------|-------------|
 | `--no-color` | Suppress ANSI color codes |
 | `--ps1` | Wrap codes in `\001...\002` for readline safety |
+| `--user-host` | Return formatted `user@host` string (with label replacements) |
 | `--user-host-color` | Return only the user@host ANSI color code |
+| `--full-prompt` | Return full `user@host:path` in a single call (used by `prompt.sh`) |
 
 Used internally by `prompt.sh` to build the custom PS1.
+
+---
+
+## `update`
+
+Check for a newer release on GitHub and self-update via `uv`.
+
+```
+aliases-cli update [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--check` | Report only; exit 1 if an update is available, do not install |
+| `--force` | Re-install even if already on the latest version |
+
+### Behavior
+
+Fetches the latest `vX.Y.Z` tag from the GitHub API, compares it to the
+installed version, and runs:
+
+```bash
+uv tool install --force-reinstall git+https://github.com/bbauer0706/aliases
+```
+
+Requires `uv` on `$PATH`. Exits 1 with an error message if `uv` is missing
+or GitHub is unreachable.
 
 ---
 

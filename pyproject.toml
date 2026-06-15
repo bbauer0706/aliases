@@ -62,7 +62,8 @@ dev = [
 name = "cz_conventional_commits"
 version = "2.2.0"
 version_files = [
-    "pyproject.toml:^version"
+    "pyproject.toml:version = \""
 ]
 tag_format = "v$version"
 update_changelog_on_bump = true
+push = true
