@@ -1,3 +1,9 @@
+## v2.2.3 (2026-06-15)
+
+### Fix
+
+- **cz**: use --tags instead of --follow-tags for lightweight tag push
+
 ## v2.2.2 (2026-06-15)
 
 ### Fix
