@@ -1,3 +1,9 @@
+## v2.2.0 (2026-06-15)
+
+### Feat
+
+- **update**: add aliases-cli update command
+
 ## v2.1.1 (2026-06-15)
 
 ### Perf
