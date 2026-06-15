@@ -66,4 +66,4 @@ version_files = [
 ]
 tag_format = "v$version"
 update_changelog_on_bump = true
-push = true
+post_bump_hooks = ["git push origin main --follow-tags"]
