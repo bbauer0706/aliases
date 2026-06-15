@@ -1,3 +1,9 @@
+## v2.2.1 (2026-06-15)
+
+### Fix
+
+- **cz**: enable auto-push and fix version_files pattern
+
 ## v2.2.0 (2026-06-15)
 
 ### Feat
