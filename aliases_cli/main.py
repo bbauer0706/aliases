@@ -13,6 +13,7 @@ from aliases_cli.commands.config_cmd import config_group
 from aliases_cli.commands.project_env import env_command
 from aliases_cli.commands.secrets_cmd import secrets_group
 from aliases_cli.commands.setup_cmd import setup_command
+from aliases_cli.commands.update_cmd import update_command
 from aliases_cli.config import Config
 from aliases_cli.project_mapper import ProjectMapper
 from aliases_cli import pwd_formatter
@@ -165,6 +166,13 @@ def completion_config_keys() -> None:
 # ---------------------------------------------------------------------------
 
 cli.add_command(setup_command)
+
+
+# ---------------------------------------------------------------------------
+# update
+# ---------------------------------------------------------------------------
+
+cli.add_command(update_command)
 
 
 # ---------------------------------------------------------------------------
