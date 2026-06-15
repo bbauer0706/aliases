@@ -13,21 +13,24 @@
 # project_env
 # ---------------------------------------------------------------------------
 project_env() {
-    local output exit_code
+    local stdout stderr exit_code tmp_stderr
+    tmp_stderr=$(mktemp)
 
-    # Capture the export statements
-    output=$(aliases-cli env "$@" 2>/dev/null)
+    # Single invocation: capture stdout (exports) and let stderr flow through
+    stdout=$(aliases-cli env "$@" 2>"$tmp_stderr")
     exit_code=$?
+    stderr=$(cat "$tmp_stderr")
+    rm -f "$tmp_stderr"
 
     if [[ $exit_code -ne 0 ]]; then
         echo "Error: aliases-cli env failed (exit $exit_code)" >&2
+        [[ -n "$stderr" ]] && echo "$stderr" >&2
         return $exit_code
     fi
 
-    eval "$output"
-
-    # Print the success message that the CLI wrote to stderr
-    aliases-cli env "$@" >/dev/null
+    eval "$stdout"
+    # Print the status message that the CLI wrote to stderr
+    [[ -n "$stderr" ]] && echo "$stderr" >&2
 }
 
 # ---------------------------------------------------------------------------
@@ -57,12 +60,8 @@ alias project_fix='refresh_project_env'
 if [[ "${ALIASES_AUTO_SETUP_ENV:-0}" == "1" ]]; then
     _auto_setup_new_terminal() {
         [[ -n "$PROJECT_NAME" ]] && return
-        local cwd
-        cwd=$(pwd)
-        # Only trigger inside configured workspace directories
-        if aliases-cli completion projects &>/dev/null; then
-            project_env -e "${DEFAULT_ENV:-dev}" 2>/dev/null || true
-        fi
+        # Run project_env; it exits cleanly if CWD isn't inside a workspace dir.
+        project_env -e "${DEFAULT_ENV:-dev}" 2>/dev/null || true
     }
     _auto_setup_new_terminal
     unset -f _auto_setup_new_terminal

@@ -6,6 +6,7 @@ and builds a list of :class:`ProjectInfo` objects.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -32,15 +33,34 @@ class ProjectInfo:
 
 
 class ProjectMapper:
+    _CACHE_TTL = 5.0  # seconds
+
     def __init__(self, config: "Config") -> None:
         self._config = config
+        self._cache: list[ProjectInfo] | None = None
+        self._cache_ts: float = 0.0
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
     def discover_projects(self) -> list[ProjectInfo]:
-        """Scan workspace directories and return all discovered projects."""
+        """Scan workspace directories and return all discovered projects.
+
+        Results are cached for :attr:`_CACHE_TTL` seconds so rapid repeated
+        calls (tab-completion bursts, multi-component opens) share one scan.
+        """
+        now = time.monotonic()
+        if self._cache is not None and (now - self._cache_ts) < self._CACHE_TTL:
+            return self._cache
+
+        result = self._scan_projects()
+        self._cache = result
+        self._cache_ts = now
+        return result
+
+    def _scan_projects(self) -> list[ProjectInfo]:
+        """Unconditionally scan workspace directories."""
         workspace_dirs: list[str] = self._config.get("projects.workspace_directories", [])
         shortcuts: dict[str, str] = self._config.get("projects.shortcuts", {})
         ignore: list[str] = self._config.get("projects.ignore", [])

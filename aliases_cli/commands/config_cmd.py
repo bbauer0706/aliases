@@ -7,13 +7,9 @@ import subprocess
 import sys
 
 import click
-from rich.console import Console
-from rich.table import Table
 
 from aliases_cli.config import Config
 from aliases_cli.config_sync import ConfigSync
-
-console = Console()
 
 
 # ---------------------------------------------------------------------------
@@ -59,7 +55,8 @@ def config_set(key: str, value: str) -> None:
     cfg.set(key, value)
     cfg.save()
     coerced = cfg.get(key)
-    console.print(f"[green]✓[/green] {key} = {coerced}")
+    from rich.console import Console  # noqa: PLC0415
+    Console().print(f"[green]✓[/green] {key} = {coerced}")
 
 
 # ── list ───────────────────────────────────────────────────────────────────
@@ -79,6 +76,9 @@ def config_list(plain: bool) -> None:
                     click.echo(f"{section}.{k} = {v}")
         return
 
+    from rich.console import Console  # noqa: PLC0415
+    from rich.table import Table  # noqa: PLC0415
+    console = Console()
     for section, values in sorted(data.items()):
         table = Table(
             title=f"[bold cyan][{section}][/bold cyan]",

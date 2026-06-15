@@ -42,6 +42,12 @@ ANSI_COLORS: dict[str, str] = {
 
 _RESET = "\033[0m"
 
+# Resolved once per process — hostname never changes mid-session.
+try:
+    _HOSTNAME: str = socket.gethostname()
+except OSError:
+    _HOSTNAME = ""
+
 
 def _wrap(code: str, ps1_mode: bool) -> str:
     """Optionally wrap an ANSI code in readline non-printing delimiters."""
@@ -131,10 +137,7 @@ def get_user_host_label(config: "Config", *, no_color: bool = False, ps1: bool =
         "user_replacements": [{"username": "benedikt.bauer", "label": "bb"}]
     """
     real_user: str = os.environ.get("USER") or os.environ.get("LOGNAME") or ""
-    try:
-        real_host: str = socket.gethostname()
-    except OSError:
-        real_host = ""
+    real_host: str = _HOSTNAME
 
     # Resolve user label
     user_label = real_user
