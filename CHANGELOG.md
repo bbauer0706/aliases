@@ -1,3 +1,9 @@
+## v2.1.1 (2026-06-15)
+
+### Perf
+
+- fix 5 additional performance issues across shell and Python
+
 ## v2.1.0 (2026-06-15)
 
 ### Feat
