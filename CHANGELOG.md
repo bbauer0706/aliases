@@ -1,3 +1,9 @@
+## v2.2.4 (2026-06-16)
+
+### Fix
+
+- resolve project shortcuts using full_name → alias mapping
+
 ## v2.2.3 (2026-06-15)
 
 ### Fix
