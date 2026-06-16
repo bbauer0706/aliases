@@ -91,7 +91,7 @@ class TestDiscoverProjects:
         _mk_project(workspace, "my-long-project-name")
         cfg = Config.instance()
         cfg._data["projects"]["workspace_directories"] = [str(workspace)]
-        cfg._data["projects"]["shortcuts"] = {"mlpn": "my-long-project-name"}
+        cfg._data["projects"]["shortcuts"] = {"my-long-project-name": "mlpn"}
         mapper = ProjectMapper(cfg)
         projects = mapper.discover_projects()
         assert projects[0].display_name == "mlpn"
@@ -112,7 +112,7 @@ class TestFindProject:
         _mk_project(workspace, "dispatch-backend")
         cfg = Config.instance()
         cfg._data["projects"]["workspace_directories"] = [str(workspace)]
-        cfg._data["projects"]["shortcuts"] = {"dis": "dispatch-backend"}
+        cfg._data["projects"]["shortcuts"] = {"dispatch-backend": "dis"}
         mapper = ProjectMapper(cfg)
         p = mapper.find_project("dis")
         assert p is not None

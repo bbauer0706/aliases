@@ -86,7 +86,7 @@ class TestCodeProjectLookup:
         make_project(workspace, "dispatch-backend")
         cfg = Config.instance()
         cfg._data["projects"]["workspace_directories"] = [str(workspace)]
-        cfg._data["projects"]["shortcuts"] = {"dis": "dispatch-backend"}
+        cfg._data["projects"]["shortcuts"] = {"dispatch-backend": "dis"}
 
         with _no_popen() as mock_popen:
             result = runner.invoke(cli, ["code", "dis"])

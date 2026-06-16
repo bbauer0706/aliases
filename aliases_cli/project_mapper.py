@@ -65,8 +65,8 @@ class ProjectMapper:
         shortcuts: dict[str, str] = self._config.get("projects.shortcuts", {})
         ignore: list[str] = self._config.get("projects.ignore", [])
 
-        # shortcuts maps display_name → full_name; invert for lookup
-        full_to_display: dict[str, str] = {v: k for k, v in shortcuts.items()}
+        # shortcuts maps full_name → display_name (the short alias)
+        full_to_display: dict[str, str] = dict(shortcuts)
 
         projects: list[ProjectInfo] = []
         seen: set[Path] = set()
