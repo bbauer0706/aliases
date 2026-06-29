@@ -24,7 +24,7 @@ class ConfigSync:
     # Setup
     # ------------------------------------------------------------------
 
-    def setup(self, url: str, method: str = "git") -> bool:
+    def setup(self, url: str, method: str = "git", repo_config_path: str | None = None) -> bool:
         if method not in SUPPORTED_METHODS:
             _err(f"Unknown sync method '{method}'. Supported: {', '.join(SUPPORTED_METHODS)}")
             return False
@@ -32,8 +32,11 @@ class ConfigSync:
         self._config.set("sync.enabled", "true")
         self._config.set("sync.remote_url", url)
         self._config.set("sync.method", method)
+        if repo_config_path is not None:
+            self._config.set("sync.repo_config_path", repo_config_path)
         self._config.save()
-        _ok(f"Sync configured: method={method}, url={url}")
+        path_info = f", config path={self._config.get('sync.repo_config_path', 'config.json')}"
+        _ok(f"Sync configured: method={method}, url={url}{path_info}")
         return True
 
     # ------------------------------------------------------------------
@@ -78,9 +81,10 @@ class ConfigSync:
                 _err(f"git pull failed: {err.strip()}")
                 return False
 
-        remote_cfg = repo_dir / "config.json"
+        repo_cfg_path = self._config.get("sync.repo_config_path", "config.json")
+        remote_cfg = repo_dir / repo_cfg_path
         if not remote_cfg.exists():
-            _err("Remote repo does not contain config.json")
+            _err(f"Remote repo does not contain {repo_cfg_path}")
             return False
 
         shutil.copy2(remote_cfg, self._config.config_file)
@@ -159,12 +163,15 @@ class ConfigSync:
             _err("No local cache — run 'config sync pull' first.")
             return False
 
-        shutil.copy2(self._config.config_file, repo_dir / "config.json")
+        repo_cfg_path = self._config.get("sync.repo_config_path", "config.json")
+        dest = repo_dir / repo_cfg_path
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(self._config.config_file, dest)
 
         hostname = socket.gethostname()
         msg = f"chore: sync config from {hostname}"
 
-        process_utils.execute(["git", "add", "config.json"], cwd=repo_dir)
+        process_utils.execute(["git", "add", repo_cfg_path], cwd=repo_dir)
         code, _, err = process_utils.execute(
             ["git", "commit", "-m", msg], cwd=repo_dir
         )
@@ -209,33 +216,18 @@ class ConfigSync:
         method = self._config.get("sync.method", "git")
         url = self._config.get("sync.remote_url", "")
         last_sync = self._config.get("sync.last_sync", 0)
-        interval = self._config.get("sync.sync_interval", 86400)
-        auto = self._config.get("sync.auto_sync", False)
+        repo_cfg_path = self._config.get("sync.repo_config_path", "config.json")
 
         print(f"Sync enabled:   {enabled}")
         print(f"Method:         {method}")
         print(f"Remote URL:     {url or '(not set)'}")
-        print(f"Auto-sync:      {auto}")
-        print(f"Sync interval:  {interval}s")
+        print(f"Config path:    {repo_cfg_path}")
         if last_sync:
             elapsed = int(time.time()) - last_sync
             print(f"Last sync:      {_human_elapsed(elapsed)} ago")
         else:
             print("Last sync:      never")
         return True
-
-    def maybe_auto_sync(self) -> None:
-        """Silently trigger a pull if auto_sync is enabled, sync is configured, and interval has elapsed."""
-        if not self._config.get("sync.auto_sync", False):
-            return
-        if not self._config.get("sync.enabled", False):
-            return
-        if not self._config.get("sync.remote_url", ""):
-            return
-        last = self._config.get("sync.last_sync", 0)
-        interval = self._config.get("sync.sync_interval", 86400)
-        if (time.time() - last) >= interval:
-            self.pull()
 
     # ------------------------------------------------------------------
     # Helpers

@@ -70,7 +70,7 @@ _aliases_completion() {
                             local key="${COMP_WORDS[3]}"
                             case "$key" in
                                 general.terminal_colors|general.confirm_destructive_actions|\
-                                code.reuse_window|sync.enabled|sync.auto_sync|prompt.enabled)
+                                code.reuse_window|sync.enabled|prompt.enabled)
                                     COMPREPLY=($(compgen -W "true false" -- "$cur")) ;;
                                 general.verbosity)
                                     COMPREPLY=($(compgen -W "quiet normal verbose" -- "$cur")) ;;

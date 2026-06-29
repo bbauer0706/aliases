@@ -73,13 +73,10 @@ src/aliases/
 ### `config_sync.py` — Remote Sync
 
 Four methods share the same `setup/pull/push/status` interface:
-- **git**: clone to `~/.config/aliases/cache/sync/config-repo`, pull/commit/push
+- **git**: clone to `~/.config/aliases/cache/sync/config-repo`, pull/commit/push. The path of `config.json` within the repo is controlled by `sync.repo_config_path` (default `config.json`).
 - **rsync**: `rsync -az` to/from remote path
 - **file**: `shutil.copy2` to/from local/network path
 - **http**: `urllib.request.urlopen` (read-only)
-
-`maybe_auto_sync()` is called at startup — it is a no-op unless sync is enabled,
-a URL is configured, and the interval has elapsed.
 
 ### `pwd_formatter.py` — Prompt Path
 
@@ -118,5 +115,4 @@ bash: PS1 via _aliases_prompt_pwd()
 aliases = "aliases.main:main"
 ```
 
-`main.py` initialises Config (singleton), calls `maybe_auto_sync()`, then
-delegates to Click's group dispatcher.
+`main.py` initialises Config (singleton), then delegates to Click's group dispatcher.

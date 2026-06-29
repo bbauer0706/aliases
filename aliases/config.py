@@ -37,8 +37,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "sync": {
         "enabled": False,
         "remote_url": "",
-        "auto_sync": False,
-        "sync_interval": 86400,
+        "repo_config_path": "config.json",
         "last_sync": 0,
         "method": "git",
     },

@@ -19,8 +19,7 @@
   "sync": {
     "enabled": false,
     "remote_url": "",
-    "auto_sync": false,
-    "sync_interval": 86400,
+    "repo_config_path": "config.json",
     "last_sync": 0,
     "method": "git"
   },

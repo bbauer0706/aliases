@@ -150,13 +150,18 @@ def sync_group() -> None:
 @sync_group.command("setup")
 @click.argument("url")
 @click.argument("method", default="git")
-def sync_setup(url: str, method: str) -> None:
+@click.option(
+    "--config-path",
+    default=None,
+    help="Path to config.json within the remote (git method). E.g. aliases/config.json",
+)
+def sync_setup(url: str, method: str, config_path: str | None) -> None:
     """Configure remote sync.
 
     METHOD is one of: git (default), rsync, file, http.
     """
     sync = ConfigSync(Config.instance())
-    if not sync.setup(url, method):
+    if not sync.setup(url, method, repo_config_path=config_path):
         sys.exit(1)
 
 

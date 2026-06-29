@@ -164,17 +164,4 @@ cli.add_command(update_command)
 
 
 def main() -> None:
-    # Trigger auto-sync in the background so it never blocks command execution.
-    try:
-        import threading  # noqa: PLC0415
-        from aliases.config_sync import ConfigSync  # noqa: PLC0415
-
-        t = threading.Thread(
-            target=ConfigSync(Config.instance()).maybe_auto_sync,
-            daemon=True,
-        )
-        t.start()
-    except Exception:
-        pass
-
     cli()

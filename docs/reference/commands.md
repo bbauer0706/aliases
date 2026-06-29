@@ -128,10 +128,10 @@ aliases config path                # print config file path
 ```
 
 ```
-aliases config sync setup <url> [method]   # configure remote
-aliases config sync pull                    # fetch from remote
-aliases config sync push                    # push to remote
-aliases config sync status                  # show sync state
+aliases config sync setup <url> [method] [--config-path <path>]   # configure remote
+aliases config sync pull                                            # fetch from remote
+aliases config sync push                                            # push to remote
+aliases config sync status                                          # show sync state
 ```
 
 Keys use dot-notation: `general.editor`, `env.base_port`, etc.

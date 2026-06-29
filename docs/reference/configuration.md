@@ -57,8 +57,7 @@ Settings for `config sync`.
 | `sync.enabled` | bool | `false` | Enable remote sync |
 | `sync.remote_url` | string | `""` | Remote URL (git repo, rsync path, file path, or HTTP URL) |
 | `sync.method` | string | `git` | `git` / `rsync` / `file` / `http` |
-| `sync.auto_sync` | bool | `false` | Pull on startup when interval has elapsed |
-| `sync.sync_interval` | int | `86400` | Seconds between auto-sync pulls |
+| `sync.repo_config_path` | string | `config.json` | Path to `config.json` within the remote (git method). E.g. `aliases/config.json` |
 | `sync.last_sync` | int | `0` | Unix timestamp of last successful sync (auto-managed) |
 
 ---

@@ -17,8 +17,11 @@ rsync, a network file path, or an HTTP endpoint.
 ### 1. Configure (once per machine)
 
 ```bash
-# git (recommended)
+# git (recommended) — config.json at repo root
 aliases config sync setup git@github.com:you/aliases-config.git
+
+# git — config.json in a subfolder (e.g. a shared config repo)
+aliases config sync setup git@github.com:you/config.git --config-path aliases/config.json
 
 # rsync
 aliases config sync setup user@host:/path/to/config rsync
