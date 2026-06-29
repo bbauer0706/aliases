@@ -59,8 +59,6 @@ _aliases_setup_prompt() {
     export PS1
 }
 
-# Auto-enable if requested
-if [[ "${ALIASES_AUTO_SETUP_PROMPT:-0}" == "1" ]]; then
-    _aliases_setup_prompt
-fi
+_aliases_setup_prompt
+
 unset -f _aliases_setup_prompt
