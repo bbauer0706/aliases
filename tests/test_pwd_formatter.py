@@ -158,3 +158,63 @@ class TestGetUserHostLabel:
              patch.dict("os.environ", {"USER": "alice"}):
             result = get_user_host_label(cfg)
         assert "\033[" not in result
+
+    def test_host_glob_pattern_matches(self):
+        cfg = Config.instance()
+        cfg._data["prompt"]["host_replacements"] = [
+            {"hostname": "ip-10-*", "label": "prod"}
+        ]
+        with patch("aliases.pwd_formatter._HOSTNAME", "ip-10-80-1-32"), \
+             patch.dict("os.environ", {"USER": "alice"}):
+            result = get_user_host_label(cfg, no_color=True)
+        assert result == "alice@prod"
+
+    def test_host_glob_pattern_no_match(self):
+        cfg = Config.instance()
+        cfg._data["prompt"]["host_replacements"] = [
+            {"hostname": "ip-10-*", "label": "prod"}
+        ]
+        with patch("aliases.pwd_formatter._HOSTNAME", "myhost"), \
+             patch.dict("os.environ", {"USER": "alice"}):
+            result = get_user_host_label(cfg, no_color=True)
+        assert result == "alice@myhost"
+
+    def test_host_catchall_glob(self):
+        cfg = Config.instance()
+        cfg._data["prompt"]["host_replacements"] = [
+            {"hostname": "*", "label": "here"}
+        ]
+        with patch("aliases.pwd_formatter._HOSTNAME", "whatever-host-123"), \
+             patch.dict("os.environ", {"USER": "alice"}):
+            result = get_user_host_label(cfg, no_color=True)
+        assert result == "alice@here"
+
+    def test_host_env_var_in_pattern(self):
+        cfg = Config.instance()
+        cfg._data["prompt"]["host_replacements"] = [
+            {"hostname": "${MY_HOST}", "label": "matched"}
+        ]
+        with patch("aliases.pwd_formatter._HOSTNAME", "target-host"), \
+             patch.dict("os.environ", {"USER": "alice", "MY_HOST": "target-host"}):
+            result = get_user_host_label(cfg, no_color=True)
+        assert result == "alice@matched"
+
+    def test_host_env_var_in_label(self):
+        cfg = Config.instance()
+        cfg._data["prompt"]["host_replacements"] = [
+            {"hostname": "*", "label": "${HOST_ALIAS}"}
+        ]
+        with patch("aliases.pwd_formatter._HOSTNAME", "anyhost"), \
+             patch.dict("os.environ", {"USER": "alice", "HOST_ALIAS": "mybox"}):
+            result = get_user_host_label(cfg, no_color=True)
+        assert result == "alice@mybox"
+
+    def test_user_glob_pattern_matches(self):
+        cfg = Config.instance()
+        cfg._data["prompt"]["user_replacements"] = [
+            {"username": "svc-*", "label": "svc"}
+        ]
+        with patch("aliases.pwd_formatter._HOSTNAME", "myhost"), \
+             patch.dict("os.environ", {"USER": "svc-deploy"}):
+            result = get_user_host_label(cfg, no_color=True)
+        assert result == "svc@myhost"

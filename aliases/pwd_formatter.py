@@ -8,7 +8,9 @@ delimiters) for use inside PS1.
 
 from __future__ import annotations
 
+import fnmatch
 import os
+import re
 import socket
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -54,6 +56,13 @@ def _wrap(code: str, ps1_mode: bool) -> str:
     if not code:
         return ""
     return f"\001{code}\002" if ps1_mode else code
+
+
+def _expand_vars(value: str) -> str:
+    """Expand ``${VAR}`` and ``$VAR`` references using the current environment."""
+    result = re.sub(r"\$\{([^}]+)\}", lambda m: os.environ.get(m.group(1), m.group(0)), value)
+    result = re.sub(r"\$([A-Za-z_][A-Za-z0-9_]*)", lambda m: os.environ.get(m.group(1), m.group(0)), result)
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -139,18 +148,20 @@ def get_user_host_label(config: "Config", *, no_color: bool = False, ps1: bool =
     real_user: str = os.environ.get("USER") or os.environ.get("LOGNAME") or ""
     real_host: str = _HOSTNAME
 
-    # Resolve user label
+    # Resolve user label — patterns support fnmatch globs and ${VAR} expansion.
     user_label = real_user
     for rule in config.get("prompt.user_replacements", []):
-        if rule.get("username") == real_user:
-            user_label = rule.get("label", real_user)
+        pattern = _expand_vars(rule.get("username", ""))
+        if pattern and fnmatch.fnmatch(real_user, pattern):
+            user_label = _expand_vars(rule.get("label", real_user))
             break
 
-    # Resolve host label
+    # Resolve host label — patterns support fnmatch globs and ${VAR} expansion.
     host_label = real_host
     for rule in config.get("prompt.host_replacements", []):
-        if rule.get("hostname") == real_host:
-            host_label = rule.get("label", real_host)
+        pattern = _expand_vars(rule.get("hostname", ""))
+        if pattern and fnmatch.fnmatch(real_host, pattern):
+            host_label = _expand_vars(rule.get("label", real_host))
             break
 
     use_color = config.get("general.terminal_colors", True) and not no_color
