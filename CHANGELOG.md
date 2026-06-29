@@ -1,3 +1,9 @@
+## v3.2.0 (2026-06-29)
+
+### Feat
+
+- env / pattern pwd replacement
+
 ## v3.1.0 (2026-06-29)
 
 ### Feat
