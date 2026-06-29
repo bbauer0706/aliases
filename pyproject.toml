@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aliases"
-version = "3.0.0"
+version = "3.1.0"
 description = "Developer workspace management – project discovery, env setup, config sync, shell prompt"
 readme = "README.md"
 license = { text = "MIT" }
@@ -60,7 +60,7 @@ dev = [
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "3.0.0"
+version = "3.1.0"
 version_files = [
     "pyproject.toml:version = \""
 ]
