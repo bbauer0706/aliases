@@ -1,13 +1,13 @@
 # Configuration Reference
 
-Config file: `~/.config/aliases-cli/config.json`
+Config file: `~/.config/aliases/config.json`
 
-Edit directly with `aliases-cli config edit`, or use get/set:
+Edit directly with `aliases config edit`, or use get/set:
 
 ```bash
-aliases-cli config get general.editor
-aliases-cli config set general.editor vim
-aliases-cli config list
+aliases config get general.editor
+aliases config set general.editor vim
+aliases config list
 ```
 
 ---

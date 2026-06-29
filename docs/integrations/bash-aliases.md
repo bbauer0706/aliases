@@ -1,7 +1,7 @@
 # Bash Aliases
 
-`aliases-cli setup` installs these alias files into
-`~/.config/aliases-cli/bash_aliases/`. They are sourced in alphabetical order
+`aliases setup` installs these alias files into
+`~/.config/aliases/bash_aliases/`. They are sourced in alphabetical order
 by `~/.bash_aliases`.
 
 ---
@@ -35,7 +35,7 @@ General navigation and utility aliases.
 | `~` | `cd ~` |
 | `kp <port>` | `fuser -k <port>/tcp` — kill process on port |
 | `tsc` | `npx tsc --noEmit` |
-| `show_env` | `aliases-cli env --show` |
+| `show_env` | `aliases env --show` |
 
 ---
 

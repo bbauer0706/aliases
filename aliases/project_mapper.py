@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from aliases_cli.config import Config
+    from aliases.config import Config
 
 
 @dataclass

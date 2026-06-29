@@ -16,10 +16,10 @@ uv sync --group dev
 ## Running Locally
 
 ```bash
-uv run aliases-cli --version
-uv run aliases-cli --help
-uv run aliases-cli config list
-uv run aliases-cli completion projects
+uv run aliases --version
+uv run aliases --help
+uv run aliases config list
+uv run aliases completion projects
 ```
 
 ## Tests
@@ -35,20 +35,20 @@ uv run pytest --cov=src     # with coverage
 
 ```bash
 uv build
-# → dist/aliases_cli-2.0.0-py3-none-any.whl
+# → dist/aliases-2.0.0-py3-none-any.whl
 ```
 
 ## Installing the Local Build
 
 ```bash
-uv tool install dist/aliases_cli-2.0.0-py3-none-any.whl --force-reinstall
+uv tool install dist/aliases-2.0.0-py3-none-any.whl --force-reinstall
 ```
 
 Or stay in the dev venv:
 
 ```bash
 uv sync      # re-install editable
-uv run aliases-cli setup
+uv run aliases setup
 ```
 
 ## Releasing

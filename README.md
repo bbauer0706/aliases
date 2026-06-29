@@ -1,4 +1,4 @@
-# aliases-cli
+# aliases
 
 Developer workspace management for your shell. Quick-open projects in VS Code, set up project environment variables, manage secrets via the OS keychain, and format your shell prompt – all with one tool.
 
@@ -14,10 +14,10 @@ uv tool install git+https://github.com/bbauer0706/aliases
 Then run the one-time setup:
 
 ```bash
-aliases-cli setup
+aliases setup
 ```
 
-This creates `~/.config/aliases-cli/`, wires up `~/.bash_aliases`, and adds a `source` line to `~/.bashrc`. Restart your shell (or `source ~/.bash_aliases`) and you are done.
+This creates `~/.config/aliases/`, wires up `~/.bash_aliases`, and adds a `source` line to `~/.bashrc`. Restart your shell (or `source ~/.bash_aliases`) and you are done.
 
 ### Headless / CI environments (no system keychain)
 
@@ -30,15 +30,15 @@ uv tool install git+https://github.com/bbauer0706/aliases --extra keyring-fallba
 ## Quick Reference
 
 ```
-aliases-cli code   [PROJECT] [s|w|sw|[sw]]   # open VS Code
-aliases-cli env    [-e ENV] [-p PORT] [-n]   # export project env vars (eval)
-aliases-cli config get|set|list|reset|edit   # manage config
-aliases-cli secrets set|get|list|load|delete # manage keychain secrets
-aliases-cli pwd    [--ps1] [--no-color]      # formatted working directory
-aliases-cli setup  [--update] [--force]      # (re)install shell integration
+aliases code   [PROJECT] [s|w|sw|[sw]]   # open VS Code
+aliases env    [-e ENV] [-p PORT] [-n]   # export project env vars (eval)
+aliases config get|set|list|reset|edit   # manage config
+aliases secrets set|get|list|load|delete # manage keychain secrets
+aliases pwd    [--ps1] [--no-color]      # formatted working directory
+aliases setup  [--update] [--force]      # (re)install shell integration
 ```
 
-The bash alias `c` maps to `aliases-cli code`:
+The bash alias `c` maps to `aliases code`:
 
 ```bash
 c dispatch          # open project
@@ -84,16 +84,16 @@ Exported variables: `PROJECT_NAME`, `PROFILE`, `WEBPORT`, `GQLPORT`, `GQLNUMBERO
 ### `config`
 
 ```bash
-aliases-cli config get general.editor
-aliases-cli config set general.editor vim
-aliases-cli config list
-aliases-cli config reset
-aliases-cli config edit
-aliases-cli config path
-aliases-cli config sync setup git@github.com:user/config-repo.git
-aliases-cli config sync pull
-aliases-cli config sync push
-aliases-cli config sync status
+aliases config get general.editor
+aliases config set general.editor vim
+aliases config list
+aliases config reset
+aliases config edit
+aliases config path
+aliases config sync setup git@github.com:user/config-repo.git
+aliases config sync pull
+aliases config sync push
+aliases config sync status
 ```
 
 ### `secrets`
@@ -101,10 +101,10 @@ aliases-cli config sync status
 Secrets are stored in the OS keychain (GNOME Keyring, macOS Keychain, Windows Credential Manager).
 
 ```bash
-aliases-cli secrets set MY_TOKEN          # prompts securely
-aliases-cli secrets get MY_TOKEN
-aliases-cli secrets list
-aliases-cli secrets delete MY_TOKEN
+aliases secrets set MY_TOKEN          # prompts securely
+aliases secrets get MY_TOKEN
+aliases secrets list
+aliases secrets delete MY_TOKEN
 secrets_load                              # eval all secrets into shell
 secrets_load MY_TOKEN DB_PASS            # eval specific secrets
 ```
@@ -114,24 +114,24 @@ secrets_load MY_TOKEN DB_PASS            # eval specific secrets
 Formats `$PWD` using path-replacement rules from config.
 
 ```bash
-aliases-cli pwd             # formatted path
-aliases-cli pwd --ps1       # readline-safe (for PS1)
-aliases-cli pwd --no-color  # no ANSI codes
+aliases pwd             # formatted path
+aliases pwd --ps1       # readline-safe (for PS1)
+aliases pwd --no-color  # no ANSI codes
 ```
 
 ### `setup`
 
 ```bash
-aliases-cli setup           # first-time setup
-aliases-cli setup --update  # update shell files only
-aliases-cli setup --force   # overwrite without prompting
+aliases setup           # first-time setup
+aliases setup --update  # update shell files only
+aliases setup --force   # overwrite without prompting
 ```
 
 ---
 
 ## Configuration
 
-Config file: `~/.config/aliases-cli/config.json`
+Config file: `~/.config/aliases/config.json`
 
 | Key | Default | Description |
 |-----|---------|-------------|

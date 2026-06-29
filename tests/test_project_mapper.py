@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pathlib import Path
 
-from aliases_cli.config import Config
-from aliases_cli.project_mapper import ProjectMapper
+from aliases.config import Config
+from aliases.project_mapper import ProjectMapper
 from tests.conftest import make_project
 
 

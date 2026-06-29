@@ -1,4 +1,4 @@
-"""Integration tests for ``aliases-cli secrets``.
+"""Integration tests for ``aliases secrets``.
 
 The OS keychain is fully mocked — no real credentials are written or read.
 """
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from aliases_cli.main import cli
+from aliases.main import cli
 
 
 class TestSecretsSet:

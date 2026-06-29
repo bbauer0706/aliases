@@ -1,6 +1,6 @@
 # Configuration Sync
 
-Sync `~/.config/aliases-cli/config.json` across multiple machines using git,
+Sync `~/.config/aliases/config.json` across multiple machines using git,
 rsync, a network file path, or an HTTP endpoint.
 
 ## Supported Methods
@@ -18,35 +18,35 @@ rsync, a network file path, or an HTTP endpoint.
 
 ```bash
 # git (recommended)
-aliases-cli config sync setup git@github.com:you/aliases-config.git
+aliases config sync setup git@github.com:you/aliases-config.git
 
 # rsync
-aliases-cli config sync setup user@host:/path/to/config rsync
+aliases config sync setup user@host:/path/to/config rsync
 
 # file / Dropbox
-aliases-cli config sync setup ~/Dropbox/aliases-config file
+aliases config sync setup ~/Dropbox/aliases-config file
 
 # HTTP (read-only)
-aliases-cli config sync setup https://example.com/aliases-config http
+aliases config sync setup https://example.com/aliases-config http
 ```
 
 ### 2. First machine — push
 
 ```bash
-aliases-cli config sync push
+aliases config sync push
 ```
 
 ### 3. Other machines — pull
 
 ```bash
-aliases-cli config sync pull
+aliases config sync pull
 ```
 
 ### 4. Enable auto-sync (optional)
 
 ```bash
-aliases-cli config set sync.auto_sync true
-aliases-cli config set sync.sync_interval 3600  # every hour
+aliases config set sync.auto_sync true
+aliases config set sync.sync_interval 3600  # every hour
 ```
 
 When enabled, a pull is triggered silently at startup if the interval has elapsed.
@@ -54,7 +54,7 @@ When enabled, a pull is triggered silently at startup if the interval has elapse
 ## Status
 
 ```bash
-aliases-cli config sync status
+aliases config sync status
 ```
 
 ## What Is Synced
@@ -70,9 +70,9 @@ Only `config.json` is synced. The secrets name index
 **Conflicts in git cache:** delete the local clone and re-pull:
 
 ```bash
-rm -rf ~/.config/aliases-cli/cache/sync
-aliases-cli config sync pull
+rm -rf ~/.config/aliases/cache/sync
+aliases config sync pull
 ```
 
-**HTTP 404 / connection errors:** run `aliases-cli config sync status` to confirm
+**HTTP 404 / connection errors:** run `aliases config sync status` to confirm
 the URL is correct, then try a manual pull to see the full error message.

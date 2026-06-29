@@ -1,7 +1,7 @@
 # Bash Integration
 
-`aliases-cli setup` installs three shell integration files into
-`~/.config/aliases-cli/shell/`. They are sourced by `~/.bash_aliases`.
+`aliases setup` installs three shell integration files into
+`~/.config/aliases/shell/`. They are sourced by `~/.bash_aliases`.
 
 ---
 
@@ -11,14 +11,14 @@ Provides:
 
 | Function / Alias | Description |
 |-----------------|-------------|
-| `project_env [opts]` | Calls `aliases-cli env`, evals output to export vars |
-| `show_env` | Calls `aliases-cli env --show` |
+| `project_env [opts]` | Calls `aliases env`, evals output to export vars |
+| `show_env` | Calls `aliases env --show` |
 | `refresh_project_env` | Re-runs `project_env` and calls `show_env` |
 | `fix_env`, `fix_project`, `project_fix` | Aliases for `refresh_project_env` |
 
 ### Why eval?
 
-`aliases-cli env` prints `export VAR='value';` lines to stdout.
+`aliases env` prints `export VAR='value';` lines to stdout.
 A child process cannot modify the parent shell's environment directly —
 eval bridges that gap.
 
@@ -36,11 +36,11 @@ Provides:
 | Function | Description |
 |----------|-------------|
 | `aliases_setup_prompt` | Installs a custom `PS1` |
-| `_aliases_prompt_pwd` | Called by `PS1`; invokes `aliases-cli pwd --ps1` |
+| `_aliases_prompt_pwd` | Called by `PS1`; invokes `aliases pwd --ps1` |
 
 ### PS1 Safety
 
-`aliases-cli pwd --ps1` wraps ANSI codes in `\001...\002` (readline
+`aliases pwd --ps1` wraps ANSI codes in `\001...\002` (readline
 non-printing delimiters). Without these, bash miscounts the line length and
 tab-completion / line editing breaks.
 
@@ -72,7 +72,7 @@ Provides:
 
 | Function / Alias | Description |
 |-----------------|-------------|
-| `secrets_load [names...]` | Evals `aliases-cli secrets load` output |
+| `secrets_load [names...]` | Evals `aliases secrets load` output |
 | `sload` | Short alias for `secrets_load` |
 
 Exports the requested (or all) secrets from the OS keychain into the current

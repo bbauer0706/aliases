@@ -1,4 +1,4 @@
-"""``aliases-cli env`` – discover current project and export shell variables.
+"""``aliases env`` – discover current project and export shell variables.
 
 Output is a series of ``export VAR='value';`` lines intended to be eval-d
 by the calling shell via the ``project_env`` bash function.
@@ -13,9 +13,9 @@ from pathlib import Path
 
 import click
 
-from aliases_cli.config import Config
-from aliases_cli.process_utils import is_port_available
-from aliases_cli.project_mapper import ProjectMapper
+from aliases.config import Config
+from aliases.process_utils import is_port_available
+from aliases.project_mapper import ProjectMapper
 
 
 # ---------------------------------------------------------------------------
@@ -46,7 +46,7 @@ def env_command(
 ) -> None:
     """Export project environment variables into the current shell.
 
-    Intended to be called via: eval "$(aliases-cli env [OPTIONS])"
+    Intended to be called via: eval "$(aliases env [OPTIONS])"
     """
     cfg = Config.instance()
     mapper = ProjectMapper(cfg)
@@ -171,7 +171,7 @@ def _find_available(start: int, *, is_server: bool) -> int:
 
 
 def _is_server_dir(cwd: Path, project: object) -> bool:
-    from aliases_cli.project_mapper import ProjectInfo  # noqa: PLC0415
+    from aliases.project_mapper import ProjectInfo  # noqa: PLC0415
 
     if not isinstance(project, ProjectInfo) or not project.server_path:
         return False

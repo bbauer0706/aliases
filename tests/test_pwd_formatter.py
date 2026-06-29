@@ -6,8 +6,8 @@ import pytest
 from pathlib import Path
 from unittest.mock import patch
 
-from aliases_cli.config import Config
-from aliases_cli.pwd_formatter import format_pwd, get_user_host_color, get_user_host_label, ANSI_COLORS
+from aliases.config import Config
+from aliases.pwd_formatter import format_pwd, get_user_host_color, get_user_host_label, ANSI_COLORS
 
 
 class TestFormatPwd:
@@ -87,7 +87,7 @@ class TestGetUserHostColor:
 class TestGetUserHostLabel:
     def test_returns_user_at_host(self):
         cfg = Config.instance()
-        with patch("aliases_cli.pwd_formatter._HOSTNAME", "myhost"), \
+        with patch("aliases.pwd_formatter._HOSTNAME", "myhost"), \
              patch.dict("os.environ", {"USER": "alice"}):
             result = get_user_host_label(cfg, no_color=True)
         assert result == "alice@myhost"
@@ -97,7 +97,7 @@ class TestGetUserHostLabel:
         cfg._data["prompt"]["host_replacements"] = [
             {"hostname": "ip-10-80-1-32", "label": "prod"}
         ]
-        with patch("aliases_cli.pwd_formatter._HOSTNAME", "ip-10-80-1-32"), \
+        with patch("aliases.pwd_formatter._HOSTNAME", "ip-10-80-1-32"), \
              patch.dict("os.environ", {"USER": "alice"}):
             result = get_user_host_label(cfg, no_color=True)
         assert result == "alice@prod"
@@ -107,7 +107,7 @@ class TestGetUserHostLabel:
         cfg._data["prompt"]["user_replacements"] = [
             {"username": "benedikt.bauer", "label": "bb"}
         ]
-        with patch("aliases_cli.pwd_formatter._HOSTNAME", "myhost"), \
+        with patch("aliases.pwd_formatter._HOSTNAME", "myhost"), \
              patch.dict("os.environ", {"USER": "benedikt.bauer"}):
             result = get_user_host_label(cfg, no_color=True)
         assert result == "bb@myhost"
@@ -116,7 +116,7 @@ class TestGetUserHostLabel:
         cfg = Config.instance()
         cfg._data["prompt"]["host_replacements"] = [{"hostname": "ip-10-80-1-32", "label": "prod"}]
         cfg._data["prompt"]["user_replacements"] = [{"username": "benedikt.bauer", "label": "bb"}]
-        with patch("aliases_cli.pwd_formatter._HOSTNAME", "ip-10-80-1-32"), \
+        with patch("aliases.pwd_formatter._HOSTNAME", "ip-10-80-1-32"), \
              patch.dict("os.environ", {"USER": "benedikt.bauer"}):
             result = get_user_host_label(cfg, no_color=True)
         assert result == "bb@prod"
@@ -125,28 +125,28 @@ class TestGetUserHostLabel:
         cfg = Config.instance()
         cfg._data["prompt"]["host_replacements"] = [{"hostname": "other-host", "label": "x"}]
         cfg._data["prompt"]["user_replacements"] = [{"username": "other-user", "label": "y"}]
-        with patch("aliases_cli.pwd_formatter._HOSTNAME", "myhost"), \
+        with patch("aliases.pwd_formatter._HOSTNAME", "myhost"), \
              patch.dict("os.environ", {"USER": "alice"}):
             result = get_user_host_label(cfg, no_color=True)
         assert result == "alice@myhost"
 
     def test_color_codes_present(self):
         cfg = Config.instance()
-        with patch("aliases_cli.pwd_formatter._HOSTNAME", "myhost"), \
+        with patch("aliases.pwd_formatter._HOSTNAME", "myhost"), \
              patch.dict("os.environ", {"USER": "alice"}):
             result = get_user_host_label(cfg, no_color=False)
         assert "\033[" in result
 
     def test_no_color_flag(self):
         cfg = Config.instance()
-        with patch("aliases_cli.pwd_formatter._HOSTNAME", "myhost"), \
+        with patch("aliases.pwd_formatter._HOSTNAME", "myhost"), \
              patch.dict("os.environ", {"USER": "alice"}):
             result = get_user_host_label(cfg, no_color=True)
         assert "\033[" not in result
 
     def test_ps1_wrapping(self):
         cfg = Config.instance()
-        with patch("aliases_cli.pwd_formatter._HOSTNAME", "myhost"), \
+        with patch("aliases.pwd_formatter._HOSTNAME", "myhost"), \
              patch.dict("os.environ", {"USER": "alice"}):
             result = get_user_host_label(cfg, ps1=True)
         assert "\001" in result
@@ -154,7 +154,7 @@ class TestGetUserHostLabel:
     def test_terminal_colors_off_suppresses_codes(self):
         cfg = Config.instance()
         cfg._data["general"]["terminal_colors"] = False
-        with patch("aliases_cli.pwd_formatter._HOSTNAME", "myhost"), \
+        with patch("aliases.pwd_formatter._HOSTNAME", "myhost"), \
              patch.dict("os.environ", {"USER": "alice"}):
             result = get_user_host_label(cfg)
         assert "\033[" not in result

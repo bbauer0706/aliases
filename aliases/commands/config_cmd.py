@@ -1,4 +1,4 @@
-"""``aliases-cli config`` – read, write, and sync configuration."""
+"""``aliases config`` – read, write, and sync configuration."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ import sys
 
 import click
 
-from aliases_cli.config import Config
-from aliases_cli.config_sync import ConfigSync
+from aliases.config import Config
+from aliases.config_sync import ConfigSync
 
 
 # ---------------------------------------------------------------------------
@@ -19,7 +19,7 @@ from aliases_cli.config_sync import ConfigSync
 
 @click.group("config")
 def config_group() -> None:
-    """Manage aliases-cli configuration."""
+    """Manage aliases configuration."""
 
 
 # ── get ────────────────────────────────────────────────────────────────────
@@ -110,7 +110,7 @@ def config_reset(yes: bool) -> None:
         return
     # Re-initialise by wiping the saved data
     cfg._data = json.loads(json.dumps(cfg.all()))  # snapshot
-    from aliases_cli.config import DEFAULT_CONFIG  # noqa: PLC0415
+    from aliases.config import DEFAULT_CONFIG  # noqa: PLC0415
 
     import copy
 

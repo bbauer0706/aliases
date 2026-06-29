@@ -1,9 +1,9 @@
 ---
-description: "Testing standards for aliases-cli. Use when writing or modifying unit tests, creating test fixtures, or running tests. Covers pytest patterns, config isolation, CLI integration tests via CliRunner, and mocking."
+description: "Testing standards for aliases. Use when writing or modifying unit tests, creating test fixtures, or running tests. Covers pytest patterns, config isolation, CLI integration tests via CliRunner, and mocking."
 applyTo: "tests/**"
 ---
 
-# Testing Conventions for aliases-cli
+# Testing Conventions for aliases
 
 ## Framework & Location
 
@@ -12,7 +12,7 @@ applyTo: "tests/**"
 - CLI integration tests: `tests/test_cli_<command>.py`
 - Shared fixtures: `tests/conftest.py`
 - Run: `uv run pytest`
-- Coverage: `uv run pytest --cov=aliases_cli`
+- Coverage: `uv run pytest --cov=aliases`
 
 ## Test Module Responsibilities
 
@@ -33,18 +33,18 @@ applyTo: "tests/**"
 `isolated_config` in `conftest.py` is `autouse=True` — it runs automatically before every test.
 
 It does:
-1. `Config.set_test_config_directory(tmp_path / "aliases-cli")` — redirects to a temp dir
+1. `Config.set_test_config_directory(tmp_path / "aliases")` — redirects to a temp dir
 2. `yield Config.instance()` — test runs
 3. `Config.reset()` — singleton cleared for the next test
 
-**Never** touch `~/.config/aliases-cli/` in tests. Never define a local `isolated_config` — use the one from conftest.
+**Never** touch `~/.config/aliases/` in tests. Never define a local `isolated_config` — use the one from conftest.
 
 ## Standard Fixture (conftest.py)
 
 ```python
 @pytest.fixture(autouse=True)
 def isolated_config(tmp_path: Path):
-    Config.set_test_config_directory(tmp_path / "aliases-cli")
+    Config.set_test_config_directory(tmp_path / "aliases")
     yield Config.instance()
     Config.reset()
 
@@ -64,8 +64,8 @@ Helper function (not a fixture): `from tests.conftest import make_project`
 ## Unit Test Pattern
 
 ```python
-from aliases_cli.config import Config
-from aliases_cli.project_mapper import ProjectMapper
+from aliases.config import Config
+from aliases.project_mapper import ProjectMapper
 from tests.conftest import make_project
 
 def test_finds_project(workspace):
@@ -81,7 +81,7 @@ def test_finds_project(workspace):
 ## CLI Integration Test Pattern
 
 ```python
-from aliases_cli.main import cli
+from aliases.main import cli
 
 def test_config_get_default(runner):
     result = runner.invoke(cli, ["config", "get", "general.editor"])
@@ -117,7 +117,7 @@ def test_has_ansi(runner):
 from unittest.mock import patch
 
 def test_opens_project(runner, workspace):
-    with patch("aliases_cli.commands.code_navigator.subprocess.Popen") as mock:
+    with patch("aliases.commands.code_navigator.subprocess.Popen") as mock:
         result = runner.invoke(cli, ["code", "myproject"])
     assert mock.called
     assert "myproject" in " ".join(mock.call_args[0][0])
@@ -149,7 +149,7 @@ def test_env_command(runner, workspace, monkeypatch):
 - Always check `result.exit_code == 0` for success cases
 - Never launch real VS Code → patch `subprocess.Popen`
 - Never touch real keychain → patch `keyring.*`
-- Never call `subprocess.run(["aliases-cli", ...])` in tests → use `runner.invoke(cli, [...])`
+- Never call `subprocess.run(["aliases", ...])` in tests → use `runner.invoke(cli, [...])`
 - Group related tests in classes
 - Use plain `assert` — pytest shows better diffs than `assertEqual`
 
@@ -160,5 +160,5 @@ uv run pytest               # all tests
 uv run pytest -v            # verbose
 uv run pytest -x            # stop on first failure
 uv run pytest -k cli_config # filter by name
-uv run pytest --cov=aliases_cli --cov-report=term-missing
+uv run pytest --cov=aliases --cov-report=term-missing
 ```

@@ -1,4 +1,4 @@
-"""``aliases-cli update`` – check for a newer version and self-update.
+"""``aliases update`` – check for a newer version and self-update.
 
 Fetches the latest release tag from GitHub, compares it to the installed
 version, and re-installs via ``uv tool install git+<repo>`` if an update
@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 import click
 
-from aliases_cli import __version__
+from aliases import __version__
 
 _REPO = "bbauer0706/aliases"
 _INSTALL_URL = "git+https://github.com/bbauer0706/aliases"
@@ -28,7 +28,7 @@ def _fetch_latest_tag() -> str | None:
     try:
         req = urllib.request.Request(
             _TAGS_API,
-            headers={"Accept": "application/vnd.github+json", "User-Agent": "aliases-cli"},
+            headers={"Accept": "application/vnd.github+json", "User-Agent": "aliases"},
         )
         with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
             tags: list[dict] = json.loads(resp.read())
@@ -53,13 +53,13 @@ def _parse_version(tag: str) -> tuple[int, ...]:
 @click.option("--check", "check_only", is_flag=True, help="Only check; do not install.")
 @click.option("--force", is_flag=True, help="Re-install even if already up to date.")
 def update_command(check_only: bool, force: bool) -> None:
-    """Check for a newer version and update aliases-cli.
+    """Check for a newer version and update aliases.
 
     \b
     Examples:
-      aliases-cli update            Check and install if newer
-      aliases-cli update --check    Check only, exit 1 if outdated
-      aliases-cli update --force    Re-install regardless of version
+      aliases update            Check and install if newer
+      aliases update --check    Check only, exit 1 if outdated
+      aliases update --force    Re-install regardless of version
     """
     current_tag = f"v{__version__}"
     click.echo(f"Installed : {current_tag}")

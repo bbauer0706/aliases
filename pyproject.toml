@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "aliases-cli"
+name = "aliases"
 version = "2.2.4"
 description = "Developer workspace management – project discovery, env setup, config sync, shell prompt"
 readme = "README.md"
@@ -36,14 +36,14 @@ dev = [
 ]
 
 [project.scripts]
-aliases-cli = "aliases_cli.main:main"
+aliases = "aliases.main:main"
 
 [project.urls]
 Repository = "https://github.com/bbauer0706/aliases"
 Issues = "https://github.com/bbauer0706/aliases/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["aliases_cli"]
+packages = ["aliases"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

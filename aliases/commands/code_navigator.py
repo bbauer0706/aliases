@@ -1,4 +1,4 @@
-"""``aliases-cli code`` / ``aliases-cli c`` – open projects in VS Code.
+"""``aliases code`` / ``aliases c`` – open projects in VS Code.
 
 Parsing rules (evaluated in order for each positional argument):
   1. ``project[sw]``          bracket notation → open multiple components
@@ -16,8 +16,8 @@ from pathlib import Path
 
 import click
 
-from aliases_cli.config import Config
-from aliases_cli.project_mapper import ProjectInfo, ProjectMapper
+from aliases.config import Config
+from aliases.project_mapper import ProjectInfo, ProjectMapper
 
 
 def run(args: tuple[str, ...], config: Config, mapper: ProjectMapper) -> int:

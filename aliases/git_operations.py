@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Union
 
-from aliases_cli.process_utils import execute
+from aliases.process_utils import execute
 
 MAIN_BRANCH_NAMES = frozenset({"main", "master", "trunk", "develop"})
 

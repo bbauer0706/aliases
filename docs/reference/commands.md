@@ -1,7 +1,7 @@
 # Commands Reference
 
-All commands are available as `aliases-cli <command>` or via the short bash
-wrappers set up by `aliases-cli setup`.
+All commands are available as `aliases <command>` or via the short bash
+wrappers set up by `aliases setup`.
 
 ---
 
@@ -10,7 +10,7 @@ wrappers set up by `aliases-cli setup`.
 Set up shell integration after installation.
 
 ```
-aliases-cli setup [OPTIONS]
+aliases setup [OPTIONS]
 ```
 
 | Option | Description |
@@ -27,9 +27,9 @@ Run once after `uv tool install`. Run again with `--update` after upgrading.
 Open projects in VS Code. Falls back to `code <args>` when no project matches.
 
 ```
-aliases-cli code [ARGS...]
-aliases-cli c    [ARGS...]   # short alias
-c                [ARGS...]   # bash alias → aliases-cli code
+aliases code [ARGS...]
+aliases c    [ARGS...]   # short alias
+c                [ARGS...]   # bash alias → aliases code
 ```
 
 ### Syntax
@@ -65,13 +65,13 @@ Config keys: `code.reuse_window`, `code.vscode_flags`, `code.fallback_behavior`.
 Discover the current project from `$PWD` and output shell export statements.
 
 ```
-aliases-cli env [OPTIONS]
+aliases env [OPTIONS]
 ```
 
 Intended to be used via `eval`:
 
 ```bash
-eval "$(aliases-cli env)"
+eval "$(aliases env)"
 ```
 
 The bash wrapper `project_env` (installed by `setup`) does this for you.
@@ -110,28 +110,28 @@ Config keys: `env.base_port`, `env.default_env`.
 
 ## `config`
 
-Read and write configuration. Config file: `~/.config/aliases-cli/config.json`.
+Read and write configuration. Config file: `~/.config/aliases/config.json`.
 
 ```
-aliases-cli config <subcommand>
+aliases config <subcommand>
 ```
 
 ### Subcommands
 
 ```
-aliases-cli config get <key>           # print value
-aliases-cli config set <key> <value>   # set value (type-coerced)
-aliases-cli config list [--plain]      # list all settings
-aliases-cli config reset [-y]          # reset to defaults
-aliases-cli config edit                # open in editor
-aliases-cli config path                # print config file path
+aliases config get <key>           # print value
+aliases config set <key> <value>   # set value (type-coerced)
+aliases config list [--plain]      # list all settings
+aliases config reset [-y]          # reset to defaults
+aliases config edit                # open in editor
+aliases config path                # print config file path
 ```
 
 ```
-aliases-cli config sync setup <url> [method]   # configure remote
-aliases-cli config sync pull                    # fetch from remote
-aliases-cli config sync push                    # push to remote
-aliases-cli config sync status                  # show sync state
+aliases config sync setup <url> [method]   # configure remote
+aliases config sync pull                    # fetch from remote
+aliases config sync push                    # push to remote
+aliases config sync status                  # show sync state
 ```
 
 Keys use dot-notation: `general.editor`, `env.base_port`, etc.
@@ -146,21 +146,21 @@ Manage secrets backed by the OS keychain (GNOME Keyring, macOS Keychain,
 Windows Credential Manager).
 
 ```
-aliases-cli secrets <subcommand>
+aliases secrets <subcommand>
 ```
 
 ### Subcommands
 
 ```
-aliases-cli secrets set <name> [value]    # store (prompts if no value)
-aliases-cli secrets get <name>            # print value
-aliases-cli secrets list                  # list all names
-aliases-cli secrets delete <name> [-y]    # remove (also: remove, rm)
-aliases-cli secrets load [name...]        # output export statements for eval
+aliases secrets set <name> [value]    # store (prompts if no value)
+aliases secrets get <name>            # print value
+aliases secrets list                  # list all names
+aliases secrets delete <name> [-y]    # remove (also: remove, rm)
+aliases secrets load [name...]        # output export statements for eval
 ```
 
 The bash wrapper `secrets_load [names...]` (installed by `setup`) calls
-`eval "$(aliases-cli secrets load ...)"` to export secrets into the current shell.
+`eval "$(aliases secrets load ...)"` to export secrets into the current shell.
 
 Secret names must match `[A-Za-z0-9_-]`.
 
@@ -171,7 +171,7 @@ Secret names must match `[A-Za-z0-9_-]`.
 Format `$PWD` using `prompt.path_replacements` rules from config.
 
 ```
-aliases-cli pwd [OPTIONS]
+aliases pwd [OPTIONS]
 ```
 
 | Option | Description |
@@ -191,7 +191,7 @@ Used internally by `prompt.sh` to build the custom PS1.
 Check for a newer release on GitHub and self-update via `uv`.
 
 ```
-aliases-cli update [OPTIONS]
+aliases update [OPTIONS]
 ```
 
 | Option | Description |
@@ -218,7 +218,7 @@ or GitHub is unreachable.
 Data helpers for bash tab-completion. Not intended for direct use.
 
 ```
-aliases-cli completion projects           # pipe-delimited project list
-aliases-cli completion components <name>  # component suffixes for a project
-aliases-cli completion config-keys        # all dot-notation config keys
+aliases completion projects           # pipe-delimited project list
+aliases completion components <name>  # component suffixes for a project
+aliases completion config-keys        # all dot-notation config keys
 ```

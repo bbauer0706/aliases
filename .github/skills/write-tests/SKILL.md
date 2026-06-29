@@ -1,12 +1,12 @@
 ---
 name: write-tests
-description: "Write or extend tests for aliases-cli. Use when asked to add tests for a command, fix a failing test, or improve coverage. Covers both unit tests (logic) and CLI integration tests (end-to-end via CliRunner). Handles isolation, mocking, and test structure."
+description: "Write or extend tests for aliases. Use when asked to add tests for a command, fix a failing test, or improve coverage. Covers both unit tests (logic) and CLI integration tests (end-to-end via CliRunner). Handles isolation, mocking, and test structure."
 argument-hint: "Describe what to test: command name, function, scenario, or 'full coverage for <module>'"
 ---
 
 # Write Tests Skill
 
-Adds unit tests and/or CLI integration tests to aliases-cli following established patterns.
+Adds unit tests and/or CLI integration tests to aliases following established patterns.
 
 ## When to Use
 
@@ -26,7 +26,7 @@ Test individual Python functions or classes directly, without going through the 
 - Use when: testing business logic, edge cases, pure functions
 
 ```python
-from aliases_cli.config import Config
+from aliases.config import Config
 
 def test_set_int(isolated_config):
     cfg = Config.instance()
@@ -43,7 +43,7 @@ Test the CLI end-to-end by invoking Click commands via `CliRunner`. Run in the s
 - Use when: testing a full command including argument parsing, output format, exit codes
 
 ```python
-from aliases_cli.main import cli
+from aliases.main import cli
 
 def test_config_get_default(runner):
     result = runner.invoke(cli, ["config", "get", "general.editor"])
@@ -55,11 +55,11 @@ def test_config_get_default(runner):
 
 | Fixture | Scope | Description |
 |---------|-------|-------------|
-| `isolated_config` | function (autouse) | Sets Config to `tmp_path/aliases-cli`; resets after test |
+| `isolated_config` | function (autouse) | Sets Config to `tmp_path/aliases`; resets after test |
 | `runner` | function | `CliRunner()` — stdout and stderr always separated (Click 8.4+) |
 | `workspace` | function | Empty `tmp_path/workspaces/` directory |
 
-`isolated_config` runs **automatically for every test**. Never skip it; never touch `~/.config/aliases-cli/`.
+`isolated_config` runs **automatically for every test**. Never skip it; never touch `~/.config/aliases/`.
 
 Helper function (import directly): `from tests.conftest import make_project`
 
@@ -81,7 +81,7 @@ Always use `result.stdout` for output checks and `result.stderr` for error/warni
 from unittest.mock import patch
 
 def test_opens_project(runner, workspace):
-    with patch("aliases_cli.commands.code_navigator.subprocess.Popen") as mock:
+    with patch("aliases.commands.code_navigator.subprocess.Popen") as mock:
         result = runner.invoke(cli, ["code", "myproject"])
     assert mock.called
     assert "myproject" in " ".join(mock.call_args[0][0])
@@ -141,10 +141,10 @@ uv run pytest -q                            # all must still be green
 
 ## Rules
 
-- **NEVER** touch `~/.config/aliases-cli/` — `isolated_config` is autouse; it always runs
+- **NEVER** touch `~/.config/aliases/` — `isolated_config` is autouse; it always runs
 - **NEVER** actually launch VS Code — patch `subprocess.Popen`
 - **NEVER** write to the real OS keychain — patch `keyring.*`
-- Use `runner.invoke(cli, [...])` — not `subprocess.run(["aliases-cli", ...])`
+- Use `runner.invoke(cli, [...])` — not `subprocess.run(["aliases", ...])`
 - Check `result.exit_code == 0` for success, `!= 0` for failure
 - Use `result.stdout` for stdout checks, `result.stderr` for stderr checks
 - Prefer plain `assert` over `assertEqual`

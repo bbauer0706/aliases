@@ -1,9 +1,9 @@
-"""Integration tests for ``aliases-cli completion`` helpers."""
+"""Integration tests for ``aliases completion`` helpers."""
 
 from __future__ import annotations
 
-from aliases_cli.config import Config
-from aliases_cli.main import cli
+from aliases.config import Config
+from aliases.main import cli
 from tests.conftest import make_project
 
 

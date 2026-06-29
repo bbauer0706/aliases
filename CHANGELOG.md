@@ -26,7 +26,7 @@
 
 ### Feat
 
-- **update**: add aliases-cli update command
+- **update**: add aliases update command
 
 ## v2.1.1 (2026-06-15)
 
@@ -60,7 +60,7 @@
 
 ### Feat
 
-- aliases-cli compleation
+- aliases compleation
 - secretes cmd
 
 ## v1.9.0 (2026-04-15)

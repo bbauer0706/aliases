@@ -1,4 +1,4 @@
-"""aliases-cli entry point."""
+"""aliases entry point."""
 
 from __future__ import annotations
 
@@ -7,16 +7,16 @@ import sys
 
 import click
 
-from aliases_cli import __version__
-from aliases_cli.commands.code_navigator import run as _code_run
-from aliases_cli.commands.config_cmd import config_group
-from aliases_cli.commands.project_env import env_command
-from aliases_cli.commands.secrets_cmd import secrets_group
-from aliases_cli.commands.setup_cmd import setup_command
-from aliases_cli.commands.update_cmd import update_command
-from aliases_cli.config import Config
-from aliases_cli.project_mapper import ProjectMapper
-from aliases_cli import pwd_formatter
+from aliases import __version__
+from aliases.commands.code_navigator import run as _code_run
+from aliases.commands.config_cmd import config_group
+from aliases.commands.project_env import env_command
+from aliases.commands.secrets_cmd import secrets_group
+from aliases.commands.setup_cmd import setup_command
+from aliases.commands.update_cmd import update_command
+from aliases.config import Config
+from aliases.project_mapper import ProjectMapper
+from aliases import pwd_formatter
 
 
 # ---------------------------------------------------------------------------
@@ -25,17 +25,17 @@ from aliases_cli import pwd_formatter
 
 
 @click.group(invoke_without_command=True, context_settings={"help_option_names": ["-h", "--help"]})
-@click.version_option(__version__, "-v", "--version", prog_name="aliases-cli")
+@click.version_option(__version__, "-v", "--version", prog_name="aliases")
 @click.pass_context
 def cli(ctx: click.Context) -> None:
-    """aliases-cli – developer workspace management.
+    """aliases – developer workspace management.
 
     Quick-open projects in VS Code, set up project environment variables,
     manage encrypted secrets, and format your shell prompt.
 
     \b
     After installation, run once:
-        aliases-cli setup
+        aliases setup
     """
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
@@ -184,7 +184,7 @@ def main() -> None:
     # Trigger auto-sync in the background so it never blocks command execution.
     try:
         import threading  # noqa: PLC0415
-        from aliases_cli.config_sync import ConfigSync  # noqa: PLC0415
+        from aliases.config_sync import ConfigSync  # noqa: PLC0415
 
         t = threading.Thread(
             target=ConfigSync(Config.instance()).maybe_auto_sync,

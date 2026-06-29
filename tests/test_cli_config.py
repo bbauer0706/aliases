@@ -1,14 +1,14 @@
-"""Integration tests for ``aliases-cli config`` commands.
+"""Integration tests for ``aliases config`` commands.
 
 Uses Click's CliRunner to invoke the CLI end-to-end in the same process.
-Config is fully isolated — the real ~/.config/aliases-cli/ is never touched.
+Config is fully isolated — the real ~/.config/aliases/ is never touched.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from aliases_cli.main import cli
+from aliases.main import cli
 
 
 class TestConfigGet:

@@ -1,7 +1,7 @@
-"""Shared pytest fixtures for aliases-cli tests.
+"""Shared pytest fixtures for aliases tests.
 
-Every test runs inside a fully isolated Config directory (tmp_path / "aliases-cli").
-The real ~/.config/aliases-cli/ is NEVER touched.
+Every test runs inside a fully isolated Config directory (tmp_path / "aliases").
+The real ~/.config/aliases/ is NEVER touched.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from aliases_cli.config import Config
+from aliases.config import Config
 
 
 # ---------------------------------------------------------------------------
@@ -23,9 +23,9 @@ from aliases_cli.config import Config
 def isolated_config(tmp_path: Path):
     """Redirect Config to a temp directory and reset the singleton after each test.
 
-    Guarantees ~/.config/aliases-cli/ is never touched by any test.
+    Guarantees ~/.config/aliases/ is never touched by any test.
     """
-    Config.set_test_config_directory(tmp_path / "aliases-cli")
+    Config.set_test_config_directory(tmp_path / "aliases")
     yield Config.instance()
     Config.reset()
 

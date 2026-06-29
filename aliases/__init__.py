@@ -1,6 +1,6 @@
 from importlib.metadata import PackageNotFoundError, version
 
 try:
-    __version__ = version("aliases-cli")
+    __version__ = version("aliases")
 except PackageNotFoundError:
     __version__ = "dev"

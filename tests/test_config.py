@@ -6,7 +6,7 @@ import json
 import pytest
 from pathlib import Path
 
-from aliases_cli.config import Config, DEFAULT_CONFIG, _deep_merge
+from aliases.config import Config, DEFAULT_CONFIG, _deep_merge
 
 
 # ---------------------------------------------------------------------------
@@ -90,7 +90,7 @@ class TestDeepMerge:
 
 class TestCorruptConfig:
     def test_invalid_json_falls_back_to_defaults(self, tmp_path):
-        cfg_dir = tmp_path / "aliases-cli"
+        cfg_dir = tmp_path / "aliases"
         cfg_dir.mkdir()
         (cfg_dir / "config.json").write_text("{ invalid json }", encoding="utf-8")
 

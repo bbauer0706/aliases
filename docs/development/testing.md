@@ -1,6 +1,6 @@
 # Testing
 
-aliases-cli uses [pytest](https://pytest.org) for all tests.
+aliases uses [pytest](https://pytest.org) for all tests.
 
 ## Quick Start
 
@@ -29,11 +29,11 @@ Every test that touches `Config` must redirect it to a temp directory:
 ```python
 import pytest
 from pathlib import Path
-from aliases_cli.config import Config
+from aliases.config import Config
 
 @pytest.fixture(autouse=True)
 def isolated_config(tmp_path: Path):
-    Config.set_test_config_directory(tmp_path / "aliases-cli")
+    Config.set_test_config_directory(tmp_path / "aliases")
     yield
     Config.reset()
 ```
@@ -43,8 +43,8 @@ Use `autouse=True` at the class or module level to avoid forgetting.
 ### Example Test
 
 ```python
-from aliases_cli.config import Config
-from aliases_cli.project_mapper import ProjectMapper
+from aliases.config import Config
+from aliases.project_mapper import ProjectMapper
 
 def test_finds_project(tmp_path, isolated_config):
     ws = tmp_path / "workspaces"

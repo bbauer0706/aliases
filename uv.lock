@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.12"
 
 [[package]]
-name = "aliases-cli"
+name = "aliases"
 version = "2.2.4"
 source = { editable = "." }
 dependencies = [

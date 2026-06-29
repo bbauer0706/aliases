@@ -17,12 +17,12 @@ uv tool install git+https://github.com/bbauer0706/aliases
 Run once after installing:
 
 ```bash
-aliases-cli setup
+aliases setup
 ```
 
 What it does:
 
-1. Creates `~/.config/aliases-cli/` with the default `config.json`
+1. Creates `~/.config/aliases/` with the default `config.json`
 2. Copies shell integration, bash aliases, and completion files there
 3. Creates (or updates) `~/.bash_aliases` that sources all those files
 4. Adds `source ~/.bash_aliases` to `~/.bashrc` if missing
@@ -47,18 +47,18 @@ the OS keychain.
 ## Updating
 
 ```bash
-uv tool upgrade aliases-cli
-aliases-cli setup --update   # refresh bundled shell/alias files
+uv tool upgrade aliases
+aliases setup --update   # refresh bundled shell/alias files
 ```
 
-`--update` only overwrites the files inside `~/.config/aliases-cli/` — it
+`--update` only overwrites the files inside `~/.config/aliases/` — it
 does not touch `~/.bash_aliases` or `~/.bashrc`.
 
 ## Uninstalling
 
 ```bash
-uv tool uninstall aliases-cli
-rm -rf ~/.config/aliases-cli
+uv tool uninstall aliases
+rm -rf ~/.config/aliases
 # Remove the source line from ~/.bash_aliases and ~/.bashrc manually
 ```
 
@@ -68,5 +68,5 @@ rm -rf ~/.config/aliases-cli
 git clone https://github.com/bbauer0706/aliases
 cd aliases
 uv sync --group dev
-uv run aliases-cli --version
+uv run aliases --version
 ```

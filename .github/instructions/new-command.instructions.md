@@ -1,17 +1,17 @@
 ---
-description: "Use when adding a new CLI subcommand, implementing a new feature block, or extending an existing command in aliases-cli. Covers the full checklist: Click command, config keys, tests, bash integration, and docs."
+description: "Use when adding a new CLI subcommand, implementing a new feature block, or extending an existing command in aliases. Covers the full checklist: Click command, config keys, tests, bash integration, and docs."
 ---
 
-# Adding a New Command to aliases-cli
+# Adding a New Command to aliases
 
 Follow every step in order.
 
-## 1. Click Command — `aliases_cli/commands/my_cmd.py`
+## 1. Click Command — `aliases/commands/my_cmd.py`
 
 ```python
 import click
-from aliases_cli.config import Config
-from aliases_cli.project_mapper import ProjectMapper
+from aliases.config import Config
+from aliases.project_mapper import ProjectMapper
 
 
 @click.command("my-cmd")
@@ -31,17 +31,17 @@ Rules:
 - Shell-evaluable output to stdout; status messages to stderr.
 - Exit codes: `0` success, `1` runtime error, `2` bad usage.
 
-## 2. Register in `aliases_cli/main.py`
+## 2. Register in `aliases/main.py`
 
 ```python
-from aliases_cli.commands.my_cmd import my_command
+from aliases.commands.my_cmd import my_command
 
 cli.add_command(my_command)
 ```
 
 Add in alphabetical order among the other `add_command` calls.
 
-## 3. Add Config Keys (if needed) — `aliases_cli/config.py`
+## 3. Add Config Keys (if needed) — `aliases/config.py`
 
 Add to `DEFAULT_CONFIG`:
 
@@ -63,12 +63,12 @@ Add a table entry for every new key under the correct section heading.
 ```python
 import pytest
 from pathlib import Path
-from aliases_cli.config import Config
+from aliases.config import Config
 
 
 @pytest.fixture(autouse=True)
 def isolated_config(tmp_path: Path):
-    Config.set_test_config_directory(tmp_path / "aliases-cli")
+    Config.set_test_config_directory(tmp_path / "aliases")
     yield
     Config.reset()
 
@@ -83,8 +83,8 @@ See `.github/instructions/testing.instructions.md` for full patterns.
 
 If the command prints `export VAR='value';` lines:
 
-1. Create `aliases_cli/data/shell/my-cmd.sh` with a bash wrapper function.
-2. Add the filename to the copy list in `aliases_cli/commands/setup_cmd.py` (`_SHELL_FILES`).
+1. Create `aliases/data/shell/my-cmd.sh` with a bash wrapper function.
+2. Add the filename to the copy list in `aliases/commands/setup_cmd.py` (`_SHELL_FILES`).
 3. Document in `docs/integrations/bash-integration.md`.
 
 ## 7. Update Docs
@@ -96,7 +96,7 @@ If the command prints `export VAR='value';` lines:
 ## Verification
 
 ```bash
-uv run aliases-cli my-cmd --help
+uv run aliases my-cmd --help
 uv run pytest tests/test_my_cmd.py -v
 uv run pytest -q   # all green
 ```

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Shell integration for aliases-cli – custom PS1 prompt formatting.
-# Source this file from ~/.bash_aliases (done automatically by aliases-cli setup).
+# Shell integration for aliases – custom PS1 prompt formatting.
+# Source this file from ~/.bash_aliases (done automatically by aliases setup).
 #
 # After sourcing, opt in by calling:
 #   aliases_setup_prompt
 #
 # Or set ALIASES_AUTO_SETUP_PROMPT=1 before sourcing to enable automatically.
 #
-# Configuration (in ~/.config/aliases-cli/config.json):
+# Configuration (in ~/.config/aliases/config.json):
 #   {
 #     "prompt": {
 #       "enabled": true,
@@ -22,7 +22,7 @@
 #   }
 
 # ---------------------------------------------------------------------------
-# Prompt cache – aliases-cli is only invoked when the directory changes.
+# Prompt cache – aliases is only invoked when the directory changes.
 # On every other Enter press, PS1 reads the cached string at zero cost.
 # ---------------------------------------------------------------------------
 _ALIASES_PROMPT_CACHE=""
@@ -30,7 +30,7 @@ _ALIASES_PROMPT_CACHE_DIR=""
 
 _aliases_update_prompt_cache() {
     if [[ "$PWD" != "$_ALIASES_PROMPT_CACHE_DIR" ]]; then
-        _ALIASES_PROMPT_CACHE="$(aliases-cli pwd --full-prompt --ps1 2>/dev/null)" \
+        _ALIASES_PROMPT_CACHE="$(aliases pwd --full-prompt --ps1 2>/dev/null)" \
             || _ALIASES_PROMPT_CACHE="${USER}@${HOSTNAME}:${PWD}"
         _ALIASES_PROMPT_CACHE_DIR="$PWD"
     fi
@@ -42,7 +42,7 @@ _aliases_update_prompt_cache() {
 aliases_setup_prompt() {
     # Respect prompt.enabled config key
     local enabled
-    enabled=$(aliases-cli config get prompt.enabled 2>/dev/null)
+    enabled=$(aliases config get prompt.enabled 2>/dev/null)
     if [[ "$enabled" == "false" ]]; then
         return
     fi

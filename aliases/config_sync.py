@@ -8,10 +8,10 @@ import urllib.request
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from aliases_cli import process_utils
+from aliases import process_utils
 
 if TYPE_CHECKING:
-    from aliases_cli.config import Config
+    from aliases.config import Config
 
 SUPPORTED_METHODS = ("git", "rsync", "file", "http")
 
@@ -250,11 +250,11 @@ class ConfigSync:
 
     def _assert_enabled(self) -> bool:
         if not self._config.get("sync.enabled", False):
-            _err("Sync is not enabled. Run: aliases-cli config sync setup <url>")
+            _err("Sync is not enabled. Run: aliases config sync setup <url>")
             return False
         url = self._config.get("sync.remote_url", "")
         if not url:
-            _err("No remote URL configured. Run: aliases-cli config sync setup <url>")
+            _err("No remote URL configured. Run: aliases config sync setup <url>")
             return False
         return True
 

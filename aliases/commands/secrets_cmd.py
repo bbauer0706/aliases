@@ -1,8 +1,8 @@
-"""``aliases-cli secrets`` – OS-keychain-backed secrets management.
+"""``aliases secrets`` – OS-keychain-backed secrets management.
 
 Uses the ``keyring`` library as the secure backend (GNOME Keyring, macOS
 Keychain, Windows Credential Manager, etc.).  A plaintext index file at
-``~/.config/aliases-cli/secrets_names.json`` tracks the *names* of stored
+``~/.config/aliases/secrets_names.json`` tracks the *names* of stored
 secrets so that ``secrets list`` does not require decrypting anything.
 
 For headless / CI environments without a system keychain install the extra:
@@ -18,9 +18,9 @@ from pathlib import Path
 
 import click
 
-from aliases_cli.config import Config
+from aliases.config import Config
 
-SERVICE_NAME = "aliases-cli"
+SERVICE_NAME = "aliases"
 _NAME_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 

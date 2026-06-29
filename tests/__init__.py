@@ -1,1 +1,1 @@
-# aliases-cli tests
+# aliases tests

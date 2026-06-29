@@ -1,11 +1,11 @@
-"""Integration tests for ``aliases-cli pwd``."""
+"""Integration tests for ``aliases pwd``."""
 
 from __future__ import annotations
 
 from unittest.mock import patch
 
-from aliases_cli.config import Config
-from aliases_cli.main import cli
+from aliases.config import Config
+from aliases.main import cli
 
 
 class TestPwdBasic:
@@ -90,7 +90,7 @@ class TestPwdUserHost:
         cfg._data["prompt"]["host_replacements"] = [
             {"hostname": "ip-10-80-1-32", "label": "prod"}
         ]
-        with patch("aliases_cli.pwd_formatter._HOSTNAME", "ip-10-80-1-32"), \
+        with patch("aliases.pwd_formatter._HOSTNAME", "ip-10-80-1-32"), \
              patch.dict("os.environ", {"USER": "alice"}):
             result = runner.invoke(cli, ["pwd", "--user-host", "--no-color"])
         assert result.exit_code == 0
@@ -102,7 +102,7 @@ class TestPwdUserHost:
         cfg._data["prompt"]["user_replacements"] = [
             {"username": "benedikt.bauer", "label": "bb"}
         ]
-        with patch("aliases_cli.pwd_formatter._HOSTNAME", "myhost"), \
+        with patch("aliases.pwd_formatter._HOSTNAME", "myhost"), \
              patch.dict("os.environ", {"USER": "benedikt.bauer"}):
             result = runner.invoke(cli, ["pwd", "--user-host", "--no-color"])
         assert result.exit_code == 0

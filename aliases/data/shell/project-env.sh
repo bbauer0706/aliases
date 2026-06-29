@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Shell integration for aliases-cli – project environment setup.
-# Source this file from ~/.bash_aliases (done automatically by aliases-cli setup).
+# Shell integration for aliases – project environment setup.
+# Source this file from ~/.bash_aliases (done automatically by aliases setup).
 #
 # Provides:
 #   project_env [OPTIONS]   – discover current project and export env vars
@@ -17,13 +17,13 @@ project_env() {
     tmp_stderr=$(mktemp)
 
     # Single invocation: capture stdout (exports) and let stderr flow through
-    stdout=$(aliases-cli env "$@" 2>"$tmp_stderr")
+    stdout=$(aliases env "$@" 2>"$tmp_stderr")
     exit_code=$?
     stderr=$(cat "$tmp_stderr")
     rm -f "$tmp_stderr"
 
     if [[ $exit_code -ne 0 ]]; then
-        echo "Error: aliases-cli env failed (exit $exit_code)" >&2
+        echo "Error: aliases env failed (exit $exit_code)" >&2
         [[ -n "$stderr" ]] && echo "$stderr" >&2
         return $exit_code
     fi
@@ -37,7 +37,7 @@ project_env() {
 # show_env
 # ---------------------------------------------------------------------------
 show_env() {
-    aliases-cli env --show
+    aliases env --show
 }
 
 # ---------------------------------------------------------------------------

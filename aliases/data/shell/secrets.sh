@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Shell integration for aliases-cli – secrets export helper.
-# Source this file from ~/.bash_aliases (done automatically by aliases-cli setup).
+# Shell integration for aliases – secrets export helper.
+# Source this file from ~/.bash_aliases (done automatically by aliases setup).
 #
 # Usage:
 #   secrets_load               # export all stored secrets
@@ -12,7 +12,7 @@
 
 secrets_load() {
     local output
-    output=$(aliases-cli secrets load "$@") || return $?
+    output=$(aliases secrets load "$@") || return $?
     eval "$output"
 }
 

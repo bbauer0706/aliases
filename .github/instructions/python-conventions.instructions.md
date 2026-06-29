@@ -1,5 +1,5 @@
 ---
-description: "Python coding standards for aliases-cli. Use when writing or modifying .py source files. Covers naming, error handling, imports, patterns, and style used in this codebase."
+description: "Python coding standards for aliases. Use when writing or modifying .py source files. Covers naming, error handling, imports, patterns, and style used in this codebase."
 applyTo: "**/*.py"
 ---
 
@@ -24,7 +24,7 @@ Python 3.12+. Use modern syntax: `match`, `str | None`, `X | Y` unions, `@datacl
 Standard order (separated by blank lines):
 1. stdlib (`os`, `sys`, `pathlib`, `json`, …)
 2. third-party (`click`, `keyring`, `rich`, …)
-3. project (`from aliases_cli.config import Config`)
+3. project (`from aliases.config import Config`)
 
 No wildcard imports.
 
@@ -54,7 +54,7 @@ No wildcard imports.
 - **Singleton** — `Config` uses `_instance` class variable with `instance()` accessor.
 - **Dataclass** — `ProjectInfo` is a `@dataclass`.
 - **`importlib.metadata`** — version string in `__init__.py`.
-- **`importlib.resources`** — access bundled `data/` files via `files("aliases_cli") / "data"`.
+- **`importlib.resources`** — access bundled `data/` files via `files("aliases") / "data"`.
 
 ## File / Path Handling
 
@@ -70,5 +70,5 @@ Use `pathlib.Path` everywhere. No `os.path.join()`.
 
 - No `subprocess.shell=True` with user input.
 - No `eval()` in Python code.
-- No hardcoded paths to the binary — shell scripts call `aliases-cli` from PATH.
+- No hardcoded paths to the binary — shell scripts call `aliases` from PATH.
 - No `print()` in command code — use `click.echo()`.

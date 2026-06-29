@@ -1,4 +1,4 @@
-# aliases-cli Documentation
+# aliases Documentation
 
 Developer workspace management for your shell.
 
@@ -25,7 +25,7 @@ Developer workspace management for your shell.
 
 ```bash
 uv tool install git+https://github.com/bbauer0706/aliases
-aliases-cli setup
+aliases setup
 ```
 
 Restart your shell (or `source ~/.bash_aliases`) and you are ready.

@@ -1,4 +1,4 @@
-"""Integration tests for ``aliases-cli code`` / ``aliases-cli c``.
+"""Integration tests for ``aliases code`` / ``aliases c``.
 
 subprocess.Popen is mocked — VS Code is never actually launched.
 """
@@ -8,14 +8,14 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
-from aliases_cli.config import Config
-from aliases_cli.main import cli
+from aliases.config import Config
+from aliases.main import cli
 from tests.conftest import make_project
 
 
 def _no_popen():
     """Patch subprocess.Popen to prevent VS Code from actually launching."""
-    return patch("aliases_cli.commands.code_navigator.subprocess.Popen")
+    return patch("aliases.commands.code_navigator.subprocess.Popen")
 
 
 class TestCodeNoArgs:

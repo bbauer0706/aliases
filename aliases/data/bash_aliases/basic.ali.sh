@@ -20,5 +20,5 @@ alias tsc='npx tsc --noEmit'
 # ── Show current project environment variables ──────────────────────────────
 # (delegates to the CLI; defined in shell/project-env.sh as well)
 show_env() {
-    aliases-cli env --show
+    aliases env --show
 }

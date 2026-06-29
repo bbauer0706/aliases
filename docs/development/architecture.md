@@ -2,7 +2,7 @@
 
 ## Overview
 
-aliases-cli is a Click-based Python CLI. Modules are organized in a flat
+aliases is a Click-based Python CLI. Modules are organized in a flat
 dependency hierarchy:
 
 ```
@@ -14,9 +14,9 @@ Core modules do not import from commands. No circular dependencies.
 ## Package Layout
 
 ```
-src/aliases_cli/
+src/aliases/
 ├── __init__.py          # version via importlib.metadata
-├── main.py              # Click group, entry point (aliases_cli.main:main)
+├── main.py              # Click group, entry point (aliases.main:main)
 ├── config.py            # Config singleton
 ├── project_mapper.py    # Project discovery + component detection
 ├── config_sync.py       # Remote config sync
@@ -51,7 +51,7 @@ src/aliases_cli/
 ### `config.py` — Config Singleton
 
 - `Config.instance()` returns the singleton (lazy-initialised on first call)
-- Config dir defaults to `~/.config/aliases-cli/`; overridden by
+- Config dir defaults to `~/.config/aliases/`; overridden by
   `Config.set_test_config_directory(path)` for test isolation
 - `config.get("section.key")` — dot-notation access, returns `None` if missing
 - `config.set("section.key", "value")` — type-coerces to the existing stored type
@@ -73,7 +73,7 @@ src/aliases_cli/
 ### `config_sync.py` — Remote Sync
 
 Four methods share the same `setup/pull/push/status` interface:
-- **git**: clone to `~/.config/aliases-cli/cache/sync/config-repo`, pull/commit/push
+- **git**: clone to `~/.config/aliases/cache/sync/config-repo`, pull/commit/push
 - **rsync**: `rsync -az` to/from remote path
 - **file**: `shutil.copy2` to/from local/network path
 - **http**: `urllib.request.urlopen` (read-only)
@@ -94,19 +94,19 @@ Thin wrapper: `execute(cmd, cwd) → (code, stdout, stderr)`.
 
 ## Shell Integration
 
-`aliases-cli setup` copies bundled files from `aliases_cli/data/` to
-`~/.config/aliases-cli/` and generates `~/.bash_aliases`. The bash functions
-in `shell/*.sh` call `aliases-cli` (from PATH) and `eval` its output.
+`aliases setup` copies bundled files from `aliases/data/` to
+`~/.config/aliases/` and generates `~/.bash_aliases`. The bash functions
+in `shell/*.sh` call `aliases` (from PATH) and `eval` its output.
 
 ```
 bash: project_env()
-  → aliases-cli env [opts]   (captures stdout)
+  → aliases env [opts]   (captures stdout)
   → eval "export VAR=value;"
 ```
 
 ```
 bash: PS1 via _aliases_prompt_pwd()
-  → aliases-cli pwd --ps1    (stdout → inserted into PS1 string)
+  → aliases pwd --ps1    (stdout → inserted into PS1 string)
 ```
 
 ## Entry Point
@@ -115,7 +115,7 @@ bash: PS1 via _aliases_prompt_pwd()
 
 ```toml
 [project.scripts]
-aliases-cli = "aliases_cli.main:main"
+aliases = "aliases.main:main"
 ```
 
 `main.py` initialises Config (singleton), calls `maybe_auto_sync()`, then

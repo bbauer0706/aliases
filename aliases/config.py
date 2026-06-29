@@ -1,4 +1,4 @@
-"""Configuration management for aliases-cli.
+"""Configuration management for aliases.
 
 Singleton pattern — call Config.instance() after the module is imported.
 Test isolation: call Config.set_test_config_directory(path) before any
@@ -88,7 +88,7 @@ class Config:
     @classmethod
     def instance(cls) -> "Config":
         if cls._instance is None:
-            config_dir = cls._test_dir or Path.home() / ".config" / "aliases-cli"
+            config_dir = cls._test_dir or Path.home() / ".config" / "aliases"
             cls._instance = cls(config_dir)
         return cls._instance
 

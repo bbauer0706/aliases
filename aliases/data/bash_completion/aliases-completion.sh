@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Bash tab-completion for aliases-cli and the 'c' shorthand.
-# Sourced automatically by ~/.bash_aliases when set up via: aliases-cli setup
+# Bash tab-completion for aliases and the 'c' shorthand.
+# Sourced automatically by ~/.bash_aliases when set up via: aliases setup
 
 # Per-session caches (reset on re-source)
 _ALIASES_PROJECTS_CACHE=""
 _ALIASES_CONFIG_KEYS_CACHE=""
 
 # ---------------------------------------------------------------------------
-# _aliases_cli_completion – completes the 'aliases-cli' command
+# _aliases_completion – completes the 'aliases' command
 # ---------------------------------------------------------------------------
-_aliases_cli_completion() {
+_aliases_completion() {
     local cur prev cword
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
@@ -31,7 +31,7 @@ _aliases_cli_completion() {
         # ── code / c ──────────────────────────────────────────────────────
         code|c)
             [[ -z "$_ALIASES_PROJECTS_CACHE" ]] && \
-                _ALIASES_PROJECTS_CACHE=$(aliases-cli completion projects 2>/dev/null)
+                _ALIASES_PROJECTS_CACHE=$(aliases completion projects 2>/dev/null)
             _aliases_complete_project_specs "$cur"
             ;;
 
@@ -63,7 +63,7 @@ _aliases_cli_completion() {
                     get|set)
                         if [[ $cword -eq 3 ]]; then
                             [[ -z "$_ALIASES_CONFIG_KEYS_CACHE" ]] && \
-                                _ALIASES_CONFIG_KEYS_CACHE=$(aliases-cli completion config-keys 2>/dev/null)
+                                _ALIASES_CONFIG_KEYS_CACHE=$(aliases completion config-keys 2>/dev/null)
                             COMPREPLY=($(compgen -W "$_ALIASES_CONFIG_KEYS_CACHE" -- "$cur"))
 
                         elif [[ $cword -eq 4 && "$config_sub" == "set" ]]; then
@@ -109,7 +109,7 @@ _aliases_cli_completion() {
                 COMPREPLY=($(compgen -W "projects components config-keys" -- "$cur"))
             elif [[ $cword -eq 3 && "${COMP_WORDS[2]}" == "components" ]]; then
                 [[ -z "$_ALIASES_PROJECTS_CACHE" ]] && \
-                    _ALIASES_PROJECTS_CACHE=$(aliases-cli completion projects 2>/dev/null)
+                    _ALIASES_PROJECTS_CACHE=$(aliases completion projects 2>/dev/null)
                 local names=()
                 while IFS='|' read -r display_name _rest; do
                     [[ -n "$display_name" ]] && names+=("$display_name")
@@ -130,7 +130,7 @@ _aliases_cli_completion() {
 # ---------------------------------------------------------------------------
 # _aliases_complete_project_specs – shared project name completer
 #
-# Output format from `aliases-cli completion projects`:
+# Output format from `aliases completion projects`:
 #   display_name|full_name|has_server|has_web   (has_* = "1" or "0")
 # ---------------------------------------------------------------------------
 _aliases_complete_project_specs() {
@@ -183,7 +183,7 @@ _aliases_complete_project_specs() {
 # ---------------------------------------------------------------------------
 # Register completions
 # ---------------------------------------------------------------------------
-complete -F _aliases_cli_completion aliases-cli
+complete -F _aliases_completion aliases
 complete -F _aliases_code_completion c
 
 # ---------------------------------------------------------------------------
@@ -193,6 +193,6 @@ _aliases_code_completion() {
     COMPREPLY=()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     [[ -z "$_ALIASES_PROJECTS_CACHE" ]] && \
-        _ALIASES_PROJECTS_CACHE=$(aliases-cli completion projects 2>/dev/null)
+        _ALIASES_PROJECTS_CACHE=$(aliases completion projects 2>/dev/null)
     _aliases_complete_project_specs "$cur"
 }
