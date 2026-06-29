@@ -37,9 +37,9 @@ _aliases_update_prompt_cache() {
 }
 
 # ---------------------------------------------------------------------------
-# aliases_setup_prompt – install the custom PS1
+# _aliases_setup_prompt – install the custom PS1
 # ---------------------------------------------------------------------------
-aliases_setup_prompt() {
+_aliases_setup_prompt() {
     # Respect prompt.enabled config key
     local enabled
     enabled=$(aliases config get prompt.enabled 2>/dev/null)
@@ -61,5 +61,6 @@ aliases_setup_prompt() {
 
 # Auto-enable if requested
 if [[ "${ALIASES_AUTO_SETUP_PROMPT:-0}" == "1" ]]; then
-    aliases_setup_prompt
+    _aliases_setup_prompt
 fi
+unset -f _aliases_setup_prompt

@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 
 ANSI_COLORS: dict[str, str] = {
+    # Standard foreground
     "black": "\033[30m",
     "red": "\033[31m",
     "green": "\033[32m",
@@ -31,6 +32,7 @@ ANSI_COLORS: dict[str, str] = {
     "magenta": "\033[35m",
     "cyan": "\033[36m",
     "white": "\033[37m",
+    # Bold foreground
     "bold_black": "\033[1;30m",
     "bold_red": "\033[1;31m",
     "bold_green": "\033[1;32m",
@@ -39,6 +41,33 @@ ANSI_COLORS: dict[str, str] = {
     "bold_magenta": "\033[1;35m",
     "bold_cyan": "\033[1;36m",
     "bold_white": "\033[1;37m",
+    # Bright (high-intensity) foreground
+    "bright_black": "\033[90m",
+    "bright_red": "\033[91m",
+    "bright_green": "\033[92m",
+    "bright_yellow": "\033[93m",
+    "bright_blue": "\033[94m",
+    "bright_magenta": "\033[95m",
+    "bright_cyan": "\033[96m",
+    "bright_white": "\033[97m",
+    # Bold + bright
+    "bold_bright_black": "\033[1;90m",
+    "bold_bright_red": "\033[1;91m",
+    "bold_bright_green": "\033[1;92m",
+    "bold_bright_yellow": "\033[1;93m",
+    "bold_bright_blue": "\033[1;94m",
+    "bold_bright_magenta": "\033[1;95m",
+    "bold_bright_cyan": "\033[1;96m",
+    "bold_bright_white": "\033[1;97m",
+    # Dim (faint) foreground
+    "dim_black": "\033[2;30m",
+    "dim_red": "\033[2;31m",
+    "dim_green": "\033[2;32m",
+    "dim_yellow": "\033[2;33m",
+    "dim_blue": "\033[2;34m",
+    "dim_magenta": "\033[2;35m",
+    "dim_cyan": "\033[2;36m",
+    "dim_white": "\033[2;37m",
     "reset": "\033[0m",
 }
 
@@ -97,12 +126,14 @@ def format_pwd(
     # Apply replacement rules – first match wins.
     for rule in replacements:
         env_var = rule.get("env_var")
-        literal_path = rule.get("path")
+        raw_path = rule.get("path")
 
         if env_var:
+            # Legacy: {"env_var": "MYVAR", ...}  still supported.
             prefix = os.environ.get(env_var, "")
-        elif literal_path:
-            prefix = str(Path(literal_path).expanduser())
+        elif raw_path is not None:
+            # Preferred: {"path": "$MYVAR/subdir", ...} — $VAR expanded then ~.
+            prefix = str(Path(_expand_vars(raw_path)).expanduser())
         else:
             continue
 
