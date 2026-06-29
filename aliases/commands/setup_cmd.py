@@ -9,6 +9,7 @@ After ``uv tool install git+<url>`` run this once to wire up:
 from __future__ import annotations
 
 import shutil
+import subprocess
 import sys
 from importlib.resources import as_file, files
 from pathlib import Path
@@ -110,6 +111,17 @@ def setup_command(force: bool, update: bool) -> None:
     # ── 5. Ensure ~/.bashrc sources ~/.bash_aliases ────────────────────────
     _ensure_bashrc(bashrc_path, bash_aliases_path)
 
+    # ── 6. Offer to install fzf if missing ────────────────────────────────
+    _ensure_fzf()
+
+    # ── 7. Offer to install ripgrep if missing ─────────────────────────────
+    _ensure_tool(
+        binary="rg",
+        display_name="ripgrep (rg)",
+        description="fast content search — used by aliases grep features",
+        pkg_name="ripgrep",
+    )
+
     click.echo(
         "\n\033[32m✓\033[0m Setup complete. Restart your shell or run:\n"
         "    source ~/.bash_aliases"
@@ -143,6 +155,7 @@ ALIASES_CONFIG_DIR="{config_dir}"
 [ -f "${{ALIASES_CONFIG_DIR}}/shell/project-env.sh" ] && source "${{ALIASES_CONFIG_DIR}}/shell/project-env.sh"
 [ -f "${{ALIASES_CONFIG_DIR}}/shell/secrets.sh" ]     && source "${{ALIASES_CONFIG_DIR}}/shell/secrets.sh"
 [ -f "${{ALIASES_CONFIG_DIR}}/shell/prompt.sh" ]      && source "${{ALIASES_CONFIG_DIR}}/shell/prompt.sh"
+[ -f "${{ALIASES_CONFIG_DIR}}/shell/fzf.sh" ]         && source "${{ALIASES_CONFIG_DIR}}/shell/fzf.sh"
 
 # ── Bash aliases ────────────────────────────────────────────────────────────
 for _ali_f in "${{ALIASES_CONFIG_DIR}}/bash_aliases/"*.ali.sh; do
@@ -167,6 +180,61 @@ def _backup_and_write(path: Path, content: str) -> None:
     shutil.copy2(path, backup)
     click.echo(f"  Backed up: {backup}")
     path.write_text(content, encoding="utf-8")
+
+
+def _ensure_fzf() -> None:
+    _ensure_tool(
+        binary="fzf",
+        display_name="fzf",
+        description="fuzzy-search — required for Ctrl+R history, branch picker, and completion",
+        pkg_name="fzf",
+        fallback_cmd='git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install --all',
+        fallback_label="~/.fzf/install",
+    )
+
+
+def _ensure_tool(
+    binary: str,
+    display_name: str,
+    description: str,
+    pkg_name: str,
+    fallback_cmd: str | None = None,
+    fallback_label: str | None = None,
+) -> None:
+    """Prompt the user to install a tool if it is not already on PATH."""
+    if shutil.which(binary):
+        click.echo(f"  {display_name} already installed — skipping.")
+        return
+
+    click.echo(f"\n  {display_name} is not installed. It enables {description}.")
+    if not click.confirm(f"  Install {display_name} now?", default=True):
+        click.echo(f"  Skipped. Install {display_name} manually.")
+        return
+
+    for pkg_mgr, cmd in [
+        ("apt-get", ["sudo", "apt-get", "install", "-y", pkg_name]),
+        ("brew",    ["brew", "install", pkg_name]),
+        ("dnf",     ["sudo", "dnf", "install", "-y", pkg_name]),
+        ("pacman",  ["sudo", "pacman", "-S", "--noconfirm", pkg_name]),
+    ]:
+        if shutil.which(pkg_mgr):
+            click.echo(f"  Installing {display_name} via {pkg_mgr}…")
+            result = subprocess.run(cmd)
+            if result.returncode == 0:
+                click.echo(f"  \033[32m✓\033[0m {display_name} installed.")
+            else:
+                click.echo(f"  {display_name} installation failed.", err=True)
+            return
+
+    if fallback_cmd:
+        click.echo(f"  No supported package manager found. Running fallback install…")
+        result = subprocess.run(["bash", "-c", fallback_cmd])
+        if result.returncode == 0:
+            click.echo(f"  \033[32m✓\033[0m {display_name} installed via {fallback_label or 'fallback'}.")
+        else:
+            click.echo(f"  {display_name} installation failed.", err=True)
+    else:
+        click.echo(f"  No supported package manager found. Install {display_name} manually.", err=True)
 
 
 def _ensure_bashrc(bashrc: Path, bash_aliases: Path) -> None:
