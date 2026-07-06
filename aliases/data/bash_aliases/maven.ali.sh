@@ -3,3 +3,4 @@
 
 alias mcp='mvn clean package'
 alias mcv='mvn clean verify'
+alias mci='mvn clean install'
