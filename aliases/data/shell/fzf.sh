@@ -64,11 +64,12 @@ eval "$(fzf --bash)"
 _fzf_comprun() {
     local cmd=$1; shift
     case "$cmd" in
-        cd)             fzf --preview 'ls -1 {}'                                           "$@" ;;
-        vim|nvim|nano)  fzf --preview "$_fzf_file_preview"                                 "$@" ;;
-        export|unset)   fzf --preview 'echo ${}'                                           "$@" ;;
-        kill)           fzf --preview 'ps --pid={} -o pid,ppid,%cpu,%mem,cmd 2>/dev/null'  "$@" ;;
-        *)              fzf                                                                "$@" ;;
+        cd)                 fzf --preview 'ls -1 {}'                                                                            "$@" ;;
+        vim|nvim|nano)      fzf --preview "$_fzf_file_preview"                                                                  "$@" ;;
+        export|unset)       fzf --preview 'echo ${}'                                                                            "$@" ;;
+        kill)               fzf --preview 'ps --pid={} -o pid,ppid,%cpu,%mem,cmd 2>/dev/null'                                   "$@" ;;
+        which|type|command) fzf --preview 'type {}; p=$(command -v {} 2>/dev/null); [ -f "$p" ] && { echo; file -b "$p"; }'     "$@" ;;
+        *)                  fzf                                                                                                 "$@" ;;
     esac
 }
 
