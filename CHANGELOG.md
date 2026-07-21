@@ -1,3 +1,9 @@
+## v3.6.0 (2026-07-21)
+
+### Feat
+
+- alt+b allow creation of new branch
+
 ## v3.5.1 (2026-07-08)
 
 ### Fix
