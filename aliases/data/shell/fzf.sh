@@ -77,21 +77,33 @@ _fzf_comprun() {
 # Alt+B — fuzzy git branch picker (preview: recent log for that branch)
 # ---------------------------------------------------------------------------
 _aliases_fzf_git_branch() {
-    local branch
-    branch=$(
+    local out status query branch
+    # --print-query makes fzf emit the typed query as the first output line,
+    # so we can create a new branch when nothing matched.
+    out=$(
         git branch --all --color=always 2>/dev/null |
         grep -v HEAD |
         sed 's/^[* ]*//' |
         fzf --ansi \
+            --print-query \
             --preview 'git log --oneline --color=always {1} 2>/dev/null | head -20' \
             --preview-window=right:50% \
-            --header='Branches  (Enter to checkout)' \
-            --color='header:italic' \
-            --exit-0
-    ) || return
+            --header='Branches  (Enter to checkout · type new name + Enter to create)' \
+            --color='header:italic'
+    )
+    status=$?
+    # 130 = aborted with Esc / Ctrl-C. Exit 0 (match picked) and 1 (no match,
+    # but we still get the typed query) both fall through to the logic below.
+    [[ $status -eq 130 ]] && return
 
-    branch=$(sed 's#^remotes/[^/]*/##' <<< "$branch" | xargs)
-    [[ -n "$branch" ]] && git checkout "$branch"
+    query=$(head -1 <<< "$out")
+    branch=$(tail -n +2 <<< "$out" | sed 's#^remotes/[^/]*/##' | xargs)
+
+    if [[ -n "$branch" ]]; then
+        git checkout "$branch"
+    elif [[ -n "$query" ]]; then
+        git checkout -b "$(xargs <<< "$query")"
+    fi
 }
 
 bind -x '"\eb": _aliases_fzf_git_branch'
