@@ -47,10 +47,22 @@ prompt.
 non-printing delimiters). Without these, bash miscounts the line length and
 tab-completion / line editing breaks.
 
-`PS1` is assigned its finished value and is deliberately **not** exported, and
-holds no `${...}` references. Tools that snapshot the environment — VS Code's
-Java launcher, for one — otherwise inherit a `PS1` referring to a shell
-variable they cannot resolve, and fail trying to expand it.
+`PS1` is assigned its finished value and holds no `${...}` references. Tools
+that snapshot the environment — VS Code's Java launcher, for one — otherwise
+inherit a `PS1` referring to a shell variable they cannot resolve, and fail
+trying to expand it. Spring's placeholder resolver aborts context startup.
+
+Merely not exporting is not enough, so the script runs `export -n PS1`
+unconditionally on source: the export attribute is **inherited and survives
+reassignment**, so a shell launched from a parent that exported `PS1` would keep
+leaking it to its own children forever. `export -n` clears only the attribute —
+the value, and your prompt, are untouched — which is why it runs even when the
+prompt is disabled via `ALIASES_NO_PROMPT` or `prompt.enabled`.
+
+Note that a process started *before* the fix keeps the stale value for its whole
+lifetime. A running VS Code server has to be restarted (reloading the window
+reuses the same server process) before its child processes see a clean
+environment.
 
 ### Path Replacement
 

@@ -24,6 +24,14 @@
 #     }
 #   }
 
+# PS1 must never be in the environment: it is a shell variable, and children
+# that scan their env (Spring's placeholder resolver, for one) choke on it.
+# Not exporting is not enough – the export attribute is inherited and survives
+# reassignment, so a parent that exported PS1 keeps us leaking it forever.
+# `export -n` drops only the attribute; the value and the prompt are untouched,
+# which is why this runs unconditionally, before either opt-out below.
+export -n PS1 2>/dev/null || true
+
 # ---------------------------------------------------------------------------
 # aliases is only invoked when the directory changes. On every other Enter
 # press PROMPT_COMMAND sees an unchanged $PWD and leaves PS1 alone.
