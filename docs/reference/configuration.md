@@ -101,7 +101,7 @@ PS1 / prompt formatting settings.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `prompt.enabled` | bool | `true` | Enable custom prompt |
+| `prompt.enabled` | bool | `true` | Enable custom prompt. `ALIASES_NO_PROMPT=1` disables it for a single shell without touching config. |
 | `prompt.user_host_color` | string | `bold_green` | ANSI color for `user@host` |
 | `prompt.default_path_color` | string | `bold_blue` | Color when no replacement rule matches |
 | `prompt.path_replacements` | list | `[]` | Ordered list of path replacement rules |

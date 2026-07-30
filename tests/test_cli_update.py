@@ -15,6 +15,11 @@ def runner() -> CliRunner:
     return CliRunner()
 
 
+def _which(binary: str) -> str | None:
+    """shutil.which stub – update_cmd looks up both 'uv' and 'aliases'."""
+    return {"uv": "/usr/bin/uv", "aliases": "/usr/bin/aliases"}.get(binary)
+
+
 class TestUpdateCheck:
     def test_already_up_to_date(self, runner):
         with patch("aliases.commands.update_cmd._fetch_latest_tag", return_value="v2.1.1"), \
@@ -28,17 +33,30 @@ class TestUpdateCheck:
         mock_proc.returncode = 0
         with patch("aliases.commands.update_cmd._fetch_latest_tag", return_value="v9.9.9"), \
              patch("aliases.commands.update_cmd.__version__", "2.1.1"), \
-             patch("shutil.which", return_value="/usr/bin/uv"), \
+             patch("shutil.which", side_effect=_which), \
              patch("subprocess.run", return_value=mock_proc) as mock_run:
             result = runner.invoke(cli, ["update"])
         assert result.exit_code == 0
         assert "Updating" in result.output
         assert "Updated to v9.9.9" in result.output
-        mock_run.assert_called_once()
-        args = mock_run.call_args[0][0]
-        assert "uv" in args[0]
-        assert "tool" in args
-        assert "install" in args
+        install_args, setup_args = (c[0][0] for c in mock_run.call_args_list)
+        assert "uv" in install_args[0]
+        assert "tool" in install_args
+        assert "install" in install_args
+        # Shell files are refreshed with the newly installed binary.
+        assert setup_args == ["/usr/bin/aliases", "setup", "--update"]
+
+    def test_setup_refresh_failure_warns_but_update_succeeds(self, runner):
+        install_ok = MagicMock(returncode=0)
+        setup_failed = MagicMock(returncode=1)
+        with patch("aliases.commands.update_cmd._fetch_latest_tag", return_value="v9.9.9"), \
+             patch("aliases.commands.update_cmd.__version__", "2.1.1"), \
+             patch("shutil.which", side_effect=_which), \
+             patch("subprocess.run", side_effect=[install_ok, setup_failed]):
+            result = runner.invoke(cli, ["update"])
+        assert result.exit_code == 0
+        assert "Updated to v9.9.9" in result.output
+        assert "run 'aliases setup --update'" in result.output
 
     def test_check_only_exits_1_when_outdated(self, runner):
         with patch("aliases.commands.update_cmd._fetch_latest_tag", return_value="v9.9.9"), \
@@ -59,11 +77,11 @@ class TestUpdateCheck:
         mock_proc.returncode = 0
         with patch("aliases.commands.update_cmd._fetch_latest_tag", return_value="v2.1.1"), \
              patch("aliases.commands.update_cmd.__version__", "2.1.1"), \
-             patch("shutil.which", return_value="/usr/bin/uv"), \
+             patch("shutil.which", side_effect=_which), \
              patch("subprocess.run", return_value=mock_proc) as mock_run:
             result = runner.invoke(cli, ["update", "--force"])
         assert result.exit_code == 0
-        mock_run.assert_called_once()
+        assert mock_run.call_count == 2  # uv install, then setup --update
 
     def test_github_unreachable_exits_1(self, runner):
         with patch("aliases.commands.update_cmd._fetch_latest_tag", return_value=None):

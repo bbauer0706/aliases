@@ -2,10 +2,13 @@
 # Shell integration for aliases – custom PS1 prompt formatting.
 # Source this file from ~/.bash_aliases (done automatically by aliases setup).
 #
-# After sourcing, opt in by calling:
-#   aliases_setup_prompt
+# The prompt installs itself on source. To disable it:
+#   ALIASES_NO_PROMPT=1            – per shell, no subprocess (set it before sourcing)
+#   aliases config set prompt.enabled false   – globally
 #
-# Or set ALIASES_AUTO_SETUP_PROMPT=1 before sourcing to enable automatically.
+# PS1 is deliberately NOT exported and holds no variable references: child
+# processes that snapshot the environment must not inherit an unexpandable
+# ${...} they know nothing about.
 #
 # Configuration (in ~/.config/aliases/config.json):
 #   {
@@ -22,17 +25,17 @@
 #   }
 
 # ---------------------------------------------------------------------------
-# Prompt cache – aliases is only invoked when the directory changes.
-# On every other Enter press, PS1 reads the cached string at zero cost.
+# aliases is only invoked when the directory changes. On every other Enter
+# press PROMPT_COMMAND sees an unchanged $PWD and leaves PS1 alone.
 # ---------------------------------------------------------------------------
-_ALIASES_PROMPT_CACHE=""
-_ALIASES_PROMPT_CACHE_DIR=""
+_ALIASES_PROMPT_DIR=""
 
-_aliases_update_prompt_cache() {
-    if [[ "$PWD" != "$_ALIASES_PROMPT_CACHE_DIR" ]]; then
-        _ALIASES_PROMPT_CACHE="$(aliases pwd --full-prompt --ps1 2>/dev/null)" \
-            || _ALIASES_PROMPT_CACHE="${USER}@${HOSTNAME}:${PWD}"
-        _ALIASES_PROMPT_CACHE_DIR="$PWD"
+_aliases_update_prompt() {
+    if [[ "$PWD" != "$_ALIASES_PROMPT_DIR" ]]; then
+        PS1="$(aliases pwd --full-prompt --ps1 2>/dev/null)"
+        [[ -n "$PS1" ]] || PS1="${USER}@${HOSTNAME}:${PWD}"
+        PS1+='\$ '
+        _ALIASES_PROMPT_DIR="$PWD"
     fi
 }
 
@@ -40,23 +43,20 @@ _aliases_update_prompt_cache() {
 # _aliases_setup_prompt – install the custom PS1
 # ---------------------------------------------------------------------------
 _aliases_setup_prompt() {
-    # Respect prompt.enabled config key
+    # Checked first: an opt-out must not cost an `aliases` subprocess.
+    [[ -n "$ALIASES_NO_PROMPT" ]] && return
+
+    # Respect prompt.enabled config key. Older CLI versions print Python's
+    # "False", newer ones "false" – ,, accepts both.
     local enabled
     enabled=$(aliases config get prompt.enabled 2>/dev/null)
-    if [[ "$enabled" == "false" ]]; then
-        return
-    fi
+    [[ "${enabled,,}" == "false" ]] && return
 
-    # Populate cache immediately so the first prompt is correct.
-    _aliases_update_prompt_cache
+    # Populate immediately so the first prompt is correct.
+    _aliases_update_prompt
 
-    # Hook into PROMPT_COMMAND so the cache refreshes only on cd.
-    # Preserve any existing PROMPT_COMMAND entries.
-    PROMPT_COMMAND="_aliases_update_prompt_cache${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
-
-    # PS1 just reads the pre-built cached string – no subprocess, no Python.
-    PS1="\${_ALIASES_PROMPT_CACHE}\\$ "
-    export PS1
+    # Refresh only on cd, preserving any existing PROMPT_COMMAND entries.
+    PROMPT_COMMAND="_aliases_update_prompt${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
 }
 
 _aliases_setup_prompt

@@ -123,8 +123,16 @@ aliases pwd --no-color  # no ANSI codes
 
 ```bash
 aliases setup           # first-time setup
-aliases setup --update  # update shell files only
+aliases setup --update  # refresh shell files + ~/.bash_aliases
 aliases setup --force   # overwrite without prompting
+```
+
+### `update`
+
+```bash
+aliases update          # reinstall if newer, then refresh shell files
+aliases update --check  # check only
+aliases update --force  # reinstall regardless of version
 ```
 
 ---

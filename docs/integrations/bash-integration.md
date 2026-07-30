@@ -31,18 +31,26 @@ when opening a terminal inside a workspace directory.
 
 ## `shell/prompt.sh`
 
-Provides:
+Installs a custom `PS1` on source. Provides:
 
 | Function | Description |
 |----------|-------------|
-| `aliases_setup_prompt` | Installs a custom `PS1` |
-| `_aliases_prompt_pwd` | Called by `PS1`; invokes `aliases pwd --ps1` |
+| `_aliases_update_prompt` | Hooked into `PROMPT_COMMAND`; rebuilds `PS1` on `cd` |
+
+`aliases pwd --full-prompt --ps1` runs only when `$PWD` changes; every other
+Enter press reuses the `PS1` already in place, so there is no subprocess per
+prompt.
 
 ### PS1 Safety
 
 `aliases pwd --ps1` wraps ANSI codes in `\001...\002` (readline
 non-printing delimiters). Without these, bash miscounts the line length and
 tab-completion / line editing breaks.
+
+`PS1` is assigned its finished value and is deliberately **not** exported, and
+holds no `${...}` references. Tools that snapshot the environment — VS Code's
+Java launcher, for one — otherwise inherit a `PS1` referring to a shell
+variable they cannot resolve, and fail trying to expand it.
 
 ### Path Replacement
 
@@ -59,10 +67,12 @@ Each rule replaces a path prefix with a short label.
 Rules are evaluated in order; the first match wins. With no match the path
 is shown with `~` substituted for `$HOME`.
 
-### Auto-enable
+### Disabling
 
-Set `ALIASES_AUTO_SETUP_PROMPT=1` before sourcing to call `aliases_setup_prompt`
-automatically on source.
+| Method | Scope |
+|--------|-------|
+| `ALIASES_NO_PROMPT=1` | Per shell. Checked before any `aliases` subprocess runs, so it also removes the startup cost. Set it before sourcing — e.g. via `terminal.integrated.env.linux` in VS Code. |
+| `aliases config set prompt.enabled false` | Every shell. |
 
 ---
 

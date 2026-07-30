@@ -36,6 +36,8 @@ def config_get(key: str) -> None:
         sys.exit(1)
     if isinstance(value, (dict, list)):
         click.echo(json.dumps(value, indent=2))
+    elif isinstance(value, bool):
+        click.echo(json.dumps(value))  # true/false, not Python's True/False
     else:
         click.echo(str(value))
 
@@ -55,6 +57,8 @@ def config_set(key: str, value: str) -> None:
     cfg.set(key, value)
     cfg.save()
     coerced = cfg.get(key)
+    if isinstance(coerced, bool):
+        coerced = json.dumps(coerced)  # match `config get`: true/false
     from rich.console import Console  # noqa: PLC0415
     Console().print(f"[green]✓[/green] {key} = {coerced}")
 

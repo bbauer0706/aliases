@@ -88,12 +88,20 @@ def setup_command(force: bool, update: bool) -> None:
             dest.chmod(0o644)
             click.echo(f"  Installed: {dest}")
 
-    if update:
-        click.echo("\n\033[32m✓\033[0m Shell files updated.")
-        return
-
     # ── 4. Create / update ~/.bash_aliases ────────────────────────────────
     bash_aliases_content = _generate_bash_aliases(config_dir)
+
+    if update:
+        # ~/.bash_aliases is a generated file (its own header says so), so
+        # refresh it too — otherwise template changes never reach the user.
+        # .bashrc / fzf / ripgrep stay untouched: those are one-time setup.
+        if (
+            bash_aliases_path.exists()
+            and bash_aliases_path.read_text(encoding="utf-8") != bash_aliases_content
+        ):
+            _backup_and_write(bash_aliases_path, bash_aliases_content)
+        click.echo("\n\033[32m✓\033[0m Shell files updated.")
+        return
 
     if bash_aliases_path.exists() and not force:
         click.echo(f"\n{bash_aliases_path} already exists.")
@@ -166,9 +174,6 @@ unset _ali_f
 # ── Bash completion ─────────────────────────────────────────────────────────
 [ -f "${{ALIASES_CONFIG_DIR}}/bash_completion/aliases-completion.sh" ] && \\
     source "${{ALIASES_CONFIG_DIR}}/bash_completion/aliases-completion.sh"
-
-# ── Prompt setup ────────────────────────────────────────────────────────────
-aliases_setup_prompt 2>/dev/null || true
 
 # ── Short alias ─────────────────────────────────────────────────────────────
 alias c='aliases code'

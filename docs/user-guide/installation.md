@@ -47,12 +47,22 @@ the OS keychain.
 ## Updating
 
 ```bash
-uv tool upgrade aliases
-aliases setup --update   # refresh bundled shell/alias files
+aliases update           # checks GitHub, reinstalls, refreshes shell files
 ```
 
-`--update` only overwrites the files inside `~/.config/aliases/` — it
-does not touch `~/.bash_aliases` or `~/.bashrc`.
+`aliases update` runs `aliases setup --update` for you afterwards, so the
+bundled shell files never lag behind the installed version.
+
+To refresh the shell files on their own (e.g. after `uv tool upgrade aliases`):
+
+```bash
+aliases setup --update
+```
+
+`--update` overwrites the files inside `~/.config/aliases/` and regenerates
+`~/.bash_aliases` (backing up the old one to `~/.bash_aliases.bak` if it
+changed). It does not touch `~/.bashrc` and does not prompt to install fzf or
+ripgrep.
 
 ## Uninstalling
 

@@ -104,3 +104,17 @@ def update_command(check_only: bool, force: bool) -> None:
         raise SystemExit(result.returncode)
 
     click.echo(f"Updated to {latest_tag}.")
+
+    # The files under ~/.config/aliases/ are copies of the packaged ones, so a
+    # reinstall alone leaves them stale. Re-run setup with the *new* binary
+    # (this process is still running the old code) so `update` is enough.
+    aliases_path = shutil.which("aliases")
+    if aliases_path is None:
+        click.echo("Warning: 'aliases' not on PATH — run 'aliases setup --update'.", err=True)
+        return
+    click.echo("Refreshing shell files …")
+    if subprocess.run([aliases_path, "setup", "--update"], text=True).returncode != 0:  # noqa: S603
+        click.echo("Warning: refresh failed — run 'aliases setup --update'.", err=True)
+        return
+
+    click.echo("Restart your shell or run: source ~/.bash_aliases")
