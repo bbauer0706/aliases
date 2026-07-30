@@ -1,3 +1,9 @@
+## v3.6.2 (2026-07-30)
+
+### Fix
+
+- unexport inherited PS1 so it never reaches child processes
+
 ## v3.6.1 (2026-07-30)
 
 ### Fix
