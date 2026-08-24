@@ -47,8 +47,8 @@ c dispatch[sw]      # open server + web
 c ..                # fallback to: code ..
 ```
 
-Shell helpers are sourced from `~/.bash_aliases` – including [`glab` shortcuts](#glab-shortcuts)
-for working across a GitLab group.
+Shell helpers are sourced from `~/.bash_aliases` – including [`glab`](#glab-shortcuts)
+and [`gh`](#gh-shortcuts) shortcuts for working across a GitLab group or your GitHub account.
 
 ---
 
@@ -174,6 +174,32 @@ The repo list is cached in `~/.cache/aliases/glab-repos-<group>.txt` for 24 hour
 
 ---
 
+## `gh` shortcuts
+
+The GitHub twin of the above, sourced from
+`~/.config/aliases/bash_aliases/gh.ali.sh`. Scoped to your own repositories.
+
+| Command | Does |
+|---------|------|
+| `ghc [query]` | Pick one of your repos, clone it into your workspace directory, `cd` there |
+| `ghpr [flags]` | Open a PR from the current branch – pushes it first, fills from commits. Refuses to run on `main`/`master`. Extra flags pass through (`ghpr --draft`) |
+| `ghco` | Pick an open PR and check it out |
+| `ghm` | Squash-merge the current PR and delete the branch |
+| `gho` | Open the current PR – or the repo – in the browser |
+| `ghci` | Watch the checks for the current branch's PR |
+| `ghciv` | Inspect a workflow run |
+| `ghcir` | Rerun the failed jobs |
+
+No repo cache here, unlike `glc`: one account is a single fast call.
+
+List someone else's repositories with `GH_OWNER`:
+
+```bash
+GH_OWNER=someorg ghc
+```
+
+---
+
 ## Configuration
 
 Config file: `~/.config/aliases/config.json`
@@ -196,7 +222,7 @@ See [docs/reference/configuration.md](docs/reference/configuration.md) for all k
 - Python 3.12+
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
 - bash 4.0+ for shell integration
-- optional: [`fzf`](https://github.com/junegunn/fzf) for the pickers, [`glab`](https://gitlab.com/gitlab-org/cli) for the `gl*` commands
+- optional: [`fzf`](https://github.com/junegunn/fzf) for the pickers, [`glab`](https://gitlab.com/gitlab-org/cli) for the `gl*` commands, [`gh`](https://cli.github.com/) for the `gh*` commands
 
 ## Development
 
