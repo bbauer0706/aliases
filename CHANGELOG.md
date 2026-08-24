@@ -1,3 +1,19 @@
+## v3.10.0 (2026-08-24)
+
+### Feat
+
+- eza support
+
+### Fix
+
+- make eza icon usage configurable
+
+## v3.8.1 (2026-08-24)
+
+### Fix
+
+- add force to cache move op
+
 ## v3.9.0 (2026-08-24)
 
 ### Feat
