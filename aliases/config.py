@@ -34,6 +34,9 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "port_offset": 100,
         "default_env": "dev",
     },
+    "eza": {
+        "icons": "auto",
+    },
     "sync": {
         "enabled": False,
         "remote_url": "",

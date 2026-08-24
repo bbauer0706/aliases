@@ -16,6 +16,9 @@
     "port_offset": 100,
     "default_env": "dev"
   },
+  "eza": {
+    "icons": "auto"
+  },
   "sync": {
     "enabled": false,
     "remote_url": "",

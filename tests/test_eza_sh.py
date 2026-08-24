@@ -23,7 +23,13 @@ LS = shutil.which("ls")
 pytestmark = pytest.mark.skipif(BASH is None, reason="bash not available")
 
 
-def _run(snippet: str, *, with_eza: bool, tmp_path: Path) -> subprocess.CompletedProcess:
+def _run(
+    snippet: str,
+    *,
+    with_eza: bool,
+    tmp_path: Path,
+    icons: str | None = None,
+) -> subprocess.CompletedProcess:
     """Source the alias files in an interactive bash with a controlled PATH.
 
     PATH holds *only* the tmp bin/, so `with_eza=False` is a real absence test
@@ -38,6 +44,10 @@ def _run(snippet: str, *, with_eza: bool, tmp_path: Path) -> subprocess.Complete
         stub = bin_dir / "eza"
         stub.write_text(f'#!{BASH}\necho "eza $*"\n')
         stub.chmod(0o755)
+    if icons is not None:
+        config = bin_dir / "aliases"
+        config.write_text(f'#!{BASH}\nprintf "%s\\n" {icons!r}\n')
+        config.chmod(0o755)
     proc = subprocess.run(
         [BASH, "--norc", "--noprofile", "-ic",
          f"source {BASIC_SH}; source {EZA_SH}; {snippet}"],
@@ -68,6 +78,18 @@ class TestWithEza:
     def test_command_ls_still_reaches_coreutils(self, tmp_path):
         out = _run("command ls --version", with_eza=True, tmp_path=tmp_path).stdout
         assert "coreutils" in out and "eza" not in out
+
+    def test_icons_mode_is_configurable(self, tmp_path):
+        out = _run(
+            "alias ls", with_eza=True, icons="always", tmp_path=tmp_path
+        ).stdout
+        assert "--icons=always" in out
+
+    def test_invalid_icons_mode_uses_auto(self, tmp_path):
+        out = _run(
+            "alias ls", with_eza=True, icons="invalid", tmp_path=tmp_path
+        ).stdout
+        assert "--icons=auto" in out
 
 
 class TestWithoutEza:

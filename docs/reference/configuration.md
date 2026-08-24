@@ -48,6 +48,19 @@ Settings for the `env` command.
 
 ---
 
+## `eza`
+
+Settings for the optional eza-based `ls` aliases.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `eza.icons` | string | `auto` | Icon mode passed to eza: `auto`, `always`, or `never` |
+
+Set it with `aliases config set eza.icons always`, then reload the aliases with
+`source ~/.bash_aliases`.
+
+---
+
 ## `sync`
 
 Settings for `config sync`.

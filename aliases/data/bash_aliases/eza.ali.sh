@@ -12,8 +12,14 @@
 
 command -v eza &>/dev/null || return 0
 
+_eza_icons=$(aliases config get eza.icons 2>/dev/null || printf '%s' auto)
+case $_eza_icons in
+    auto|always|never) ;;
+    *) _eza_icons=auto ;;
+esac
+
 # --icons=auto emits icons only to a TTY, so piped output stays clean.
-_eza_opts='--group-directories-first --icons=auto'
+_eza_opts="--group-directories-first --icons=$_eza_icons"
 
 # Aliases are not expanded in scripts or non-interactive shells, and
 # `command ls` still reaches coreutils — overriding ls here is safe.
@@ -26,4 +32,4 @@ _eza_opts='--group-directories-first --icons=auto'
     alias ltt="eza --tree --level=3 --long --no-permissions --no-user $_eza_opts"
 }
 
-unset _eza_opts
+unset _eza_icons _eza_opts
