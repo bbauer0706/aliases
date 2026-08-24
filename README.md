@@ -200,6 +200,28 @@ GH_OWNER=someorg ghc
 
 ---
 
+## `eza`
+
+Sourced from `~/.config/aliases/bash_aliases/eza.ali.sh`. Silently inactive when
+[`eza`](https://github.com/eza-community/eza) is not installed – then `la` falls back
+to the `ls -alh` from `basic.ali.sh`.
+
+| Command | Does |
+|---------|------|
+| `ls` | eza, directories first, icons |
+| `ll` | Long listing with the git status column |
+| `la` | Long listing including hidden files |
+| `lt` | Tree, 2 levels |
+| `ltt` | Tree, 3 levels, long, without permissions/owner |
+
+Icons need a Nerd Font in your terminal, and are emitted only to a TTY, so piped
+output stays clean. `command ls` still gets coreutils.
+
+With eza installed, the fzf directory previews (Alt+C, `cd **<TAB>`) switch from
+`ls -1` to a 2-level `eza --tree`.
+
+---
+
 ## Configuration
 
 Config file: `~/.config/aliases/config.json`
@@ -222,7 +244,7 @@ See [docs/reference/configuration.md](docs/reference/configuration.md) for all k
 - Python 3.12+
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
 - bash 4.0+ for shell integration
-- optional: [`fzf`](https://github.com/junegunn/fzf) for the pickers, [`glab`](https://gitlab.com/gitlab-org/cli) for the `gl*` commands, [`gh`](https://cli.github.com/) for the `gh*` commands
+- optional: [`fzf`](https://github.com/junegunn/fzf) for the pickers, [`glab`](https://gitlab.com/gitlab-org/cli) for the `gl*` commands, [`gh`](https://cli.github.com/) for the `gh*` commands, [`eza`](https://github.com/eza-community/eza) for the `ls` aliases
 
 ## Development
 

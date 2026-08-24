@@ -38,6 +38,13 @@ _fzf_preview_cmd() {
 # Whole-file preview of {} for real file paths (Ctrl+T, ** completion).
 _fzf_file_preview="$(_fzf_preview_cmd '{}')"
 
+# Directory preview: eza tree when available, plain ls otherwise.
+if command -v eza &>/dev/null; then
+    _fzf_dir_preview='eza --tree --level=2 --color=always --icons=auto {}'
+else
+    _fzf_dir_preview='ls -1 {}'
+fi
+
 # --walker-skip applies to fzf's built-in file/dir walker (safe globally).
 export FZF_DEFAULT_OPTS='--height 100% --border --layout reverse --info inline --walker-skip .git,node_modules,target,.cache'
 
@@ -47,7 +54,7 @@ export FZF_DEFAULT_OPTS='--height 100% --border --layout reverse --info inline -
 export FZF_CTRL_R_OPTS='--preview "" --header "History  (type to search · Ctrl+R re-sorts matches)" --color header:italic'
 
 # Alt+C: directory picker
-export FZF_ALT_C_OPTS='--preview "ls -1 {}"'
+export FZF_ALT_C_OPTS="--preview '$_fzf_dir_preview'"
 
 # Ctrl+T: file picker — same bat preview as Alt+F
 export FZF_CTRL_T_OPTS="--preview '$_fzf_file_preview'"
@@ -79,7 +86,7 @@ eval "$(fzf --bash)"
 _fzf_comprun() {
     local cmd=$1; shift
     case "$cmd" in
-        cd)                 fzf --preview 'ls -1 {}'                                                                            "$@" ;;
+        cd)                 fzf --preview "$_fzf_dir_preview"                                                                   "$@" ;;
         vim|nvim|nano)      fzf --preview "$_fzf_file_preview"                                                                  "$@" ;;
         export|unset)       fzf --preview 'echo ${}'                                                                            "$@" ;;
         kill)               fzf --preview 'ps --pid={} -o pid,ppid,%cpu,%mem,cmd 2>/dev/null'                                   "$@" ;;

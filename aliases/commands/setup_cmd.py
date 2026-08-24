@@ -130,6 +130,14 @@ def setup_command(force: bool, update: bool) -> None:
         pkg_name="ripgrep",
     )
 
+    # ── 8. Offer to install eza if missing ─────────────────────────────────
+    _ensure_tool(
+        binary="eza",
+        display_name="eza",
+        description="a modern ls — used by the ls/ll/la aliases and fzf directory previews",
+        pkg_name="eza",
+    )
+
     click.echo(
         "\n\033[32m✓\033[0m Setup complete. Restart your shell or run:\n"
         "    source ~/.bash_aliases"
