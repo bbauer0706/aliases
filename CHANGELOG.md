@@ -1,3 +1,9 @@
+## v3.7.1 (2026-08-24)
+
+### Fix
+
+- source-time guard to run-time guard
+
 ## v3.7.0 (2026-08-24)
 
 ### Feat
