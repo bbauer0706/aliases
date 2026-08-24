@@ -47,6 +47,9 @@ c dispatch[sw]      # open server + web
 c ..                # fallback to: code ..
 ```
 
+Shell helpers are sourced from `~/.bash_aliases` – including [`glab` shortcuts](#glab-shortcuts)
+for working across a GitLab group.
+
 ---
 
 ## Commands
@@ -137,6 +140,40 @@ aliases update --force  # reinstall regardless of version
 
 ---
 
+## `glab` shortcuts
+
+Sourced from `~/.config/aliases/bash_aliases/glab.ali.sh`. Silently inactive when
+[`glab`](https://gitlab.com/gitlab-org/cli) is not installed.
+
+`glab` already handles merge requests and pipelines well; the gap is *finding* a
+repo, since `glab repo clone` needs the full nested path. `glc` closes it with an
+fzf picker over a cached list of every repo in the group.
+
+| Command | Does |
+|---------|------|
+| `glc [query]` | Pick a repo from the group, clone it into your workspace directory, `cd` there |
+| `glc -r` | Same, but refresh the repo cache first |
+| `glmr [flags]` | Open an MR from the current branch – fills from commits, squashes, deletes the source branch. Refuses to run on `main`/`master`. Extra flags pass through (`glmr --draft`) |
+| `glco` | Pick an open MR and check it out |
+| `glmm` | Merge the current MR |
+| `glo` | Open the current MR – or the repo – in the browser |
+| `glci` | Live pipeline status for the current branch |
+| `glciv` | Pipeline job TUI (trace, retry, cancel) |
+| `glcir` | Retry a job |
+
+Repos are cloned flat as `<workspace-dir>/<repo-name>`, so `c <repo-name>` and
+tab-completion pick them up right away.
+
+The group defaults to `evotess`; override it per shell with `GLAB_GROUP`:
+
+```bash
+GLAB_GROUP=othergroup glc
+```
+
+The repo list is cached in `~/.cache/aliases/glab-repos-<group>.txt` for 24 hours.
+
+---
+
 ## Configuration
 
 Config file: `~/.config/aliases/config.json`
@@ -159,6 +196,7 @@ See [docs/reference/configuration.md](docs/reference/configuration.md) for all k
 - Python 3.12+
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
 - bash 4.0+ for shell integration
+- optional: [`fzf`](https://github.com/junegunn/fzf) for the pickers, [`glab`](https://gitlab.com/gitlab-org/cli) for the `gl*` commands
 
 ## Development
 

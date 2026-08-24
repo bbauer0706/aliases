@@ -55,6 +55,21 @@ export FZF_CTRL_T_OPTS="--preview '$_fzf_file_preview'"
 # ---------------------------------------------------------------------------
 # Native fzf bash integration (Ctrl+R, Ctrl+T, Alt+C, ** completion)
 # ---------------------------------------------------------------------------
+
+# fzf's completion must load AFTER bash-completion. Otherwise fzf doesn't see
+# the dynamic loader (_completion_loader) and installs its own generic path
+# completer as the default handler, which shadows on-demand completions like
+# git's. The stock Debian/Ubuntu ~/.bashrc sources ~/.bash_aliases (and thus
+# this file) before its bash-completion block, so load it here first if
+# needed. bash-completion has its own include guard, so this is a no-op when
+# it (or the later .bashrc block) has already run.
+if ! declare -F _completion_loader &>/dev/null; then
+    for _bc in /usr/share/bash-completion/bash_completion /etc/bash_completion; do
+        [[ -r $_bc ]] && { . "$_bc"; break; }
+    done
+    unset _bc
+fi
+
 eval "$(fzf --bash)"
 
 # ---------------------------------------------------------------------------
