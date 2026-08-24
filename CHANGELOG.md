@@ -1,3 +1,9 @@
+## v3.8.1 (2026-08-24)
+
+### Fix
+
+- add force to cache move op
+
 ## v3.8.0 (2026-08-24)
 
 ### Feat
