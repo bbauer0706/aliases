@@ -51,7 +51,7 @@ for line in sys.stdin:
     if line:
         print(json.loads(line)["path_with_namespace"])' > "${file}.tmp" && [[ -s "${file}.tmp" ]]
     then
-        mv "${file}.tmp" "$file"
+        mv -f "${file}.tmp" "$file"
     else
         rm -f "${file}.tmp"
         [[ -s "$file" ]] || { echo "glc: could not list ${GLAB_GROUP} repositories" >&2; return 1; }
