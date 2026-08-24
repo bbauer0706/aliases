@@ -15,7 +15,10 @@
 #
 # Override the group per shell:  GLAB_GROUP=othergroup glc
 
-command -v glab &>/dev/null || return 0
+# No source-time `command -v glab` guard on purpose: ~/.bashrc sources
+# ~/.bash_aliases before the tail of the file extends PATH (brew shellenv,
+# nvm, …), so a tool installed there is not yet visible while this runs.
+# Nothing here executes at source time, so the check belongs in the commands.
 
 : "${GLAB_GROUP:=evotess}"
 
@@ -78,10 +81,12 @@ else:
 # glc — pick a repo from the group, clone it into the workspace dir, cd there
 # ---------------------------------------------------------------------------
 glc() {
-    local force= cache pick name target
+    local force= cache pick name target bin
     [[ "$1" == "-r" ]] && { force=1; shift; }
 
-    command -v fzf &>/dev/null || { echo "glc: fzf is required" >&2; return 1; }
+    for bin in glab fzf; do
+        command -v "$bin" &>/dev/null || { echo "glc: $bin is required" >&2; return 1; }
+    done
     cache=$(_glab_repo_cache "$force") || return 1
 
     pick=$(fzf --query "${1:-}" --select-1 \

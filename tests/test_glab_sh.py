@@ -96,6 +96,28 @@ def shell(tmp_path):
     return run
 
 
+class TestSourcingIsPathIndependent:
+    """~/.bashrc sources ~/.bash_aliases before its tail extends PATH (brew
+    shellenv, nvm, …), so glab may not be visible yet while this file is read.
+    Sourcing must still define the commands."""
+
+    def test_commands_exist_without_glab_on_path(self, tmp_path):
+        proc = subprocess.run(
+            # Absolute bash, empty PATH: nothing at all is discoverable, glab least of all.
+            [shutil.which("bash"), "--norc", "--noprofile", "-c",
+             f"source {GLAB_SH}; type -t glc glmr glco"],
+            env={"PATH": str(tmp_path), "HOME": str(tmp_path)},
+            capture_output=True,
+            text=True,
+        )
+        assert proc.stdout.split() == ["function", "function", "function"], proc.stderr
+
+    def test_glc_reports_the_missing_binary(self, shell):
+        proc, _ = shell("PATH=/nonexistent glc")
+        assert proc.returncode != 0
+        assert "glab is required" in proc.stderr
+
+
 class TestGlmr:
     def test_refuses_on_main(self, shell):
         proc, calls = shell("glmr", FAKE_BRANCH="main")
