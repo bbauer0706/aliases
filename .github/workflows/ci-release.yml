@@ -30,6 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,6 +46,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set +e
           uv run cz bump --yes
@@ -59,7 +62,22 @@ jobs:
           fi
 
           tag=$(git describe --tags --abbrev=0)
-          git push origin HEAD:main --tags
+
+          # Push the tag directly — tags are not subject to branch-protection rules
+          git push origin "$tag"
+
+          # Open a PR for the version-bump commit so it lands in main via the
+          # required PR workflow, then enable auto-merge so it merges once CI passes
+          release_branch="release/${tag}"
+          git checkout -b "$release_branch"
+          git push origin "$release_branch"
+          gh pr create \
+            --title "bump: version ${tag}" \
+            --body "Automated version bump to ${tag}." \
+            --base main \
+            --head "$release_branch"
+          gh pr merge "$release_branch" --auto --squash
+
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
       - if: steps.bump.outputs.tag != ''
         env:
