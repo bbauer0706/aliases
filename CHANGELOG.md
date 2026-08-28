@@ -1,3 +1,14 @@
+## v3.11.0 (2026-08-28)
+
+### Feat
+
+- glc + ghc cache handling
+
+### Fix
+
+- workflow (hopefully)
+- push version-bump commit via PR to respect branch-protection rules
+
 ## v3.10.0 (2026-08-24)
 
 ### Feat
