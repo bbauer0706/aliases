@@ -15,6 +15,10 @@ The workflow updates `pyproject.toml` and `CHANGELOG.md`, creates the version
 commit and tag, pushes both, and creates a GitHub Release. Other commit types do
 not create a release when they contain no releasable change.
 
+The release job uses the `RELEASE_TOKEN` repository secret so its atomic version
+commit and tag push can use the repository administrator ruleset bypass. The
+token requires `repo` scope.
+
 Preview the next release locally with `uv run cz bump --dry-run`.
 
 ## Version History
