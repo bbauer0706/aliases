@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 # GitHub CLI shortcuts for your own repositories.
 #
-# The GitLab twin of this file (glab.ali.sh) caches the repo list, because that
-# group has ~300 repos behind a paginated API. A personal account is a single
-# fast call, so there is nothing to cache here.
-#
-#   ghc [query]        pick one of your repos → clone into the workspace dir → cd
+#   ghc [-r] [query]   pick one of your repos → clone into the workspace dir → cd
 #   ghpr [flags]       open a PR from the current branch (pushes it first)
 #   ghco               pick an open PR → check it out
 #   ghm                squash-merge the current PR and delete the branch
@@ -23,6 +19,44 @@ _gh_require() {
     for bin in "$@"; do
         command -v "$bin" &>/dev/null || { echo "${FUNCNAME[1]}: $bin is required" >&2; return 1; }
     done
+}
+
+# ---------------------------------------------------------------------------
+# Repo list cache — ~/.cache/aliases/gh-repos-<owner>.txt, 24h TTL
+# ---------------------------------------------------------------------------
+
+_gh_refresh_repo_cache() {
+    local file="$1"
+    echo "Fetching ${GH_OWNER:-your} repositories…" >&2
+    if gh repo list ${GH_OWNER:+"$GH_OWNER"} --limit 200 --no-archived \
+        --json nameWithOwner --jq '.[].nameWithOwner' > "${file}.tmp" 2>/dev/null &&
+       [[ -s "${file}.tmp" ]]
+    then
+        mv -f "${file}.tmp" "$file"
+    else
+        rm -f "${file}.tmp"
+        [[ -s "$file" ]] || { echo "ghc: could not list ${GH_OWNER:-your} repositories" >&2; return 1; }
+        echo "ghc: refresh failed, using the cached list" >&2
+    fi
+}
+
+_gh_repo_cache() {
+    local force="$1" dir file owner
+    dir="${XDG_CACHE_HOME:-$HOME/.cache}/aliases"
+    mkdir -p "$dir" || return 1
+    owner="${GH_OWNER:-self}"
+    file="$dir/gh-repos-${owner}.txt"
+
+    if [[ -z "$force" && -s "$file" ]]; then
+        if [[ -z $(find "$file" -mmin -1440 2>/dev/null) ]]; then
+            _gh_refresh_repo_cache "$file" >/dev/null 2>&1 &
+        fi
+        echo "$file"
+        return 0
+    fi
+
+    _gh_refresh_repo_cache "$file" || return 1
+    echo "$file"
 }
 
 # First existing directory from projects.workspace_directories.
@@ -48,16 +82,16 @@ else:
 # ghc — pick one of your repos, clone it into the workspace dir, cd there
 # ---------------------------------------------------------------------------
 ghc() {
-    local pick name target
+    local force= cache pick name target
+    [[ "$1" == "-r" ]] && { force=1; shift; }
     _gh_require gh fzf || return 1
+    cache=$(_gh_repo_cache "$force") || return 1
 
-    pick=$(gh repo list ${GH_OWNER:+"$GH_OWNER"} --limit 200 --no-archived \
-               --json nameWithOwner --jq '.[].nameWithOwner' 2>/dev/null |
-        fzf --query "${1:-}" --select-1 \
+    pick=$(fzf --query "${1:-}" --select-1 \
             --preview 'gh repo view {} 2>/dev/null | head -40' \
             --preview-window=right:50% \
-            --header="${GH_OWNER:-your} repositories  (Enter to clone + cd)" \
-            --color='header:italic') || return
+            --header="${GH_OWNER:-your} repositories  (Enter to clone + cd · ghc -r refreshes)" \
+            --color='header:italic' < "$cache") || return
     [[ -n "$pick" ]] || return
 
     # Clone flat: the project mapper only scans one level under each workspace

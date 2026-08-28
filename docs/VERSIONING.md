@@ -2,6 +2,21 @@
 
 aliases follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH).
 
+## Automated Releases
+
+Pushes to `main` are released by `.github/workflows/ci-release.yml` after tests
+and lint pass. Commitizen derives the next version from conventional commits:
+
+- `fix:` creates a patch release
+- `feat:` creates a minor release
+- `BREAKING CHANGE:` creates a major release
+
+The workflow updates `pyproject.toml` and `CHANGELOG.md`, creates the version
+commit and tag, pushes both, and creates a GitHub Release. Other commit types do
+not create a release when they contain no releasable change.
+
+Preview the next release locally with `uv run cz bump --dry-run`.
+
 ## Version History
 
 | Version | Changes |
@@ -20,5 +35,6 @@ Re-add your secrets with `aliases secrets set`.
 
 ## Version String
 
-The version is derived from the latest git tag at build time
-(via `importlib.metadata`). In a dev checkout it shows `dev`.
+The package version is stored in `pyproject.toml` and exposed at runtime via
+`importlib.metadata`. In a dev checkout without installed package metadata it
+shows `dev`.

@@ -120,7 +120,7 @@ def config_reset(yes: bool) -> None:
 
     cfg._data = copy.deepcopy(DEFAULT_CONFIG)
     cfg.save()
-    console.print("[green]✓[/green] Configuration reset to defaults.")
+    click.secho("✓ Configuration reset to defaults.", fg="green")
 
 
 # ── edit ───────────────────────────────────────────────────────────────────

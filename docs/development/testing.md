@@ -8,7 +8,8 @@ aliases uses [pytest](https://pytest.org) for all tests.
 uv run pytest           # run all tests
 uv run pytest -v        # verbose
 uv run pytest -x        # stop on first failure
-uv run pytest --cov=src # coverage report
+uv run pytest --cov=aliases # coverage report
+uv run ruff check .     # lint
 ```
 
 ## Test Layout
@@ -87,8 +88,15 @@ def make_project(workspace, name, server=None, web=None):
 ## CI
 
 ```bash
-# All that is needed in CI:
+uv sync --locked --group dev
+uv run ruff check .
 uv run pytest
 ```
 
-Exit code is non-zero on any failure.
+Pull requests and pushes to `main` run these checks. Releases from `main` only
+continue after both commands succeed.
+
+## Pre-push Hook
+
+The tracked `.githooks/pre-push` hook runs the same commands before each push.
+It is enabled by the global `core.hooksPath=.githooks` Git configuration.

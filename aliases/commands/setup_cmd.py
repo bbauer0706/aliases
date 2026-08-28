@@ -240,7 +240,7 @@ def _ensure_tool(
             return
 
     if fallback_cmd:
-        click.echo(f"  No supported package manager found. Running fallback install…")
+        click.echo("  No supported package manager found. Running fallback install…")
         result = subprocess.run(["bash", "-c", fallback_cmd])
         if result.returncode == 0:
             click.echo(f"  \033[32m✓\033[0m {display_name} installed via {fallback_label or 'fallback'}.")

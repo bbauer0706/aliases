@@ -26,19 +26,8 @@
 # Repo list cache — ~/.cache/aliases/glab-repos-<group>.txt, 24h TTL
 # ---------------------------------------------------------------------------
 
-# Echoes the cache file path on stdout, refreshing it first when stale.
-# $1 non-empty forces a refresh.
-_glab_repo_cache() {
-    local force="$1" dir file
-    dir="${XDG_CACHE_HOME:-$HOME/.cache}/aliases"
-    mkdir -p "$dir" || return 1
-    file="$dir/glab-repos-${GLAB_GROUP}.txt"
-
-    if [[ -z "$force" && -s "$file" && -n $(find "$file" -mmin -1440 2>/dev/null) ]]; then
-        echo "$file"
-        return 0
-    fi
-
+_glab_refresh_repo_cache() {
+    local file="$1"
     echo "Fetching ${GLAB_GROUP} repositories…" >&2
     # `glab api` has no --jq, so parse the ndjson stream ourselves. Write to a
     # temp file first: a failed fetch must not truncate a usable cache.
@@ -57,6 +46,25 @@ for line in sys.stdin:
         [[ -s "$file" ]] || { echo "glc: could not list ${GLAB_GROUP} repositories" >&2; return 1; }
         echo "glc: refresh failed, using the cached list" >&2
     fi
+}
+
+# Echoes the cache file path on stdout. Expired caches refresh in the
+# background; $1 non-empty forces a synchronous refresh.
+_glab_repo_cache() {
+    local force="$1" dir file
+    dir="${XDG_CACHE_HOME:-$HOME/.cache}/aliases"
+    mkdir -p "$dir" || return 1
+    file="$dir/glab-repos-${GLAB_GROUP}.txt"
+
+    if [[ -z "$force" && -s "$file" ]]; then
+        if [[ -z $(find "$file" -mmin -1440 2>/dev/null) ]]; then
+            _glab_refresh_repo_cache "$file" >/dev/null 2>&1 &
+        fi
+        echo "$file"
+        return 0
+    fi
+
+    _glab_refresh_repo_cache "$file" || return 1
     echo "$file"
 }
 

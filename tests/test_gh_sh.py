@@ -1,9 +1,8 @@
 """Tests for data/bash_aliases/gh.ali.sh.
 
-Same contract as the glab twin: the file must survive being sourced before PATH
-is complete, must never open a PR from main, and must clone flat into the
-workspace directory. Plus the one behaviour gh does not share with glab — it
-does not push the branch for you, so ghpr has to.
+The file must survive being sourced before PATH is complete, refresh stale repo
+caches without blocking, never open a PR from main, and clone flat into the
+workspace directory. GitHub also needs ghpr to push new branches explicitly.
 """
 
 from __future__ import annotations
@@ -11,6 +10,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 import pytest
@@ -25,12 +25,13 @@ _STUBS = {
 echo "gh $*" >> "$STUB_LOG"
 case "$1 $2" in
     "repo clone") mkdir -p "$4" ;;
-    "repo list")  printf '%s\\n' bbauer0706/aliases bbauer0706/sysmon ;;
+    "repo list")  sleep "${GH_API_DELAY:-0}"; printf '%s\n' bbauer0706/aliases bbauer0706/sysmon ;;
 esac
 """,
     "fzf": """#!/usr/bin/env bash
 echo "fzf $*" >> "$STUB_LOG"
-cat > /dev/null
+input=$(cat)
+printf 'fzf-input:%s\n' "$input" >> "$STUB_LOG"
 printf '%s\\n' "$FZF_PICK"
 """,
     "aliases": """#!/usr/bin/env bash
@@ -61,6 +62,9 @@ def shell(tmp_path):
     workspace.mkdir()
     log = tmp_path / "calls.log"
     log.touch()
+    cache_dir = tmp_path / "cache" / "aliases"
+    cache_dir.mkdir(parents=True)
+    cache_file = cache_dir / "gh-repos-self.txt"
 
     def run(snippet: str, **env: str):
         proc = subprocess.run(
@@ -68,6 +72,7 @@ def shell(tmp_path):
             env={
                 **os.environ,
                 "PATH": f"{bin_dir}:{os.environ['PATH']}",
+                "XDG_CACHE_HOME": str(tmp_path / "cache"),
                 "STUB_LOG": str(log),
                 "WORKSPACE_DIR": str(workspace),
                 "FZF_PICK": "bbauer0706/sysmon",
@@ -79,6 +84,7 @@ def shell(tmp_path):
         return proc, log.read_text(encoding="utf-8")
 
     run.workspace = workspace
+    run.cache_file = cache_file
     return run
 
 
@@ -129,6 +135,26 @@ class TestGhpr:
 
 
 class TestGhc:
+    def test_fresh_cache_is_not_refetched(self, shell):
+        shell.cache_file.write_text("bbauer0706/sysmon\n", encoding="utf-8")
+        proc, calls = shell("ghc")
+        assert proc.returncode == 0, proc.stderr
+        assert "gh repo list" not in calls
+
+    def test_stale_cache_is_used_while_refreshed_in_background(self, shell):
+        shell.cache_file.write_text("bbauer0706/old-repo\n", encoding="utf-8")
+        os.utime(shell.cache_file, (0, 0))
+        started = time.monotonic()
+        proc, calls = shell("ghc", GH_API_DELAY="1")
+        assert proc.returncode == 0, proc.stderr
+        assert time.monotonic() - started < 0.7
+        assert "fzf-input:bbauer0706/old-repo" in calls
+
+        deadline = time.monotonic() + 2
+        while "bbauer0706/sysmon" not in shell.cache_file.read_text(encoding="utf-8"):
+            assert time.monotonic() < deadline
+            time.sleep(0.01)
+
     def test_clones_flat_into_the_workspace_dir(self, shell):
         target = shell.workspace / "sysmon"
         proc, calls = shell("ghc")

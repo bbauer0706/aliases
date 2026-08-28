@@ -1,9 +1,8 @@
 """Tests for data/bash_aliases/glab.ali.sh.
 
-The wrapper is thin, but three things must hold: it never opens a merge request
-from main, it does not re-hit the API while the repo cache is fresh, and it
-clones flat into the workspace directory (the project mapper only scans one
-level deep). These run the real script under bash with stubbed binaries.
+The wrapper must refresh stale repo caches without blocking, never open a merge
+request from main, and clone flat into the workspace directory (the project
+mapper only scans one level deep). Tests run the real script with stubbed tools.
 """
 
 from __future__ import annotations
@@ -11,6 +10,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 import pytest
@@ -25,12 +25,13 @@ _STUBS = {
 echo "glab $*" >> "$STUB_LOG"
 case "$1 $2" in
     "repo clone") mkdir -p "$4" ;;
-    "api "*|"api") cat "$GLAB_API_NDJSON" ;;
+    "api "*|"api") sleep "${GLAB_API_DELAY:-0}"; cat "$GLAB_API_NDJSON" ;;
 esac
 """,
     "fzf": """#!/usr/bin/env bash
 echo "fzf $*" >> "$STUB_LOG"
-cat > /dev/null
+input=$(cat)
+printf 'fzf-input:%s\n' "$input" >> "$STUB_LOG"
 printf '%s\\n' "$FZF_PICK"
 """,
     "aliases": """#!/usr/bin/env bash
@@ -146,12 +147,19 @@ class TestGlc:
         assert proc.returncode == 0, proc.stderr
         assert "glab api" not in calls
 
-    def test_stale_cache_is_refetched(self, shell):
+    def test_stale_cache_is_used_while_refreshed_in_background(self, shell):
         shell.cache_file.write_text("evotess/old/repo\n", encoding="utf-8")
         os.utime(shell.cache_file, (0, 0))  # epoch — well past the 24h TTL
-        proc, calls = shell("glc")
+        started = time.monotonic()
+        proc, calls = shell("glc", GLAB_API_DELAY="1")
         assert proc.returncode == 0, proc.stderr
-        assert "glab api" in calls
+        assert time.monotonic() - started < 0.7
+        assert "fzf-input:evotess/old/repo" in calls
+
+        deadline = time.monotonic() + 2
+        while "ci-components/python" not in shell.cache_file.read_text(encoding="utf-8"):
+            assert time.monotonic() < deadline
+            time.sleep(0.01)
         assert "ci-components/python" in shell.cache_file.read_text(encoding="utf-8")
 
     def test_clones_flat_into_the_workspace_dir(self, shell):

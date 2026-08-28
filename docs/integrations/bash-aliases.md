@@ -62,6 +62,29 @@ Then fetches `origin/main`, rebases, and prompts before force-pushing
 
 ---
 
+## `gh.ali.sh` and `glab.ali.sh`
+
+GitHub and GitLab workflow shortcuts. Repository pickers require `fzf` and the
+corresponding `gh` or `glab` CLI.
+
+| Function | Description |
+|----------|-------------|
+| `ghc [query]` / `glc [query]` | Pick a repository, clone it into the configured workspace, and change into it |
+| `ghc -r` / `glc -r` | Refresh the repository list immediately before opening the picker |
+| `ghpr` / `glmr` | Create a pull or merge request from the current feature branch |
+| `ghco` / `glco` | Pick and check out an open pull or merge request |
+| `gho` / `glo` | Open the current request or repository in the browser |
+
+Repository lists are cached for 24 hours. After expiry, the picker uses the
+existing list immediately and refreshes it in the background. The first run
+and explicit `-r` refreshes wait for the API because no stale list should be
+used in those cases.
+
+Set `GH_OWNER` to list another GitHub owner or `GLAB_GROUP` to use another
+GitLab group for the current shell.
+
+---
+
 ## `npm.ali.sh`
 
 Script shortcuts and npm wrappers.

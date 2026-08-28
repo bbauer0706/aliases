@@ -28,7 +28,8 @@ uv run aliases completion projects
 uv run pytest               # all tests
 uv run pytest -v            # verbose
 uv run pytest -k config     # match test names
-uv run pytest --cov=src     # with coverage
+uv run pytest --cov=aliases # with coverage
+uv run ruff check .         # lint (same command as CI)
 ```
 
 ## Building the Wheel
@@ -53,8 +54,13 @@ uv run aliases setup
 
 ## Releasing
 
-1. Tag the commit: `git tag v2.x.y && git push --tags`
-2. `uv build`
-3. `uv publish` (or push to GitHub; uv tool install works directly from git)
+Push conventional commits to `main`. After tests and Ruff pass, GitHub Actions
+runs Commitizen to calculate the next semantic version, update `CHANGELOG.md`,
+commit the bump, tag it, and create a GitHub Release. Commits with no releasable
+change (for example `docs:` or `chore:`) pass without creating a release.
 
-The version string is read from the git tag at build time via `hatchling`.
+For a local preview without changing files:
+
+```bash
+uv run cz bump --dry-run
+```
