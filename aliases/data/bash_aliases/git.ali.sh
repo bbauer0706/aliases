@@ -5,6 +5,23 @@ alias reset-soft='git reset --soft HEAD~1'
 alias git-rm='git rm --cached'
 alias trigger-ci='git commit --allow-empty -m "ci: trigger ci pipeline" && git push'
 
+wgs() {
+    local pending=0 repo status
+
+    for repo in */; do
+        [[ -d "$repo" ]] || continue
+        git -C "$repo" rev-parse --is-inside-work-tree &>/dev/null || continue
+
+        status=$(git -C "$repo" status --porcelain 2>/dev/null)
+        if [[ -n "$status" ]]; then
+            printf '%s\n' "${repo%/}: pending work"
+            pending=1
+        fi
+    done
+
+    (( pending )) || printf '%s\n' "No pending work"
+}
+
 # Safe rebase onto origin/main with pre-flight checks.
 rebase() {
     if ! git rev-parse --is-inside-work-tree &>/dev/null; then
