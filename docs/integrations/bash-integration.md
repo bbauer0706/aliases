@@ -5,6 +5,24 @@
 
 ---
 
+## PATH bootstrap
+
+The generated `~/.bash_aliases` prepends the directory holding the `aliases`
+console script (normally `~/.local/bin`) to `PATH` before it sources anything
+else.
+
+This is required because Debian/Ubuntu's stock `~/.bashrc` sources
+`~/.bash_aliases` *before* it adds `~/.local/bin` to `PATH`. Without the
+bootstrap every `aliases` call inside the integration files fails silently and
+falls back to defaults — `eza` ignores `eza.icons`, and the prompt stays on its
+plain `user@host:/full/path` fallback until the first `cd`.
+
+The block is idempotent, skips directories that do not exist, and makes the
+later `.bashrc` PATH line a harmless no-op. Re-run `aliases setup --update`
+after moving your installation.
+
+---
+
 ## `shell/project-env.sh`
 
 Provides:

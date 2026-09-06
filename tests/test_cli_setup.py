@@ -61,3 +61,27 @@ class TestSetupUpdate:
 
         assert result.exit_code == 0
         assert bashrc.read_text(encoding="utf-8") == "# untouched\n"
+
+
+class TestBinDirOnPath:
+    """Stock ~/.bashrc sources ~/.bash_aliases before adding ~/.local/bin to PATH.
+
+    Without a PATH fix-up the `aliases` calls inside the integration files fail
+    silently, so eza ignores eza.icons and the prompt stays on its fallback
+    until the first cd.
+    """
+
+    def test_prepends_bin_dir_before_sourcing(self, home: Path):
+        from aliases.commands.setup_cmd import _generate_bash_aliases
+
+        content = _generate_bash_aliases(home / ".config" / "aliases")
+
+        path_block = content.index('PATH="$_ali_bin:')
+        assert path_block < content.index("prompt.sh")
+        assert path_block < content.index(".ali.sh")
+
+    def test_always_includes_local_bin(self, home: Path):
+        from aliases.commands.setup_cmd import _aliases_bin_dirs
+
+        # A dev-checkout venv must never be the only entry baked into the file.
+        assert str(home / ".local" / "bin") in _aliases_bin_dirs()
